@@ -1,6 +1,9 @@
 /*
  * TODO: trap Ctrl-C and kill query instead (SQLCancel?)
  *       multiple result sets (SQLMoreResults)
+ *       pipes and redirects
+ *       batch mode?
+ *       clear buffer action
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
