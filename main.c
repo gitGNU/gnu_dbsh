@@ -95,15 +95,17 @@ void main_loop(const char *dsn, SQLHDBC conn)
 						break;
 					}
 
-					delete_latest_history(lnum);
-					add_history(sqlbuf.buf);
-					write_history(get_history_filename());
-
 					if(i < (len - 1)) action = line[++i];
 					else action = 'g';
 
 					if(action == 'q') return;
 					reset = run_action(conn, &sqlbuf, action);
+
+					if(reset) {
+						delete_latest_history(lnum);
+						add_history(sqlbuf.buf);
+						write_history(get_history_filename());
+					}
 
 				} else {
 					if(reset) {
@@ -119,7 +121,7 @@ void main_loop(const char *dsn, SQLHDBC conn)
 			}
 
 			if(!reset) {
-				if(add_to_buffer(&sqlbuf, ' ')) lnum++;
+				if(add_to_buffer(&sqlbuf, '\n')) lnum++;
 				else reset = 1;
 			}
 
