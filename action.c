@@ -82,21 +82,21 @@ int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action)
 		go(conn, sqlbuf, action);
 		reset = 1;
 		break;
-	case 'c':
+	case 'c':  // clear
 		sqlbuf->next = 0;
 		reset = 1;
 		break;
-	case 'e':
+	case 'e':  // edit
 		edit(sqlbuf);
 		print(sqlbuf);
 		break;
-	case 'l':
+	case 'l':  // load
 		// TODO: load named buffer (or should that be a command?)
 		break;
-	case 'p':
+	case 'p':  // print
 		print(sqlbuf);
 		break;
-	case 's':
+	case 's':  // save
 		// TODO: save to named buffer
 		break;
 	}
