@@ -72,7 +72,7 @@ int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action)
 	int reset = 0;
 
 	switch(action) {
-	case 'c':  // CSV
+	case 'C':  // CSV
 	case 'g':  // horizontal
 	case 'G':  // vertical
 	case 'h':  // HTML
@@ -80,6 +80,10 @@ int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action)
 	case 't':  // TSV
 	case 'x':  // XML
 		go(conn, sqlbuf, action);
+		reset = 1;
+		break;
+	case 'c':
+		sqlbuf->next = 0;
 		reset = 1;
 		break;
 	case 'e':

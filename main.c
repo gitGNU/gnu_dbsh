@@ -1,5 +1,5 @@
 /*
- * TODO: trap Ctrl-C and kill query instead (SQLCancel?)
+ * TODO: trap Ctrl-C and kill query instead (SQLCancel?), or just clear buffer if we're not running a query
  *       multiple result sets (SQLMoreResults)
  *       pipes and redirects
  *       batch mode?
