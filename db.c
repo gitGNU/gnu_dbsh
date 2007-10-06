@@ -20,16 +20,22 @@ int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, int line
 	SQLCHAR message[256];
 	SQLCHAR state[6];
 	SQLINTEGER code;
+	SQLSMALLINT i;
+	int retval = 0;
 
-	r = SQLGetDiagRec(type, handle, 1, state, &code, message, 256, 0);
+	// TODO: only include file and line in debug mode
+	printf(_("Error at %s line %d:\n"), file, line);
 
-	if(SUCCESS(r)) {
-		// TODO: only include file and line in debug mode
-		printf(_("%s (SQLSTATE %s, error %ld) (%s:%d)\n"), message, state, code, file, line);
-		return 1;
-	} else {
-		return 0;
+	for(i = 1;; i++) {
+		r = SQLGetDiagRec(type, handle, i, state, &code, message, 256, 0);
+
+		if(SUCCESS(r)) {
+			retval = 1;
+			printf(_("%s (SQLSTATE %s, error %ld)\n"), message, state, code);
+		} else break;
 	}
+
+	return retval;
 }
 
 SQLHENV alloc_env()
