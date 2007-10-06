@@ -1,17 +1,19 @@
 /*
- * TODO: trap Ctrl-C and kill query instead?
- *       prepared statement support?  ie, prepare and run several times with diff params
+ * TODO: trap Ctrl-C and kill query instead (SQLCancel?)
  *       multiple result sets (SQLMoreResults)
  *       pay more attention to return values (eg SQL_SUCCESS_WITH_INFO) and display info/warnings
  *
- * additional commands:
- * *COLUMNS (SQLColumns)
- * *EXEC (prepared statement support)
- * *SYSTEM (or !, shell command)
+ *       prepared statement support:
+ *       SELECT * FROM <table> WHERE id = ?
+ *       \g 1
+ *       \g 2
+ *       etc
  */
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <readline/readline.h>
@@ -71,6 +73,81 @@ void delete_latest_history(int n)
 		free_history_entry(remove_history(p));
 }
 
+
+db_results *run_command(SQLHDBC conn, char *line)
+{
+	int i;
+	char command[32] = "";
+	char *saveptr;
+	char *params[4];
+	db_results *res = 0;
+
+	for(i = 0; i < 31 && line[i+1] && line[i+1] != ' '; i++) {
+		command[i] = tolower(line[i+1]);
+	}
+	command[i] = 0;
+
+	// TODO: parse properly, allow quoting / escaping etc
+	line += i + 1;
+	for(i = 0; i < 4; i++) {
+		params[i] = strtok_r(line, " ", &saveptr);
+		line = 0;
+	}
+
+	if(!strcmp(command, "columns")) {
+		res = get_columns(conn, params[0], params[1], params[2]);
+	} else if(!strcmp(command, "tables")) {
+		res = get_tables(conn, params[0], params[1], params[2]);
+	} else {
+		printf(_("Unrecognised command: %s\n"), command);
+
+	}
+
+	return res;
+}
+
+int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action)
+{
+	int reset = 0;
+	db_results *res;
+
+	switch(action) {
+	case 'c':  // CSV
+	case 'g':  // horizontal
+	case 'G':  // vertical
+	case 'h':  // HTML
+	case 'j':  // JSON
+	case 't':  // TSV
+	case 'x':  // XML
+		if(sqlbuf->buf[0] == '*') {  // TODO: configurable command character
+			res = run_command(conn, sqlbuf->buf);
+		} else {
+			res = execute_query(conn, sqlbuf->buf);
+		}
+		if(res) {
+			output_results(res, action, stdout);
+			free_results(res);
+		}
+		reset = 1;
+		break;
+	case 'e':
+		// TODO: edit
+		break;
+	case 'l':
+		// TODO: load named buffer (or should that be a command?)
+		break;
+	case 'p':
+		printf("%s\n", sqlbuf->buf);
+		sqlbuf->next--;
+		break;
+	case 's':
+		// TODO: save to named buffer
+		break;
+	}
+
+	return reset;
+}
+
 void main_loop(const char *dsn, SQLHDBC conn)
 {
 	char prompt[16];
@@ -95,85 +172,53 @@ void main_loop(const char *dsn, SQLHDBC conn)
 		}
 
 		len = strlen(line);
-		if(len) add_history(line);
+		if(len) {
+			add_history(line);
 
-		// TODO: interpret single char on line as a command?
+			// TODO: interpret single character as action?
 
-		for(i = 0; i < len; i++) {
+			for(i = 0; i < len; i++) {
 
-			// TODO: configurable escape char(s)
+				// TODO: configurable escape char(s)
 
-			if(line[i] == '\\' || line[i] == ';') {  // FIXME: allow escaping with double backslash
+				if(line[i] == '\\' || line[i] == ';') {  // TODO: allow escaping with double backslash
 
-				char action;
-				db_results *res;
+					char action;
 
-				if(!add_to_buffer(&sqlbuf, '\0')) {
-					break;
-				}
-
-				delete_latest_history(lnum);
-				add_history(sqlbuf.buf);
-				write_history(get_history_filename());
-
-				if(i < (len - 1)) action = line[++i];
-				else action = 'g';
-
-				switch(action) {
-				case 'c':  // CSV
-				case 'g':  // horizontal
-				case 'G':  // vertical
-				case 'h':  // HTML
-				case 'j':  // JSON
-				case 't':  // TSV
-				case 'x':  // XML
-					res = execute_query(conn, sqlbuf.buf);  // TODO: combine execute and fetch into one call?
-					if(res) {
-						output_results(res, action, stdout);
-						free_results(res);
+					if(!add_to_buffer(&sqlbuf, '\0')) {
+						break;
 					}
-					reset = 1;
-					break;
-				case 'e':
-					// TODO: edit
-					break;
-				case 'l':
-					// TODO: load named buffer
-					break;
-				case 'P':
-					// TODO: prepare
-					break;
-				case 'p':
-					printf("%s\n", sqlbuf.buf);
-					sqlbuf.next--;
-					break;
-				case 'q':
-					return;
-					break;
-				case 's':
-					// TODO: save to named buffer
-					break;
-				}
 
-			} else {
-				if(reset) {
-					sqlbuf.next = 0;
-					reset = 0;
-				}
+					delete_latest_history(lnum);
+					add_history(sqlbuf.buf);
+					write_history(get_history_filename());
 
-				if(!add_to_buffer(&sqlbuf, line[i])) {
-					reset = 1;
-					break;
+					if(i < (len - 1)) action = line[++i];
+					else action = 'g';
+
+					if(action == 'q') return;
+					reset = run_action(conn, &sqlbuf, action);
+
+				} else {
+					if(reset) {
+						sqlbuf.next = 0;
+						reset = 0;
+					}
+
+					if(!add_to_buffer(&sqlbuf, line[i])) {
+						reset = 1;
+						break;
+					}
 				}
 			}
-		}
 
-		if(!reset) {
-			if(add_to_buffer(&sqlbuf, ' ')) lnum++;
-			else reset = 1;
-		}
+			if(!reset) {
+				if(add_to_buffer(&sqlbuf, ' ')) lnum++;
+				else reset = 1;
+			}
 
-		if(reset) lnum = 1;
+			if(reset) lnum = 1;
+		}
 
 		free(line);
 	}

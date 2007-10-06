@@ -7,6 +7,8 @@
 
 
 int list_dsns(SQLHENV, SQLUSMALLINT);
+void time_taken(struct timeval *);
+db_results *fetch_results(SQLHSTMT, struct timeval);
 
 #define SUCCESS(r) (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO)
 #define report_error(t, h) _report_error(t, h,  __FILE__, __LINE__)
@@ -115,18 +117,19 @@ SQLHDBC connect_dsn(SQLHENV env, const char *dsn, const char *user, const char *
 	return conn;
 }
 
+void get_catalog_name(SQLHDBC conn, char *buf, int buflen)
+{
+	SQLRETURN r;
+
+	r = SQLGetInfo(conn, SQL_CATALOG_NAME, buf, buflen, 0);
+	if(!SUCCESS(r)) buf[0] = 0;
+}
+
 db_results *execute_query(SQLHDBC conn, const char *buf)
 {
 	SQLHSTMT st;
 	SQLRETURN r;
-	struct timeval tstart, tfinish;
-
-	db_results *res;
-	SQLSMALLINT i;
-	SQLINTEGER j;
-
-
-	// TODO: check return value of mallocs
+	struct timeval taken;
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SUCCESS(r)) {
@@ -134,9 +137,9 @@ db_results *execute_query(SQLHDBC conn, const char *buf)
 		return 0;
 	}
 
-	gettimeofday(&tstart, 0);
+	gettimeofday(&taken, 0);
 	r = SQLExecDirect(st, (SQLCHAR *) buf, SQL_NTS);
-	gettimeofday(&tfinish, 0);
+	time_taken(&taken);
 
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
@@ -145,10 +148,21 @@ db_results *execute_query(SQLHDBC conn, const char *buf)
 		return 0;
 	}
 
+	return fetch_results(st, taken);
+}
+
+db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
+{
+	// TODO: check return value of mallocs
+
+	db_results *res;
+	SQLRETURN r;
+	SQLSMALLINT i;
+	SQLINTEGER j;
+
 	res = calloc(1, sizeof(db_results));
 
-	res->time_taken.tv_sec  = tfinish.tv_sec  - tstart.tv_sec;
-	res->time_taken.tv_usec = tfinish.tv_usec - tstart.tv_usec;
+	res->time_taken = time_taken;
 
 	r = SQLRowCount(st, &(res->nrows));
 	if(!SUCCESS(r)) {
@@ -211,7 +225,7 @@ db_results *execute_query(SQLHDBC conn, const char *buf)
 		r = SQLFetch(st);
 		if(!SUCCESS(r)) {
 			if(!report_error(SQL_HANDLE_STMT, st))
-				printf(_("Failed to fetch row %ld\n"), j);
+				printf(_("Failed to fetch row %ld (apparently %ld rows)\n"), j, res->nrows);
 			SQLFreeHandle(SQL_HANDLE_STMT, st);
 			free_results(res);
 			return 0;
@@ -239,6 +253,67 @@ db_results *execute_query(SQLHDBC conn, const char *buf)
 	return res;
 }
 
+db_results *get_tables(SQLHDBC conn, const char *catalog,
+		       const char *schema, const char *table)
+{
+	SQLHSTMT st;
+	SQLRETURN r;
+	struct timeval taken;
+
+
+	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
+	if(!SUCCESS(r)) {
+		if(!report_error(SQL_HANDLE_STMT, st))
+			printf(_("Failed to allocate statement handle\n"));
+		return 0;
+	}
+
+	gettimeofday(&taken, 0);
+	r = SQLTables(st,
+		      (SQLCHAR *) catalog, SQL_NTS,
+		      (SQLCHAR *) schema, SQL_NTS,
+		      (SQLCHAR *) table, SQL_NTS,
+		      (SQLCHAR *) 0, 0);
+	time_taken(&taken);
+
+	if(!SUCCESS(r)) {
+		if(!report_error(SQL_HANDLE_STMT, st))
+			printf(_("Failed to list tables\n"));
+	}
+
+	return fetch_results(st, taken);
+}
+
+db_results *get_columns(SQLHDBC conn, const char *catalog,
+			const char *schema, const char *table)
+{
+	SQLHSTMT st;
+	SQLRETURN r;
+	struct timeval taken;
+
+	gettimeofday(&taken, 0);
+	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
+	time_taken(&taken);
+
+	if(!SUCCESS(r)) {
+		if(!report_error(SQL_HANDLE_STMT, st))
+			printf(_("Failed to allocate statement handle\n"));
+		return 0;
+	}
+
+	r = SQLColumns(st,
+		      (SQLCHAR *) catalog, SQL_NTS,
+		      (SQLCHAR *) schema, SQL_NTS,
+		      (SQLCHAR *) table, SQL_NTS,
+		      (SQLCHAR *) 0, 0);
+	if(!SUCCESS(r)) {
+		if(!report_error(SQL_HANDLE_STMT, st))
+			printf(_("Failed to list columns\n"));
+	}
+
+	return fetch_results(st, taken);
+}
+
 void free_results(db_results *r)
 {
 	SQLSMALLINT i;
@@ -261,4 +336,14 @@ void free_results(db_results *r)
 	}
 
 	free(r);
+}
+
+void time_taken(struct timeval *time_taken)
+{
+	struct timeval end_time;
+
+	gettimeofday(&end_time, 0);
+
+	time_taken->tv_sec  = end_time.tv_sec  - time_taken->tv_sec;
+	time_taken->tv_usec = end_time.tv_usec - time_taken->tv_usec;
 }
