@@ -15,6 +15,14 @@
 #define NULL_WIDTH 6
 
 
+void output_warnings(db_results *res, FILE *s)
+{
+	SQLINTEGER i;
+	for(i = 0; i < res->nwarnings; i++) {
+		fprintf(s, "%s\n", res->warnings[i]);
+	}
+}
+
 void output_horiz_separator(FILE *s, int col_widths[], SQLSMALLINT ncols)
 {
 	SQLSMALLINT i;
@@ -99,6 +107,7 @@ void output_horiz(db_results *res, FILE *s)
 
 	free(col_widths);
 
+	output_warnings(res, s);
 	fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
 		res->time_taken.tv_sec, res->time_taken.tv_usec);
 }
@@ -133,6 +142,7 @@ void output_vert(db_results *res, FILE *s)
 		}
 	}
 
+	output_warnings(res, s);
 	fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
 		res->time_taken.tv_sec, res->time_taken.tv_usec);
 }
@@ -173,8 +183,10 @@ void output_csv(db_results *res, FILE *s, char separator, char delimiter)
 void output_results(db_results *res, char mode, FILE *s)
 {
 	if(res->nrows == -1) {
+		output_warnings(res, s);
 		fputs(_("Success\n"), s);
 	} else if(!res->ncols) {
+		output_warnings(res, s);
 		fprintf(s, _("%ld rows affected (%ld.%06lds)\n"), res->nrows,
 			res->time_taken.tv_sec, res->time_taken.tv_usec);
 	} else {

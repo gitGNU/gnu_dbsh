@@ -13,8 +13,10 @@ typedef struct db_column db_column;
 struct db_results {
 	SQLSMALLINT ncols;
 	SQLINTEGER nrows;
+	SQLINTEGER nwarnings;
 	char **cols;
 	char ***data;
+	char **warnings;
 	struct timeval time_taken;
 };
 

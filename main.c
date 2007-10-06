@@ -1,7 +1,7 @@
 /*
  * TODO: trap Ctrl-C and kill query instead (SQLCancel?)
  *       multiple result sets (SQLMoreResults)
- *       pay more attention to return values (eg SQL_SUCCESS_WITH_INFO) and display info/warnings
+ *       do we need to use SQLDiagField to get affected rows from UPDATEs etc?
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?

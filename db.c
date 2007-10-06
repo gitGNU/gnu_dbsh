@@ -170,6 +170,17 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 
 	res->time_taken = time_taken;
 
+	SQLGetDiagField(SQL_HANDLE_STMT, st, 0, SQL_DIAG_NUMBER, &(res->nwarnings), 0, 0);
+	if(res->nwarnings) {
+		res->warnings = calloc(res->nwarnings, sizeof(char *));
+		for(j = 0; j < res->nwarnings; j++) {
+			SQLCHAR buf[1024];  // TODO: cope with data bigger than this
+			SQLGetDiagField(SQL_HANDLE_STMT, st, j + 1,
+					SQL_DIAG_MESSAGE_TEXT, buf, 1024, 0);
+			res->warnings[j] = strdup((char *) buf);
+		}
+	}
+
 	r = SQLRowCount(st, &(res->nrows));
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
@@ -329,6 +340,7 @@ void free_results(db_results *r)
 		for(i = 0; i< r->ncols; i++) if(r->cols[i]) free(r->cols[i]);
 		free(r->cols);
 	}
+
 	if(r->data) {
 		for(j = 0; j < r->nrows; j++) {
 			if(r->data[j]) {
@@ -339,6 +351,11 @@ void free_results(db_results *r)
 			}
 		}
 		free(r->data);
+	}
+
+	if(r->warnings) {
+		for(j = 0; j < r->nwarnings; j++) if(r->warnings[j]) free(r->warnings[j]);
+		free(r->warnings);
 	}
 
 	free(r);
