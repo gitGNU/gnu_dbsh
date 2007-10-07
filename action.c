@@ -109,14 +109,11 @@ static void print(sql_buffer *sqlbuf)
 	sqlbuf->next--;
 }
 
-int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
+void run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 {
-	int reset = 0;
-
 	switch(action) {
 	case 'c':  // clear
 		sqlbuf->next = 0;
-		reset = 1;
 		break;
 	case 'e':  // edit
 		edit(sqlbuf);
@@ -133,9 +130,6 @@ int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 		break;
 	default:
 		go(conn, sqlbuf, action, paramstring);
-		reset = 1;
 		break;
 	}
-
-	return reset;
 }

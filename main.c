@@ -3,6 +3,7 @@
  *       multiple result sets (SQLMoreResults)
  *       pipes and redirects
  *       batch mode?
+ *       tab completion - commands as a minimum, maybe tables etc too?
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
@@ -45,14 +46,6 @@ const char *get_history_filename()
 	return 0;
 }
 
-void delete_latest_history(int n)
-{
-	int p;
-
-	for(p = history_length - 1; n && p >= 0; n--, p--)
-		free_history_entry(remove_history(p));
-}
-
 void main_loop(const char *dsn, SQLHDBC conn)
 {
 	sql_buffer *mainbuf;
@@ -81,7 +74,6 @@ void main_loop(const char *dsn, SQLHDBC conn)
 
 		len = strlen(line);
 		if(len) {
-			add_history(line);
 
 			// TODO: interpret single character as action?
 
@@ -103,13 +95,17 @@ void main_loop(const char *dsn, SQLHDBC conn)
 					paramstring = line + i;
 
 					if(action == 'q') return;
-					reset = run_action(conn, mainbuf, action, paramstring);
+					run_action(conn, mainbuf, action, paramstring);
 
-					if(reset) {
-						delete_latest_history(lnum);
+
+					if(strlen(mainbuf->buf)) {
 						add_history(mainbuf->buf);
+
+						// This can be removed once this client is stable enough to trust
 						write_history(get_history_filename());
 					}
+
+					reset = 1;
 
 					break;
 
