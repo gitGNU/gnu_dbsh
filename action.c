@@ -16,6 +16,7 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	db_results *res;
 	FILE *stream;
+	int stype;
 	int i;
 
 	if(sqlbuf->buf[0] == '*') {  // TODO: configurable command character
@@ -27,6 +28,8 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 	// TODO: proper parsing
 
 	stream = stdout;
+	stype = 0;
+
 	for(i = 0; i < strlen(paramstring); i++) {
 		if(paramstring[i] == '>') {
 			char *filename;
@@ -37,8 +40,16 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 				free_results(res);
 				return;
 			}
+			stype = 1;
 			break;
 		} else if(paramstring[i] == '|') {
+			stream = popen(paramstring + i + 1, "w");
+			if(!stream) {
+				perror("Failed to open pipe");
+				free_results(res);
+				return;
+			}
+			stype = 2;
 			break;
 		}
 	}
@@ -46,7 +57,14 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 	if(res) {
 		output_results(res, action, stream);
 		free_results(res);
-		if(stream != stdout) fclose(stream);
+		switch(stype) {
+		case 1:
+			fclose(stream);
+			break;
+		case 2:
+			pclose(stream);
+			break;
+		}
 	}
 }
 
