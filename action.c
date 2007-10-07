@@ -106,7 +106,6 @@ static void edit(sql_buffer *sqlbuf)
 static void print(sql_buffer *sqlbuf)
 {
 	printf("%s\n", sqlbuf->buf);
-	sqlbuf->next--;
 }
 
 void run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
