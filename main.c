@@ -55,17 +55,20 @@ void delete_latest_history(int n)
 
 void main_loop(const char *dsn, SQLHDBC conn)
 {
+	sql_buffer *mainbuf;
 	char prompt[16];
 	char *line;
 	int lnum, len, i;
-	sql_buffer sqlbuf;
-	int reset = 0;
+	int reset;
 
-	sqlbuf.buf  = malloc(1024);
-	sqlbuf.len  = 1024;
-	sqlbuf.next = 0;
+	mainbuf = buffer_alloc(1024);  // TODO: make buffer size configurable
+	if(!mainbuf) {
+		printf(_("Failed to allocate SQL buffer\n"));
+		exit(1);
+	}
 
 	lnum = 1;
+	reset = 0;
 
 	for(;;) {
 		snprintf(prompt, 16, "%s %d> ", dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
@@ -90,7 +93,7 @@ void main_loop(const char *dsn, SQLHDBC conn)
 
 					char action;
 
-					if(!add_to_buffer(&sqlbuf, '\0')) {
+					if(!buffer_append(mainbuf, '\0')) {
 						break;
 					}
 
@@ -98,21 +101,21 @@ void main_loop(const char *dsn, SQLHDBC conn)
 					else action = 'g';
 
 					if(action == 'q') return;
-					reset = run_action(conn, &sqlbuf, action);
+					reset = run_action(conn, mainbuf, action);
 
 					if(reset) {
 						delete_latest_history(lnum);
-						add_history(sqlbuf.buf);
+						add_history(mainbuf->buf);
 						write_history(get_history_filename());
 					}
 
 				} else {
 					if(reset) {
-						sqlbuf.next = 0;
+						mainbuf->next = 0;
 						reset = 0;
 					}
 
-					if(!add_to_buffer(&sqlbuf, line[i])) {
+					if(!buffer_append(mainbuf, line[i])) {
 						reset = 1;
 						break;
 					}
@@ -120,7 +123,7 @@ void main_loop(const char *dsn, SQLHDBC conn)
 			}
 
 			if(!reset) {
-				if(add_to_buffer(&sqlbuf, '\n')) lnum++;
+				if(buffer_append(mainbuf, '\n')) lnum++;
 				else reset = 1;
 			}
 

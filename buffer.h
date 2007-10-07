@@ -9,6 +9,8 @@ typedef struct {
 	int next;
 } sql_buffer;
 
-int add_to_buffer(sql_buffer *, char);
+sql_buffer *buffer_alloc(size_t);
+int buffer_append(sql_buffer *, char);
+void buffer_free(sql_buffer *);
 
 #endif
