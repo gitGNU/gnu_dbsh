@@ -99,7 +99,14 @@ void main_loop(const char *dsn, SQLHDBC conn)
 
 
 					if(strlen(mainbuf->buf)) {
-						add_history(mainbuf->buf);
+
+						char *histentry;
+						char *p;
+
+						histentry = p = strdup(mainbuf->buf);
+						while((p = strchr(p, '\n'))) *p = ' ';
+						add_history(histentry);
+						free(histentry);
 
 						// This can be removed once this client is stable enough to trust
 						write_history(get_history_filename());
