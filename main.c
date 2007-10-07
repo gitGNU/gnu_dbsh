@@ -4,6 +4,7 @@
  *       pipes and redirects
  *       batch mode?
  *       tab completion - commands as a minimum, maybe tables etc too?
+ *       regression tests using SQLite
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
@@ -90,26 +91,33 @@ void main_loop(const char *dsn, SQLHDBC conn)
 						break;
 					}
 
-					if(i < (len - 1)) action = line[++i];
-					else action = 'g';
-					paramstring = line + i;
+					if(i < (len - 1)) {
+						action = line[i + 1];
+						paramstring = line + i + 1;
+					} else {
+						action = 'g';
+						paramstring = "";
+					}
 
 					if(action == 'q') return;
 					run_action(conn, mainbuf, action, paramstring);
 
-
-					if(strlen(mainbuf->buf)) {
-
+					if(mainbuf->next > 1) {
 						char *histentry;
 						char *p;
 
-						histentry = p = strdup(mainbuf->buf);
-						while((p = strchr(p, '\n'))) *p = ' ';
-						add_history(histentry);
-						free(histentry);
+						histentry = p = malloc(mainbuf->next + strlen(line + i) + 1);
+						if(histentry) {
+							strcpy(histentry, mainbuf->buf);
+							strcat(histentry, line + i);
+							while((p = strchr(p, '\n'))) *p = ' ';
 
-						// This can be removed once this client is stable enough to trust
-						write_history(get_history_filename());
+							add_history(histentry);
+							free(histentry);
+
+							// This can be removed once this client is stable enough to trust
+							write_history(get_history_filename());
+						}
 					}
 
 					reset = 1;
