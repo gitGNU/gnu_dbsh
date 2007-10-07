@@ -92,6 +92,7 @@ void main_loop(const char *dsn, SQLHDBC conn)
 				if(line[i] == '\\' || line[i] == ';') {  // TODO: allow escaping with double backslash
 
 					char action;
+					char *paramstring;
 
 					if(!buffer_append(mainbuf, '\0')) {
 						break;
@@ -99,15 +100,18 @@ void main_loop(const char *dsn, SQLHDBC conn)
 
 					if(i < (len - 1)) action = line[++i];
 					else action = 'g';
+					paramstring = line + i;
 
 					if(action == 'q') return;
-					reset = run_action(conn, mainbuf, action);
+					reset = run_action(conn, mainbuf, action, paramstring);
 
 					if(reset) {
 						delete_latest_history(lnum);
 						add_history(mainbuf->buf);
 						write_history(get_history_filename());
 					}
+
+					break;
 
 				} else {
 					if(reset) {

@@ -192,22 +192,22 @@ void output_results(db_results *res, char mode, FILE *s)
 	} else {
 
 		switch(mode) {
-		case 'c':
+		case 'C':  // CSV
 			output_csv(res, s, ',', '"');
 			break;
-		case 'G':
+		case 'G':  // Vertical
 			output_vert(res, s);
 			break;
-		case 'h':
+		case 'H':  // HTML
 			fprintf(s, "TODO\n");
 			break;
-		case 'j':
+		case 'J':  // JSON
 			fprintf(s, "TODO\n");
 			break;
-		case 't':
+		case 'T':  // TSV
 			output_csv(res, s, '\t', 0);
 			break;
-		case 'x':
+		case 'X':  // XMLS
 			fprintf(s, "TODO\n");
 			break;
 		default:

@@ -4,6 +4,6 @@
 #include "buffer.h"
 #include "db.h"
 
-int run_action(SQLHDBC, sql_buffer *, char);
+int run_action(SQLHDBC, sql_buffer *, char, char *);
 
 #endif

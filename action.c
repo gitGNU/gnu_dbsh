@@ -2,6 +2,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "common.h"
@@ -11,18 +12,41 @@
 #include "output.h"
 
 
-static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action)
+static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	db_results *res;
+	FILE *stream;
+	int i;
 
 	if(sqlbuf->buf[0] == '*') {  // TODO: configurable command character
 		res = run_command(conn, sqlbuf->buf);
 	} else {
 		res = execute_query(conn, sqlbuf->buf);
 	}
+
+	// TODO: proper parsing
+
+	stream = stdout;
+	for(i = 0; i < strlen(paramstring); i++) {
+		if(paramstring[i] == '>') {
+			char *filename;
+			filename = strtok(paramstring + i + 1, " ");
+			stream = fopen(filename, "w");
+			if(!stream) {
+				perror("Failed to open output file");
+				free_results(res);
+				return;
+			}
+			break;
+		} else if(paramstring[i] == '|') {
+			break;
+		}
+	}
+
 	if(res) {
-		output_results(res, action, stdout);
+		output_results(res, action, stream);
 		free_results(res);
+		if(stream != stdout) fclose(stream);
 	}
 }
 
@@ -67,21 +91,11 @@ static void print(sql_buffer *sqlbuf)
 	sqlbuf->next--;
 }
 
-int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action)
+int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	int reset = 0;
 
 	switch(action) {
-	case 'C':  // CSV
-	case 'g':  // horizontal
-	case 'G':  // vertical
-	case 'H':  // HTML
-	case 'J':  // JSON
-	case 'T':  // TSV
-	case 'X':  // XML
-		go(conn, sqlbuf, action);
-		reset = 1;
-		break;
 	case 'c':  // clear
 		sqlbuf->next = 0;
 		reset = 1;
@@ -98,6 +112,10 @@ int run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action)
 		break;
 	case 's':  // save
 		// TODO: save to named buffer
+		break;
+	default:
+		go(conn, sqlbuf, action, paramstring);
+		reset = 1;
 		break;
 	}
 
