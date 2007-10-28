@@ -1,10 +1,10 @@
 /*
  * TODO: trap Ctrl-C and kill query instead (SQLCancel?), or just clear buffer if we're not running a query
  *       multiple result sets (SQLMoreResults)
- *       pipes and redirects
  *       batch mode?
  *       tab completion - commands as a minimum, maybe tables etc too?
  *       regression tests using SQLite
+ *       pipe to less -F by default if no pipe or redirect specified? (or user-configurable default pipe)
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
