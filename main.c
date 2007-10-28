@@ -97,9 +97,7 @@ void *main_loop(void *d)
 					if(action == 'q') return 0;
 					run_action(data->conn, mainbuf, action, paramstring);
 
-					if(mainbuf->next > 1) {
-						history_add(mainbuf, line + i);
-					}
+					history_add(mainbuf, line + i);
 
 					reset = 1;
 
