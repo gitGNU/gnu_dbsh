@@ -35,15 +35,37 @@ db_results *run_command(SQLHDBC conn, char *line)
 		res = get_columns(conn, params[0], params[1], params[2]);
 	} else if(!strcmp(command, "schemas")) {
 		res = get_tables(conn, "%", "%", 0);
+	} else if(!strcmp(command, "set")) {
+		if(params[0] && params[1]) {
+			char *name;
+
+			name = prefix_var_name(params[0]);
+
+			if(name) {
+				if(setenv(name, params[1], 1) == -1) {
+					perror("Failed to set variable");
+				}
+
+				free(name);
+			} else {
+				perror("Error setting variable");
+			}
+
+		} else {
+			printf(_("Usage: set <name> <value>\n"));
+		}
 	} else if(!strcmp(command, "show")) {
 		if(params[0]) {
 			char *name, *value;
 
 			name = prefix_var_name(params[0]);
+
 			if(name) {
 				value = getenv(name);
 				if(value) printf("%s\n", value);
 				else printf(_("(not set)\n"));
+
+				free(name);
 
 			} else {
 				perror("Error getting variable");
