@@ -22,11 +22,16 @@ db_results *run_command(SQLHDBC conn, char *line)
 	line += i + 1;
 	for(i = 0; i < 4; i++) {
 		params[i] = strtok_r(line, " ", &saveptr);
+		if(params[i] && !strcmp(params[i], "NULL")) params[i] = 0;
 		line = 0;
 	}
 
-	if(!strcmp(command, "columns")) {
+	if(!strcmp(command, "catalogs")) {
+		res = get_tables(conn, "%", 0, 0);
+	} else if(!strcmp(command, "columns")) {
 		res = get_columns(conn, params[0], params[1], params[2]);
+	} else if(!strcmp(command, "schemas")) {
+		res = get_tables(conn, "%", "%", 0);
 	} else if(!strcmp(command, "tables")) {
 		res = get_tables(conn, params[0], params[1], params[2]);
 	} else {
