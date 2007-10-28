@@ -28,6 +28,7 @@
 #include "action.h"
 #include "buffer.h"
 #include "db.h"
+#include "rc.h"
 #include "signal.h"
 
 
@@ -42,21 +43,6 @@ void usage(const char *cmd)
 {
 	printf(_("Usage: %s -l\n       %s <dsn> [<username>] [<password>]\n"),
 	       cmd, cmd);
-}
-
-const char *get_history_filename()
-{
-	static char filename[1024];
-	char *home;
-
-	home = getenv("HOME");
-
-	if(home) {
-		snprintf(filename, 1024, "%s/.dbsh_history", home);
-		return filename;
-	}
-
-	return 0;
 }
 
 void *main_loop(void *d)
@@ -195,10 +181,12 @@ int main(int argc, char *argv[])
 
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
 
-	signal_handler_install();
+	read_rc_file();
 
 	using_history();
 	read_history(get_history_filename());
+
+	signal_handler_install();
 
 	scm_with_guile(main_loop, &data);
 
