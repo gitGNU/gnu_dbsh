@@ -6,6 +6,7 @@
  *       regression tests using SQLite
  *       cope with result set being too large to fit in memory
  *       separate history by DSN?
+ *       newlines in data break horizontal display
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
