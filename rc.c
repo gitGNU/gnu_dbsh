@@ -66,6 +66,8 @@ char *prefix_var_name(const char *name)
 			prefixed_name[j++] = toupper(name[i]);
 	}
 
+	prefixed_name[j] = 0;
+
 	return prefixed_name;
 }
 
