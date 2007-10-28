@@ -5,6 +5,7 @@
  *       tab completion - commands as a minimum, maybe tables etc too?
  *       regression tests using SQLite
  *       pipe to less -F by default if no pipe or redirect specified? (or user-configurable default pipe)
+ *       hide password in ps
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
@@ -20,11 +21,20 @@
 #include <readline/readline.h>
 #include <readline/history.h>
 
+#include <libguile.h>
+
 #include "common.h"
 #include "action.h"
 #include "buffer.h"
 #include "db.h"
 
+
+struct main_data
+{
+	const char *dsn;
+	SQLHENV env;
+	SQLHDBC conn;
+};
 
 void usage(const char *cmd)
 {
@@ -47,8 +57,9 @@ const char *get_history_filename()
 	return 0;
 }
 
-void main_loop(const char *dsn, SQLHDBC conn)
+void *main_loop(void *d)
 {
+	struct main_data *data = (struct main_data *) d;
 	sql_buffer *mainbuf;
 	char prompt[16];
 	char *line;
@@ -65,7 +76,7 @@ void main_loop(const char *dsn, SQLHDBC conn)
 	reset = 0;
 
 	for(;;) {
-		snprintf(prompt, 16, "%s %d> ", dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
+		snprintf(prompt, 16, "%s %d> ", data->dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
 
 		line = readline(prompt);
 		if(!line) {
@@ -99,8 +110,8 @@ void main_loop(const char *dsn, SQLHDBC conn)
 						paramstring = "";
 					}
 
-					if(action == 'q') return;
-					run_action(conn, mainbuf, action, paramstring);
+					if(action == 'q') return 0;
+					run_action(data->conn, mainbuf, action, paramstring);
 
 					if(mainbuf->next > 1) {
 						char *histentry;
@@ -147,21 +158,23 @@ void main_loop(const char *dsn, SQLHDBC conn)
 
 		free(line);
 	}
+
+	return 0;
 }
 
 int main(int argc, char *argv[])
 {
 	int opt;
-	char *dsn = (char *) 0, *user = (char *) 0, *pass = (char *) 0;
-	SQLHENV env;
-	SQLHDBC conn;
+	struct main_data data;
+	char *user = (char *) 0, *pass = (char *) 0;
 
-	env = alloc_env();
+
+	data.env = alloc_env();
 
 	while((opt = getopt(argc, argv, "l")) != -1) {
 		switch(opt) {
 		case 'l':
-			list_all_dsns(env);
+			list_all_dsns(data.env);
 			return 0;
 			break;
 		}
@@ -172,22 +185,23 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	dsn = argv[optind++];
+	data.dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];
 	if(argc - optind > 0) pass = argv[optind++];
 
-	conn = connect_dsn(env, dsn, user, pass);
+	data.conn = connect_dsn(data.env, data.dsn, user, pass);
 
 	using_history();
 	read_history(get_history_filename());
 
-	main_loop(dsn, conn);
+	scm_with_guile(main_loop, &data);
 
 	write_history(get_history_filename());
 
-	SQLDisconnect(conn);
-	SQLFreeHandle(SQL_HANDLE_DBC, conn);
-	SQLFreeHandle(SQL_HANDLE_ENV, env);
+	SQLDisconnect(data.conn);
+	SQLFreeHandle(SQL_HANDLE_DBC, data.conn);
+	SQLFreeHandle(SQL_HANDLE_ENV, data.env);
 
 	return 0;
 }
+

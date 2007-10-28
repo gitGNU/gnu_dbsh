@@ -5,6 +5,8 @@
 #include <string.h>
 #include <unistd.h>
 
+#include <libguile.h>
+
 #include "common.h"
 #include "action.h"
 #include "buffer.h"
@@ -14,13 +16,15 @@
 
 static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 {
-	db_results *res;
+	db_results *res = NULL;
 	FILE *stream;
 	int stype;
 	int i;
 
 	if(sqlbuf->buf[0] == '*') {  // TODO: configurable command character
 		res = run_command(conn, sqlbuf->buf);
+	} else if(sqlbuf->buf[0] == '(') {
+		scm_c_eval_string(sqlbuf->buf);
 	} else {
 		res = execute_query(conn, sqlbuf->buf);
 	}
