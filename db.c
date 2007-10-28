@@ -281,14 +281,8 @@ void cancel_query()
 {
 	SQLRETURN r;
 
-	printf("cancel_query...\n");
-
 	if(current_statement) {
-
-		printf("current_statement set\n");
-
 		r = SQLCancel(*current_statement);
-
 		if(!SUCCESS(r)) report_error(SQL_HANDLE_STMT, *current_statement);
 	} else {
 		printf("current_statement not set\n");
