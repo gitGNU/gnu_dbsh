@@ -6,6 +6,7 @@
  *       regression tests using SQLite
  *       pipe to less -F by default if no pipe or redirect specified? (or user-configurable default pipe)
  *       hide password in ps
+ *       cope with result set being too large to fit in memory
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
@@ -14,6 +15,7 @@
  *       etc
  */
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -27,6 +29,7 @@
 #include "action.h"
 #include "buffer.h"
 #include "db.h"
+#include "signal.h"
 
 
 struct main_data
@@ -190,6 +193,8 @@ int main(int argc, char *argv[])
 	if(argc - optind > 0) pass = argv[optind++];
 
 	data.conn = connect_dsn(data.env, data.dsn, user, pass);
+
+	signal_handler_install();
 
 	using_history();
 	read_history(get_history_filename());

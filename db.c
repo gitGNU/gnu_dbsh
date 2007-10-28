@@ -6,12 +6,15 @@
 #include "db.h"
 
 
+#define SUCCESS(r) (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO)
+#define report_error(t, h) _report_error(t, h,  __FILE__, __LINE__)
+
+SQLHSTMT *current_statement;
+
 int list_dsns(SQLHENV, SQLUSMALLINT);
 void time_taken(struct timeval *);
 db_results *fetch_results(SQLHSTMT, struct timeval);
 
-#define SUCCESS(r) (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO)
-#define report_error(t, h) _report_error(t, h,  __FILE__, __LINE__)
 
 
 int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, int line)
@@ -144,7 +147,10 @@ db_results *execute_query(SQLHDBC conn, const char *buf)
 	}
 
 	gettimeofday(&taken, 0);
+
+	current_statement = &st;
 	r = SQLExecDirect(st, (SQLCHAR *) buf, SQL_NTS);
+
 	time_taken(&taken);
 
 	if(!SUCCESS(r)) {
@@ -266,8 +272,27 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		}
 	}
 
+	current_statement = 0;
 	SQLFreeHandle(SQL_HANDLE_STMT, st);
 	return res;
+}
+
+void cancel_query()
+{
+	SQLRETURN r;
+
+	printf("cancel_query...\n");
+
+	if(current_statement) {
+
+		printf("current_statement set\n");
+
+		r = SQLCancel(*current_statement);
+
+		if(!SUCCESS(r)) report_error(SQL_HANDLE_STMT, *current_statement);
+	} else {
+		printf("current_statement not set\n");
+	}
 }
 
 db_results *get_tables(SQLHDBC conn, const char *catalog,
@@ -286,6 +311,7 @@ db_results *get_tables(SQLHDBC conn, const char *catalog,
 	}
 
 	gettimeofday(&taken, 0);
+	current_statement = st;
 	r = SQLTables(st,
 		      (SQLCHAR *) catalog, SQL_NTS,
 		      (SQLCHAR *) schema, SQL_NTS,
@@ -309,6 +335,7 @@ db_results *get_columns(SQLHDBC conn, const char *catalog,
 	struct timeval taken;
 
 	gettimeofday(&taken, 0);
+	current_statement = st;
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	time_taken(&taken);
 
