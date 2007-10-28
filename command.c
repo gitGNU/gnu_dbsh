@@ -1,9 +1,12 @@
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "common.h"
 #include "db.h"
+#include "rc.h"
+
 
 db_results *run_command(SQLHDBC conn, char *line)
 {
@@ -32,6 +35,22 @@ db_results *run_command(SQLHDBC conn, char *line)
 		res = get_columns(conn, params[0], params[1], params[2]);
 	} else if(!strcmp(command, "schemas")) {
 		res = get_tables(conn, "%", "%", 0);
+	} else if(!strcmp(command, "show")) {
+		if(params[0]) {
+			char *name, *value;
+
+			name = prefix_var_name(params[0]);
+			if(name) {
+				value = getenv(name);
+				if(value) printf("%s\n", value);
+				else printf(_("(not set)\n"));
+
+			} else {
+				perror("Error getting variable");
+			}
+		} else {
+			printf(_("Usage: show <config variable>\n"));
+		}
 	} else if(!strcmp(command, "tables")) {
 		res = get_tables(conn, params[0], params[1], params[2]);
 	} else {

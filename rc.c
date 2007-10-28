@@ -4,13 +4,13 @@
 #include <string.h>
 
 #include "common.h"
+#include "rc.h"
 
 
 void read_rc_file()
 {
 	char buffer[1024];
-	char *home, *name, *value, *prefixed_name;
-	int i, j, l;
+	char *home, *name, *value;
 	FILE *rc;
 
 	home = getenv("HOME");
@@ -22,30 +22,18 @@ void read_rc_file()
 
 	while(fgets(buffer, 1024, rc)) {
 
-		name = strtok(buffer, "=");
-		value = strtok(NULL, "=");
+		name = strtok(buffer, "=\n");
+		value = strtok(NULL, "=\n");
 
 		if(name && value) {
+			name = prefix_var_name(name);
 
-			l = strlen(name);
-
-			prefixed_name = malloc(l + 6);
-			if(!prefixed_name) {
-				perror(_("Error reading rc file"));
-				return;
+			if(name) {
+				setenv(name, value, 1);
+				free(name);
+			} else {
+				perror("Error reading rc file");
 			}
-
-			strcpy(prefixed_name, "DBSH_");
-
-			j = 5;
-			for(i = 0; i < l; i++) {
-				if(!isspace(name[i]))
-					prefixed_name[j++] = toupper(name[i]);
-			}
-
-			setenv(prefixed_name, value, 1);
-
-			free(prefixed_name);
 		}
 	}
 
@@ -58,6 +46,27 @@ void read_rc_file()
 	if(!getenv("DBSH_COMMAND_CHARS"))  setenv("DBSH_COMMAND_CHARS",  "*", 1);
 	if(!getenv("DBSH_DEFAULT_ACTION")) setenv("DBSH_DEFAULT_ACTION", "g", 1);
 	if(!getenv("DBSH_PROMPT"))         setenv("DBSH_PROMPT",         "{dsn} {line}> ", 1);
+}
+
+char *prefix_var_name(const char *name)
+{
+	char *prefixed_name;
+	int i, j, l;
+
+	l = strlen(name);
+
+	prefixed_name = malloc(l + 6);
+	if(!prefixed_name) return 0;
+
+	strcpy(prefixed_name, "DBSH_");
+
+	j = 5;
+	for(i = 0; i < l; i++) {
+		if(!isspace(name[i]))
+			prefixed_name[j++] = toupper(name[i]);
+	}
+
+	return prefixed_name;
 }
 
 const char *get_history_filename()
