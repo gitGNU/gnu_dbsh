@@ -1,4 +1,4 @@
-OBJS = main.o action.o buffer.o command.o db.o history.o output.o rc.o results.o rsignal.o
+OBJS = main.o action.o buffer.o command.o db.o history.o output.o rc.o signal.o
 CFLAGS = -Wall -Werror `guile-config compile`
 
 dbsh: ${OBJS}

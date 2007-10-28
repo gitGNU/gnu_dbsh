@@ -1,11 +1,24 @@
 #ifndef DB_H
 #define DB_H
 
+#include <sys/time.h>
+#include <time.h>
+
 #include <sql.h>
 #include <sqlext.h>
 
-#include "results.h"
+typedef struct db_results db_results;
+typedef struct db_column db_column;
 
+struct db_results {
+	SQLSMALLINT ncols;
+	SQLINTEGER nrows;
+	SQLINTEGER nwarnings;
+	char **cols;
+	char ***data;
+	char **warnings;
+	struct timeval time_taken;
+};
 
 SQLHENV alloc_env();
 void list_all_dsns(SQLHENV);
