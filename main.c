@@ -4,7 +4,6 @@
  *       batch mode?
  *       tab completion - commands as a minimum, maybe tables etc too?
  *       regression tests using SQLite
- *       pipe to less -F by default if no pipe or redirect specified? (or user-configurable default pipe)
  *       cope with result set being too large to fit in memory
  *
  *       prepared statement support:
@@ -20,14 +19,13 @@
 #include <unistd.h>
 
 #include <readline/readline.h>
-#include <readline/history.h>
-
 #include <libguile.h>
 
 #include "common.h"
 #include "action.h"
 #include "buffer.h"
 #include "db.h"
+#include "history.h"
 #include "rc.h"
 #include "signal.h"
 
@@ -75,8 +73,6 @@ void *main_loop(void *d)
 		len = strlen(line);
 		if(len) {
 
-			// TODO: interpret single character as action?
-
 			for(i = 0; i < len; i++) {
 
 				// TODO: configurable escape char(s)
@@ -102,21 +98,7 @@ void *main_loop(void *d)
 					run_action(data->conn, mainbuf, action, paramstring);
 
 					if(mainbuf->next > 1) {
-						char *histentry;
-						char *p;
-
-						histentry = p = malloc(mainbuf->next + strlen(line + i) + 1);
-						if(histentry) {
-							strcpy(histentry, mainbuf->buf);
-							strcat(histentry, line + i);
-							while((p = strchr(p, '\n'))) *p = ' ';
-
-							add_history(histentry);
-							free(histentry);
-
-							// This can be removed once this client is stable enough to trust
-							write_history(get_history_filename());
-						}
+						history_add(mainbuf, line + i);
 					}
 
 					reset = 1;
@@ -182,15 +164,12 @@ int main(int argc, char *argv[])
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
 
 	read_rc_file();
-
-	using_history();
-	read_history(get_history_filename());
-
+	history_start();
 	signal_handler_install();
 
 	scm_with_guile(main_loop, &data);
 
-	write_history(get_history_filename());
+	history_end();
 
 	SQLDisconnect(data.conn);
 	SQLFreeHandle(SQL_HANDLE_DBC, data.conn);

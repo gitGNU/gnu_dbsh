@@ -70,18 +70,3 @@ char *prefix_var_name(const char *name)
 
 	return prefixed_name;
 }
-
-const char *get_history_filename()
-{
-	static char filename[1024];
-	char *home;
-
-	home = getenv("HOME");
-
-	if(home) {
-		snprintf(filename, 1024, "%s/.dbsh_history", home);
-		return filename;
-	}
-
-	return 0;
-}
