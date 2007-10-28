@@ -5,6 +5,7 @@
  *       tab completion - commands as a minimum, maybe tables etc too?
  *       regression tests using SQLite
  *       cope with result set being too large to fit in memory
+ *       separate history by DSN?
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?

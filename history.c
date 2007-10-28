@@ -29,14 +29,12 @@ void history_start()
 void history_add(sql_buffer *buf, const char *action_line)
 {
 	char *histentry;
-	char *p;
 	HIST_ENTRY *prev;
 
-	histentry = p = malloc(buf->next + strlen(action_line) + 1);
+	histentry = malloc(buf->next + strlen(action_line) + 1);
 	if(histentry) {
 		strcpy(histentry, buf->buf);
 		strcat(histentry, action_line);
-		while((p = strchr(p, '\n'))) *p = ' ';
 
 		using_history();
 
