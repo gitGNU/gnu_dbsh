@@ -30,7 +30,7 @@ void history_add(sql_buffer *buf, const char *action_line)
 {
 	char *histentry;
 	char *p;
-
+	HIST_ENTRY *prev;
 
 	histentry = p = malloc(buf->next + strlen(action_line) + 1);
 	if(histentry) {
@@ -38,8 +38,14 @@ void history_add(sql_buffer *buf, const char *action_line)
 		strcat(histentry, action_line);
 		while((p = strchr(p, '\n'))) *p = ' ';
 
-		add_history(histentry);
+		using_history();
+
+		prev = previous_history();
+		if(!prev || strcmp(prev->line, histentry)) add_history(histentry);
+
 		free(histentry);
+
+		using_history();
 
 		// This can be removed once this client is stable enough to trust
 		write_history(get_history_filename());
