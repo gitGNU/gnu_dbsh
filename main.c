@@ -5,7 +5,6 @@
  *       tab completion - commands as a minimum, maybe tables etc too?
  *       regression tests using SQLite
  *       pipe to less -F by default if no pipe or redirect specified? (or user-configurable default pipe)
- *       hide password in ps
  *       cope with result set being too large to fit in memory
  *
  *       prepared statement support:
@@ -167,7 +166,7 @@ void *main_loop(void *d)
 
 int main(int argc, char *argv[])
 {
-	int opt;
+	int opt, i;
 	struct main_data data;
 	char *user = (char *) 0, *pass = (char *) 0;
 
@@ -193,6 +192,8 @@ int main(int argc, char *argv[])
 	if(argc - optind > 0) pass = argv[optind++];
 
 	data.conn = connect_dsn(data.env, data.dsn, user, pass);
+
+	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
 
 	signal_handler_install();
 
