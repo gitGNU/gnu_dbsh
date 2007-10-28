@@ -68,14 +68,9 @@ void output_horiz(db_results *res, FILE *s)
 {
 	SQLSMALLINT i;
 	SQLINTEGER j;
-	int screen_width;
 	int *col_widths;
-	int total_width;
 
-       	// TODO: use terminfo
-	screen_width = 128;
-
-	col_widths = calloc(res->ncols, sizeof(int));
+ 	col_widths = calloc(res->ncols, sizeof(int));
 
 	for(i = 0; i < res->ncols; i++) {
 		col_widths[i] = strlen(res->cols[i]);
@@ -88,14 +83,6 @@ void output_horiz(db_results *res, FILE *s)
 			else w = NULL_WIDTH;
 			if(w > col_widths[i]) col_widths[i] = w;
 		}
-	}
-
-	total_width = res->ncols * 3 + 1;
-	for(i = 0; i < res->ncols; i++) total_width += col_widths[i];
-
-	if(total_width > screen_width) {
-		// TODO: super truncating algorithm
-		fprintf(s, "Too wide!\n");
 	}
 
 	output_horiz_separator(s, col_widths, res->ncols);
