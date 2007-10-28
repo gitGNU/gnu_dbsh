@@ -284,8 +284,6 @@ void cancel_query()
 	if(current_statement) {
 		r = SQLCancel(*current_statement);
 		if(!SUCCESS(r)) report_error(SQL_HANDLE_STMT, *current_statement);
-	} else {
-		printf("current_statement not set\n");
 	}
 }
 
