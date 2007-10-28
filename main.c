@@ -47,7 +47,7 @@ void *main_loop(void *d)
 {
 	struct main_data *data = (struct main_data *) d;
 	sql_buffer *mainbuf;
-	char prompt[16];
+	char prompt[64];  // TODO: dynamic?
 	char *line;
 	int lnum, len, i;
 	int reset;
@@ -62,7 +62,7 @@ void *main_loop(void *d)
 	reset = 0;
 
 	for(;;) {
-		snprintf(prompt, 16, "%s %d> ", data->dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
+		snprintf(prompt, 64, "%s %d> ", data->dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
 
 		line = readline(prompt);
 		if(!line) {
