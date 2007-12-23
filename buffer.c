@@ -20,9 +20,8 @@ sql_buffer *buffer_alloc(size_t len)
 int buffer_append(sql_buffer *buf, char c)
 {
 	if(buf->next >= buf->len) {
-		buf->next = 0;
-		printf("SQL Buffer size exceeded - contents discarded\n");
-		return 0;
+		buf->len *= 2;
+		if(!(buf->buf = realloc(buf->buf, buf->len))) err_system();
 	}
 
 	buf->buf[buf->next++] = c;

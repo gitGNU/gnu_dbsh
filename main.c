@@ -57,7 +57,7 @@ void *main_loop(void *c)
 	int lnum, len, i;
 	int reset;
 
-	mainbuf = buffer_alloc(1024);  // TODO: make buffer size configurable
+	mainbuf = buffer_alloc(1024);
 
 	lnum = 1;
 	reset = 0;
@@ -79,9 +79,7 @@ void *main_loop(void *c)
 					char action;
 					char *paramstring;
 
-					if(!buffer_append(mainbuf, '\0')) {
-						break;
-					}
+					buffer_append(mainbuf, '\0');
 
 					if(i < (len - 1)) {
 						action = line[i + 1];
@@ -101,24 +99,19 @@ void *main_loop(void *c)
 					break;
 
 				} else {
-					if(reset) {
-						mainbuf->next = 0;
-						reset = 0;
-					}
 
-					if(!buffer_append(mainbuf, line[i])) {
-						reset = 1;
-						break;
-					}
+					buffer_append(mainbuf, line[i]);
 				}
 			}
 
-			if(!reset) {
-				if(buffer_append(mainbuf, '\n')) lnum++;
-				else reset = 1;
+			if(reset) {
+				mainbuf->next = 0;
+				lnum = 1;
+				reset = 0;
+			} else {
+				buffer_append(mainbuf, '\n');
+				lnum++;
 			}
-
-			if(reset) lnum = 1;
 		}
 
 		free(line);
