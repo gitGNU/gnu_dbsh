@@ -9,6 +9,7 @@ specify editor as argument to \e? (or named buffer?)
 actions as shortcuts for commands, eg \r for reconnect (or do away with commands and only have actions?)
 interpret single chars on a line as actions? (eg q) - configurable
 guile support?
+better portability - for one thing, make readline optional
 
 prepared statement support:
 SELECT * FROM <table> WHERE id = ?
