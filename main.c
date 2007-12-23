@@ -55,12 +55,12 @@ void *main_loop(void *c)
 	sql_buffer *mainbuf;
 	char *line;
 	int lnum, len, i;
-	int reset;
+	signed char action;
+	char *paramstring;
 
 	mainbuf = buffer_alloc(1024);
 
 	lnum = 1;
-	reset = 0;
 
 	for(;;) {
 		line = readline(prompt_render(*connp, mainbuf));
@@ -72,22 +72,32 @@ void *main_loop(void *c)
 		len = strlen(line);
 		if(len) {
 
+			action = -1;
+
 			for(i = 0; i < len; i++) {
 
-				if(strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {  // TODO: allow escaping with double backslash
-
-					char action;
-					char *paramstring;
-
-					buffer_append(mainbuf, '\0');
+				if(strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
 
 					if(i < (len - 1)) {
-						action = line[i + 1];
-						paramstring = line + i + 1;
+
+						if(strchr(getenv("DBSH_ACTION_CHARS"), line[i + 1])) {
+
+							i++;
+
+						} else {
+							action = line[i + 1];
+							paramstring = line + i + 1;
+						}
+
 					} else {
-						action = 0;
+						action = 0;  // default;
 						paramstring = "";
 					}
+				}
+
+				if(action != -1) {
+
+					buffer_append(mainbuf, '\0');
 
 					if(action == 'q') return 0;
 
@@ -95,8 +105,6 @@ void *main_loop(void *c)
 						run_action(connp, mainbuf, action, paramstring);
 						history_add(mainbuf, line + i);
 					}
-
-					reset = 1;
 
 					break;
 
@@ -106,10 +114,9 @@ void *main_loop(void *c)
 				}
 			}
 
-			if(reset) {
+			if(action != -1) {
 				mainbuf->next = 0;
 				lnum = 1;
-				reset = 0;
 			} else {
 				buffer_append(mainbuf, '\n');
 				lnum++;
