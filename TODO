@@ -10,6 +10,7 @@ actions as shortcuts for commands, eg \r for reconnect (or do away with commands
 interpret single chars on a line as actions? (eg q) - configurable
 guile support?
 better portability - for one thing, make readline optional
+better support for non-ASCII character sets
 
 prepared statement support:
 SELECT * FROM <table> WHERE id = ?
