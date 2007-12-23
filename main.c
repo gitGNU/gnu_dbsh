@@ -38,6 +38,7 @@
 #include "db.h"
 #include "history.h"
 #include "output.h"
+#include "prompt.h"
 #include "rc.h"
 #include "signal.h"
 
@@ -52,8 +53,6 @@ void *main_loop(void *c)
 {
 	SQLHDBC *connp = (SQLHDBC *) c;
 	sql_buffer *mainbuf;
-	char dsn[64];
-	char prompt[64];  // TODO: dynamic?
 	char *line;
 	int lnum, len, i;
 	int reset;
@@ -63,12 +62,8 @@ void *main_loop(void *c)
 	lnum = 1;
 	reset = 0;
 
-	db_info(*connp, SQL_DATA_SOURCE_NAME, dsn, 64);
-
 	for(;;) {
-		snprintf(prompt, 64, "%s %d> ", dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
-
-		line = readline(prompt);
+		line = readline(prompt_render(*connp, mainbuf));
 		if(!line) {
 			printf("\n");
 			break;
@@ -92,7 +87,7 @@ void *main_loop(void *c)
 						action = line[i + 1];
 						paramstring = line + i + 1;
 					} else {
-						action = 'g';
+						action = 0;
 						paramstring = "";
 					}
 
