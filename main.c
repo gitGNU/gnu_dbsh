@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
 	history_start();
 	signal_handler_install();
 
-	scm_with_guile(main_loop, &conn);
+	main_loop(&conn);
 
 	history_end();
 

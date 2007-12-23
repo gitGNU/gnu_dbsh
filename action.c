@@ -31,8 +31,6 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstrin
 
 	if(strchr(getenv("DBSH_COMMAND_CHARS"), sqlbuf->buf[0])) {
 		res = run_command(connp, sqlbuf->buf);
-	} else if(sqlbuf->buf[0] == '(') {
-		scm_c_eval_string(sqlbuf->buf);
 	} else {
 		res = execute_query(*connp, sqlbuf->buf);
 	}
