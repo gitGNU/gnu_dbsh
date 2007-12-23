@@ -405,22 +405,23 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	SQLRETURN r;
 	struct timeval taken;
 
-	gettimeofday(&taken, 0);
-	current_statement = st;
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
-	time_taken(&taken);
-
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
 			printf(_("Failed to allocate statement handle\n"));
 		return 0;
 	}
 
+	gettimeofday(&taken, 0);
+	current_statement = st;
+
 	r = SQLColumns(st,
 		      (SQLCHAR *) catalog, SQL_NTS,
 		      (SQLCHAR *) schema, SQL_NTS,
 		      (SQLCHAR *) table, SQL_NTS,
-		      (SQLCHAR *) 0, 0);
+		      (SQLCHAR *) "%", SQL_NTS);
+	time_taken(&taken);
+
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
 			printf(_("Failed to list columns\n"));
