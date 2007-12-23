@@ -14,30 +14,29 @@ void read_rc_file()
 	char *home, *name, *value;
 	FILE *rc;
 
-	home = getenv("HOME");
-	if(!home) return;
+	if((home = getenv("HOME"))) {
 
-	snprintf(buffer, 1024, "%s/.dbshrc", home);
+		snprintf(buffer, 1024, "%s/.dbshrc", home);
 
-	if(!(rc = fopen(buffer, "r"))) return;
+		if((rc = fopen(buffer, "r"))) {
 
-	while(fgets(buffer, 1024, rc)) {
+			while(fgets(buffer, 1024, rc)) {
 
-		name = strtok(buffer, "=\n");
-		value = strtok(NULL, "=\n");
+				name = strtok(buffer, "=\n");
+				value = strtok(NULL, "=\n");
 
-		if(name && value) {
-			name = prefix_var_name(name);
-			setenv(name, value, 1);
-			free(name);
+				if(name && value) {
+					name = prefix_var_name(name);
+					setenv(name, value, 1);
+					free(name);
+				}
+			}
+
+			fclose(rc);
 		}
 	}
 
-	fclose(rc);
-
-
 	// Default settings
-
 	if(!getenv("DBSH_ACTION_CHARS"))   setenv("DBSH_ACTION_CHARS",   "\\", 1);
 	if(!getenv("DBSH_COMMAND_CHARS"))  setenv("DBSH_COMMAND_CHARS",  "*", 1);
 	if(!getenv("DBSH_DEFAULT_ACTION")) setenv("DBSH_DEFAULT_ACTION", "g", 1);
