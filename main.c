@@ -11,6 +11,7 @@
  *       do away with line numbers, since they don't make sense anyway? (or make them make sense by counting newlines?)
  *       specify editor as argument to \e? (or named buffer?)
  *       text truncated?
+ *       actions as shortcuts for commands, eg \r for reconnect (or do away with commands and only have actions?)
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
