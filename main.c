@@ -50,7 +50,7 @@ void usage(const char *cmd)
 
 void *main_loop(void *c)
 {
-	SQLHDBC conn = (SQLHDBC) c;
+	SQLHDBC *connp = (SQLHDBC *) c;
 	sql_buffer *mainbuf;
 	char dsn[64];
 	char prompt[64];  // TODO: dynamic?
@@ -63,7 +63,7 @@ void *main_loop(void *c)
 	lnum = 1;
 	reset = 0;
 
-	db_info(conn, SQL_DATA_SOURCE_NAME, dsn, 64);
+	db_info(*connp, SQL_DATA_SOURCE_NAME, dsn, 64);
 
 	for(;;) {
 		snprintf(prompt, 64, "%s %d> ", dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
@@ -99,7 +99,7 @@ void *main_loop(void *c)
 					}
 
 					if(action == 'q') return 0;
-					run_action(conn, mainbuf, action, paramstring);
+					run_action(connp, mainbuf, action, paramstring);
 
 					history_add(mainbuf, line + i);
 
@@ -172,7 +172,7 @@ int main(int argc, char *argv[])
 	history_start();
 	signal_handler_install();
 
-	scm_with_guile(main_loop, conn);
+	scm_with_guile(main_loop, &conn);
 
 	history_end();
 

@@ -9,6 +9,7 @@
 
 void list_all_dsns();
 SQLHDBC db_connect(const char *, const char *, const char *);
+int db_reconnect(SQLHDBC *conn, const char *);
 void db_info(SQLHDBC, SQLUSMALLINT, char *, int);
 results *db_conn_details(SQLHDBC);
 results *execute_query(SQLHDBC, const char *);

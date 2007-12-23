@@ -43,17 +43,20 @@ static int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, i
 
 static SQLHENV alloc_env()
 {
-	SQLHENV env;
+	static SQLHENV env = {0};
 	SQLRETURN r;
 
+	if(!env) {
 
-	r = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
-	if(!SUCCESS(r)) err_fatal(_("Failed to allocate environment handle\n"));
+		r = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
+		if(!SUCCESS(r)) err_fatal(_("Failed to allocate environment handle\n"));
 
-	r = SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (SQLPOINTER) SQL_OV_ODBC3, 0);
-	if(!SUCCESS(r)) {
-		SQLFreeHandle(SQL_HANDLE_ENV, env);
-		err_fatal(_("Failed to set ODBC version to 3\n"));
+		r = SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (SQLPOINTER) SQL_OV_ODBC3, 0);
+		if(!SUCCESS(r)) {
+			SQLFreeHandle(SQL_HANDLE_ENV, env);
+			err_fatal(_("Failed to set ODBC version to 3\n"));
+		}
+
 	}
 
 	return env;
@@ -96,10 +99,7 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 	env = alloc_env();
 
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
-	if(!SUCCESS(r)) {
-		SQLFreeHandle(SQL_HANDLE_ENV, env);
-		err_fatal(_("Failed to allocate connection handle\n"));
-	}
+	if(!SUCCESS(r)) err_fatal(_("Failed to allocate connection handle\n"));
 
 	r = SQLConnect(conn,
 		       (SQLCHAR *) dsn, SQL_NTS,
@@ -108,11 +108,44 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_DBC, conn))
 			printf(_("Failed to connect to %s\n"), dsn);
-		SQLFreeHandle(SQL_HANDLE_ENV, env);
 		exit(1);
 	}
 
 	return conn;
+}
+
+int db_reconnect(SQLHDBC *conn, const char *pass)
+{
+	char dsn[256], user[256];
+	SQLHENV env;
+	SQLHDBC newconn;
+	SQLRETURN r;
+
+	db_info(*conn, SQL_DATA_SOURCE_NAME, dsn, 256);
+	db_info(*conn, SQL_USER_NAME, user, 256);
+
+	env = alloc_env();
+
+	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &newconn);
+	if(!SUCCESS(r)) err_fatal(_("Failed to allocate connection handle\n"));
+
+	r = SQLConnect(newconn,
+		       (SQLCHAR *) dsn, SQL_NTS,
+		       (SQLCHAR *) user, SQL_NTS,
+		       (SQLCHAR *) pass, SQL_NTS);
+
+	if(SUCCESS(r)) {
+		SQLDisconnect(*conn);
+		SQLFreeHandle(SQL_HANDLE_DBC, *conn);
+		*conn = newconn;
+		return 0;
+
+	} else {
+		if(!report_error(SQL_HANDLE_DBC, newconn))
+			printf(_("Failed to connect to %s\n"), dsn);
+		SQLFreeHandle(SQL_HANDLE_DBC, newconn);
+		return 1;
+	}
 }
 
 void db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)

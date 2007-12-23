@@ -75,7 +75,7 @@ static results *set(const char *name, const char *value)
 	return res;
 }
 
-results *run_command(SQLHDBC conn, char *line)
+results *run_command(SQLHDBC *connp, char *line)
 {
 	int i;
 	char command[32] = "";
@@ -101,17 +101,19 @@ results *run_command(SQLHDBC conn, char *line)
 	}
 
 	if(!strcmp(command, "catalogs")) {
-		res = get_tables(conn, "%", 0, 0);
+		res = get_tables(*connp, "%", 0, 0);
 	} else if(!strcmp(command, "columns")) {
-		res = get_columns(conn, params[0], params[1], params[2]);
+		res = get_columns(*connp, params[0], params[1], params[2]);
 	} else if(!strcmp(command, "info")) {
-		res = db_conn_details(conn);
+		res = db_conn_details(*connp);
+	} else if(!strcmp(command, "reconnect")) {
+		if(!db_reconnect(connp, params[0])) res = db_conn_details(*connp);
 	} else if(!strcmp(command, "schemas")) {
-		res = get_tables(conn, "%", "%", 0);
+		res = get_tables(*connp, "%", "%", 0);
 	} else if(!strcmp(command, "set")) {
 		res = set(params[0], params[1]);
 	} else if(!strcmp(command, "tables")) {
-		res = get_tables(conn, params[0], params[1], params[2]);
+		res = get_tables(*connp, params[0], params[1], params[2]);
 	} else {
 		printf(_("Unrecognised command: %s\n"), command);
 	}

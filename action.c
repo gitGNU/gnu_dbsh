@@ -15,7 +15,7 @@
 #include "results.h"
 
 
-static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
+static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	results *res = NULL;
 	FILE *stream;
@@ -28,11 +28,11 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 
 
 	if(sqlbuf->buf[0] == '*') {  // TODO: configurable command character
-		res = run_command(conn, sqlbuf->buf);
+		res = run_command(connp, sqlbuf->buf);
 	} else if(sqlbuf->buf[0] == '(') {
 		scm_c_eval_string(sqlbuf->buf);
 	} else {
-		res = execute_query(conn, sqlbuf->buf);
+		res = execute_query(*connp, sqlbuf->buf);
 	}
 
 	if(res) {
@@ -130,7 +130,7 @@ static void print(sql_buffer *sqlbuf)
 	printf("%s\n", sqlbuf->buf);
 }
 
-void run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
+void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	switch(action) {
 	case 'c':  // clear
@@ -150,7 +150,7 @@ void run_action(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring
 		// TODO: save to named buffer
 		break;
 	default:
-		go(conn, sqlbuf, action, paramstring);
+		go(connp, sqlbuf, action, paramstring);
 		break;
 	}
 }
