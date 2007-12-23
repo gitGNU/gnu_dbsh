@@ -27,7 +27,7 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstrin
 	// TODO: proper parsing
 
 
-	if(sqlbuf->buf[0] == '*') {  // TODO: configurable command character
+	if(strchr(getenv("DBSH_COMMAND_CHARS"), sqlbuf->buf[0])) {
 		res = run_command(connp, sqlbuf->buf);
 	} else if(sqlbuf->buf[0] == '(') {
 		scm_c_eval_string(sqlbuf->buf);
