@@ -97,8 +97,10 @@ void output_horiz(results *res, FILE *s)
 	free(col_widths);
 
 	output_warnings(res, s);
-	fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
-		res->time_taken.tv_sec, res->time_taken.tv_usec);
+
+	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
+		fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
+			res->time_taken.tv_sec, res->time_taken.tv_usec);
 }
 
 void output_vert(results *res, FILE *s)
@@ -132,8 +134,10 @@ void output_vert(results *res, FILE *s)
 	}
 
 	output_warnings(res, s);
-	fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
-		res->time_taken.tv_sec, res->time_taken.tv_usec);
+
+	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
+		fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
+			res->time_taken.tv_sec, res->time_taken.tv_usec);
 }
 
 void output_csv_row(FILE *s, const char **data, SQLSMALLINT ncols, char separator, char delimiter)
