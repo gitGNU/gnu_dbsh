@@ -1,0 +1,106 @@
+dbsh
+----
+
+Not much documentation yet, I'm afraid.  There might be something
+useful at http://code.google.com/p/dbsh/wiki/Manual, if I've bothered
+to write it.  This file contains some notes that should help you get
+started.
+
+
+License
+-------
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+
+Building
+--------
+
+./configure
+make
+su
+make install
+
+You'll need an ODBC library - I've tested with unixODBC
+(http://www.unixodbc.org) and iODBC (http://www.iodbc.org).  Consult
+the manual for your ODBC implementation for instructions on setting
+up drivers and data sources.
+
+
+Invoking
+--------
+
+dbsh -l to list available DSNs, dbsh <dsn> [<username>] [<password>]
+to connect to one.
+
+
+Actions
+-------
+
+The default action character is '\'.  This will send the SQL you've
+typed to the server.  The action character can optionally be followed
+by a letter:
+
+\g - (default) horizontal output
+\G - vertical output
+\C - CSV output
+\T - TSV output
+
+The following actions don't send the SQL to the server, they do other
+stuff instead:
+
+\e - edit buffer using $EDITOR
+\p - print contents of buffer
+\c - clear (discard) buffer
+\q - quit
+
+Any action can then be followed by a pipe ('|') or a file redirect
+('>').  These behave pretty much like you'd expect them to in the
+bourne shell (in fact, the pipe just opens a pipe straight to
+/bin/sh).
+
+Examples:
+
+> SELECT * FROM mytable\G | less
+> SELECT * FROM mytable\C > data.csv
+> SELECT * FROM mytable\p > query.sql
+
+
+dbsh commands
+-------------
+
+If the buffer begins with the command character (default '*'), it is
+treated as a dbsh command rather than SQL.  Currently available
+commands are:
+
+*set [<variable>] [<value>] - show or set config variables
+*info - connection info as displayed when you first connect
+*reconnect [<password>] - reconnect to server
+*catalogs - List catalogs
+*schemas - List schemas
+*tables - List tables
+*columns - List columns
+
+The catalog commands work with varying success among different
+drivers.  *columns doesn't seem to work at all yet.
+
+
+.dbshrc
+-------
+
+You can put config variables in ~/.dbshrc.  For example, the author's
+currently looks like this:
+
+action_chars=\;
+default_pager=less -FSin
