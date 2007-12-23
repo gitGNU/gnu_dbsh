@@ -63,10 +63,6 @@ void *main_loop(void *d)
 	int reset;
 
 	mainbuf = buffer_alloc(1024);  // TODO: make buffer size configurable
-	if(!mainbuf) {
-		printf(_("Failed to allocate SQL buffer\n"));
-		exit(1);
-	}
 
 	lnum = 1;
 	reset = 0;

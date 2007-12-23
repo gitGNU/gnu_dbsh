@@ -2,19 +2,14 @@
 #include <stdlib.h>
 
 #include "buffer.h"
+#include "err.h"
 
 sql_buffer *buffer_alloc(size_t len)
 {
 	sql_buffer *b;
 
-	b = malloc(sizeof(sql_buffer));
-	if(!b) return 0;
-
-	b->buf = malloc(len);
-	if(!b->buf) {
-		free(b);
-		return 0;
-	}
+	if(!(b = malloc(sizeof(sql_buffer)))) err_system();
+	if(!(b->buf = malloc(len))) err_system();
 
 	b->len  = len;
 	b->next = 0;
