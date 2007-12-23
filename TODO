@@ -1,0 +1,20 @@
+make signal stuff work
+multiple result sets (SQLMoreResults)
+batch mode?
+tab completion - commands as a minimum, maybe tables etc too?
+regression tests using SQLite
+separate history by DSN?
+newlines in data break horizontal display
+specify editor as argument to \e? (or named buffer?)
+actions as shortcuts for commands, eg \r for reconnect (or do away with commands and only have actions?)
+interpret single chars on a line as actions? (eg q) - configurable
+guile support?
+
+prepared statement support:
+SELECT * FROM <table> WHERE id = ?
+\g 1
+\g 2
+etc
+
+commands:
+*autocommit on|off

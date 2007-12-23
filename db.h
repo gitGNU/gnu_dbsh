@@ -20,7 +20,6 @@
 #define DB_H
 
 #include <sys/time.h>
-#include <time.h>
 
 #include <sql.h>
 #include <sqlext.h>

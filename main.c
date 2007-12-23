@@ -32,7 +32,7 @@
 #include "output.h"
 #include "prompt.h"
 #include "rc.h"
-#include "signal.h"
+#include "sig.h"
 
 
 void usage(const char *cmd)
