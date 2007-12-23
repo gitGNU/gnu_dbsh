@@ -54,13 +54,11 @@ void *main_loop(void *c)
 	SQLHDBC *connp = (SQLHDBC *) c;
 	sql_buffer *mainbuf;
 	char *line;
-	int lnum, len, i;
+	int len, i;
 	signed char action;
 	char *paramstring;
 
 	mainbuf = buffer_alloc(1024);
-
-	lnum = 1;
 
 	for(;;) {
 		line = readline(prompt_render(*connp, mainbuf));
@@ -77,18 +75,11 @@ void *main_loop(void *c)
 			for(i = 0; i < len; i++) {
 
 				if(strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
-
 					if(i < (len - 1)) {
-
-						if(strchr(getenv("DBSH_ACTION_CHARS"), line[i + 1])) {
-
-							i++;
-
-						} else {
-							action = line[i + 1];
-							paramstring = line + i + 1;
+						if(!strchr(getenv("DBSH_ACTION_CHARS"), line[++i])) {
+							action = line[i];
+							paramstring = line + i;
 						}
-
 					} else {
 						action = 0;  // default;
 						paramstring = "";
@@ -96,31 +87,22 @@ void *main_loop(void *c)
 				}
 
 				if(action != -1) {
-
 					buffer_append(mainbuf, '\0');
 
 					if(action == 'q') return 0;
-
 					if(action != 'c') {
 						run_action(connp, mainbuf, action, paramstring);
-						history_add(mainbuf, line + i);
+						history_add(mainbuf, line + i - 1);
 					}
 
 					break;
-
 				} else {
-
 					buffer_append(mainbuf, line[i]);
 				}
 			}
 
-			if(action != -1) {
-				mainbuf->next = 0;
-				lnum = 1;
-			} else {
-				buffer_append(mainbuf, '\n');
-				lnum++;
-			}
+			if(action == -1) buffer_append(mainbuf, '\n');
+			else mainbuf->next = 0;
 		}
 
 		free(line);
