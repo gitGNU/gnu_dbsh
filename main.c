@@ -36,6 +36,7 @@
 #include "buffer.h"
 #include "db.h"
 #include "history.h"
+#include "output.h"
 #include "rc.h"
 #include "signal.h"
 
@@ -137,9 +138,10 @@ int main(int argc, char *argv[])
 	SQLHDBC conn;
 	char *dsn = 0, *user = 0, *pass = 0;
 	int opt, i;
+	results *res;
 
 	setlocale(LC_ALL, "");
-
+	read_rc_file();
 
 	while((opt = getopt(argc, argv, "l")) != -1) {
 		switch(opt) {
@@ -163,7 +165,9 @@ int main(int argc, char *argv[])
 
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
 
-	read_rc_file();
+	res = db_conn_details(conn);
+	output_results(res, 0, stdout);
+
 	history_start();
 	signal_handler_install();
 

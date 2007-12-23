@@ -92,7 +92,6 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 	SQLHENV env;
 	SQLHDBC conn;
 	SQLRETURN r;
-	SQLCHAR buf[256];
 
 	env = alloc_env();
 
@@ -113,19 +112,6 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 		exit(1);
 	}
 
-	printf(_("Connected to %s\n"), dsn);
-
-	r = SQLGetInfo(conn, SQL_SERVER_NAME, buf, 256, 0);
-	if(SUCCESS(r)) printf(_("Server:  %s\n"), buf);
-
-	r = SQLGetInfo(conn, SQL_DBMS_NAME, buf, 256, 0);
-	if(SUCCESS(r)) printf(_("DBMS:    %s\n"), buf);
-
-	r = SQLGetInfo(conn, SQL_DBMS_VER, buf, 256, 0);
-	if(SUCCESS(r)) printf(_("Version: %s\n"), buf);
-
-	fputs("\n", stdout);
-
 	return conn;
 }
 
@@ -141,17 +127,27 @@ void db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 	}
 }
 
-results *db_conn_info(SQLHDBC conn)
+results *db_conn_details(SQLHDBC conn)
 {
-//	SQLRETURN r;
 	results *res;
-//	char buf[256];
+	char buf[256];
 
 	res = results_alloc();
 
 	results_set_cols(res, 2, _("name"), _("value"));
+	results_set_rows(res, 3);
 
-	// TODO
+	db_info(conn, SQL_SERVER_NAME, buf, 256);
+	res->data[0][0] = strdup(_("Server"));
+	res->data[0][1] = strdup(buf);
+
+	db_info(conn, SQL_DBMS_NAME, buf, 256);
+	res->data[1][0] = strdup(_("DBMS"));
+	res->data[1][1] = strdup(buf);
+
+	db_info(conn, SQL_DBMS_VER, buf, 256);
+	res->data[2][0] = strdup(_("Version"));
+	res->data[2][1] = strdup(buf);
 
 	return res;
 }
