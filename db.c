@@ -220,6 +220,11 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 	SQLRETURN r;
 	SQLSMALLINT i;
 	SQLINTEGER j;
+	SQLCHAR *buf;
+	SQLINTEGER buflen;
+
+	buflen = 1024;
+	if(!(buf = malloc(buflen))) err_system();
 
 	res = results_alloc();
 	res->time_taken = time_taken;
@@ -228,9 +233,18 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 	if(res->nwarnings) {
 		if(!(res->warnings = calloc(res->nwarnings, sizeof(char *)))) err_system();
 		for(j = 0; j < res->nwarnings; j++) {
-			SQLCHAR buf[1024];  // TODO: cope with data bigger than this
+			SQLSMALLINT reqlen;
 			SQLGetDiagField(SQL_HANDLE_STMT, st, j + 1,
-					SQL_DIAG_MESSAGE_TEXT, buf, 1024, 0);
+					SQL_DIAG_MESSAGE_TEXT, buf, buflen, &reqlen);
+
+			if(reqlen + 1 > buflen) {
+				buflen = reqlen + 1;
+				if(!(buf = realloc(buf, buflen))) err_system();
+
+				SQLGetDiagField(SQL_HANDLE_STMT, st, j + 1,
+						SQL_DIAG_MESSAGE_TEXT, buf, buflen, 0);
+			}
+
 			res->warnings[j] = strdup((char *) buf);
 		}
 	}
@@ -266,15 +280,24 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 	if(!(res->cols = calloc(res->ncols, sizeof(char *)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
-		SQLCHAR buf[1024];  // TODO: cope with data bigger than this
+		SQLSMALLINT reqlen;
 		SQLSMALLINT type;
 		SQLUINTEGER size;
 		SQLSMALLINT digits;
 		SQLSMALLINT nullable;
 
 		// TODO: is there a way to just get the name?
-		r = SQLDescribeCol(st, i + 1, buf, 256, 0,
+		r = SQLDescribeCol(st, i + 1, buf, buflen, &reqlen,
 				   &type, &size, &digits, &nullable);
+
+		if(reqlen + 1 > buflen) {
+			buflen = reqlen + 1;
+			if(!(buf = realloc(buf, buflen))) err_system();
+
+			r = SQLDescribeCol(st, i + 1, buf, buflen, 0,
+					   &type, &size, &digits, &nullable);
+		}
+
 		if(!SUCCESS(r)) {
 			if(!report_error(SQL_HANDLE_STMT, st))
 				printf(_("Failed to retrieve column data\n"));
@@ -306,9 +329,16 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		if(!(res->data[j] = calloc(res->ncols, sizeof(char *)))) err_system();
 
 		for(i = 0; i < res->ncols; i++) {
-			char buf[1024];  // TODO: cope with data bigger than this
-			SQLINTEGER len;
-			r = SQLGetData(st, i + 1, SQL_C_CHAR, buf, 1024, &len);
+			SQLINTEGER reqlen;
+			r = SQLGetData(st, i + 1, SQL_C_CHAR, buf, buflen, &reqlen);
+
+			if(reqlen + 1 > buflen) {
+				buflen = reqlen + 1;
+				if(!(buf = realloc(buf, buflen))) err_system();
+
+				r = SQLGetData(st, i + 1, SQL_C_CHAR, buf, buflen, &reqlen);
+			}
+
 			if(!SUCCESS(r)) {
 				if(!report_error(SQL_HANDLE_STMT, st))
 					printf(_("Failed to fetch column %d from row %ld\n"), i, j);
@@ -317,7 +347,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 				return 0;
 			}
 
-			if(len != SQL_NULL_DATA) res->data[j][i] = strdup(buf);
+			if(reqlen != SQL_NULL_DATA) res->data[j][i] = strdup((char *) buf);
 		}
 	}
 
