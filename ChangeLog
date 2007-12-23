@@ -1,0 +1,4 @@
+2007-12-23  Ben Spencer  <dangerous.ben@gmail.com>
+
+	* action.c: Removed superfluous guile include
+

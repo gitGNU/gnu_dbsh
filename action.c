@@ -23,8 +23,6 @@
 #include <string.h>
 #include <unistd.h>
 
-#include <libguile.h>
-
 #include "common.h"
 #include "action.h"
 #include "buffer.h"
