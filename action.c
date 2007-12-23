@@ -24,8 +24,10 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstrin
 	char *default_pager;
 
 
-	// TODO: proper parsing
+	if(!sqlbuf->buf[0]) return;
 
+
+	// TODO: proper parsing
 
 	if(strchr(getenv("DBSH_COMMAND_CHARS"), sqlbuf->buf[0])) {
 		res = run_command(connp, sqlbuf->buf);
