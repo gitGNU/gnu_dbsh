@@ -79,9 +79,7 @@ void *main_loop(void *c)
 
 			for(i = 0; i < len; i++) {
 
-				// TODO: configurable escape char(s)
-
-				if(line[i] == '\\' || line[i] == ';') {  // TODO: allow escaping with double backslash
+				if(strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {  // TODO: allow escaping with double backslash
 
 					char action;
 					char *paramstring;
