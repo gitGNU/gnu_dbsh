@@ -6,6 +6,7 @@
 
 #include "common.h"
 #include "db.h"
+#include "err.h"
 #include "rc.h"
 #include "results.h"
 
@@ -15,12 +16,7 @@ extern char **environ;
 
 static results *set(const char *name, const char *value)
 {
-	results *res = calloc(1, sizeof(struct results));
-
-	if(!res) {
-		perror("Error allocating result set");
-		return 0;
-	}
+	results *res = results_alloc();
 
 	results_set_cols(res, 2, _("name"), _("value"));
 
@@ -43,18 +39,17 @@ static results *set(const char *name, const char *value)
 			}
 		}
 
-		res->nrows = 1;
-		res->data = calloc(1, sizeof(char **));
-		res->data[0] = calloc(2, sizeof(char *));
-		res->data[0][0] = strdup(name);
-		res->data[0][1] = strdup(value);
+		results_set_rows(res, 1);
+
+		if(!(res->data[0][0] = strdup(name))) err_system();
+		if(!(res->data[0][1] = strdup(value))) err_system();
 
 		free(prefixed_name);
 	} else {
 		char **v, *name_ptr, *value_ptr;
 		int i;
 
-		res->data = calloc(1024, sizeof(char **));
+		if(!(res->data = calloc(1024, sizeof(char **)))) err_system();
 
 		for(v = environ; *v; v++) {
 			if(!strncmp(*v, "DBSH_", 5)) {
@@ -64,14 +59,14 @@ static results *set(const char *name, const char *value)
 				value_ptr = strchr(name_ptr, '=');
 				if(!value_ptr) continue;
 
-				res->data[res->nrows] = calloc(2, sizeof(char *));
-				res->data[res->nrows][0] = calloc((value_ptr - name_ptr) + 1, sizeof(char));
+				if(!(res->data[res->nrows] = calloc(2, sizeof(char *)))) err_system();
+				if(!(res->data[res->nrows][0] = calloc((value_ptr - name_ptr) + 1, sizeof(char)))) err_system();
 
 				for(i = 0; name_ptr[i] != '='; i++) {
 					res->data[res->nrows][0][i] = tolower(name_ptr[i]);
 				}
 
-				res->data[res->nrows][1] = strdup(++value_ptr);
+				if(!(res->data[res->nrows][1] = strdup(++value_ptr))) err_system();
 				res->nrows++;
 			}
 		}
