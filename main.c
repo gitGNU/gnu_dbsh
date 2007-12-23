@@ -30,7 +30,6 @@
 #include <unistd.h>
 
 #include <readline/readline.h>
-#include <libguile.h>
 
 #include "common.h"
 #include "action.h"
