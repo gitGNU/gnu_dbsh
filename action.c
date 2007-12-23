@@ -134,8 +134,6 @@ static void print(sql_buffer *sqlbuf)
 
 void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
-	if(!action) action = *getenv("DBSH_DEFAULT_ACTION");
-
 	switch(action) {
 	case 'e':  // edit
 		edit(sqlbuf);
