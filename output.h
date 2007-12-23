@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#include "db.h"
-
-void output_results(db_results *, char, FILE *);
+void output_results(results *, char, FILE *);
 
 #endif

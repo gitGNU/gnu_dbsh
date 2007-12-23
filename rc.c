@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "err.h"
 #include "rc.h"
 
 
@@ -27,13 +28,8 @@ void read_rc_file()
 
 		if(name && value) {
 			name = prefix_var_name(name);
-
-			if(name) {
-				setenv(name, value, 1);
-				free(name);
-			} else {
-				perror("Error reading rc file");
-			}
+			setenv(name, value, 1);
+			free(name);
 		}
 	}
 
@@ -55,8 +51,7 @@ char *prefix_var_name(const char *name)
 
 	l = strlen(name);
 
-	prefixed_name = malloc(l + 6);
-	if(!prefixed_name) return 0;
+	if(!(prefixed_name = malloc(l + 6))) err_system();
 
 	strcpy(prefixed_name, "DBSH_");
 

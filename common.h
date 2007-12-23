@@ -5,4 +5,6 @@
 
 #define _(String) String
 
+typedef struct results results;
+
 #endif

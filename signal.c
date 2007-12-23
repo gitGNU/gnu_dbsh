@@ -1,6 +1,7 @@
 #include <signal.h>
 #include <stdio.h>
 
+#include "common.h"
 #include "db.h"
 
 

@@ -153,7 +153,7 @@ int main(int argc, char *argv[])
 	while((opt = getopt(argc, argv, "l")) != -1) {
 		switch(opt) {
 		case 'l':
-			list_all_dsns(data.env);
+			list_all_dsns();
 			return 0;
 			break;
 		}

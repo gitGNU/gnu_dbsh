@@ -12,11 +12,12 @@
 #include "buffer.h"
 #include "command.h"
 #include "output.h"
+#include "results.h"
 
 
 static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 {
-	db_results *res = NULL;
+	results *res = NULL;
 	FILE *stream;
 	int stype;
 	int i;
@@ -45,7 +46,7 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 				stream = fopen(filename, "w");
 				if(!stream) {
 					perror("Failed to open output file");
-					free_results(res);
+					results_free(res);
 					return;
 				}
 				stype = 1;
@@ -54,7 +55,7 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 				stream = popen(paramstring + i + 1, "w");
 				if(!stream) {
 					perror("Failed to open pipe");
-					free_results(res);
+					results_free(res);
 					return;
 				}
 				stype = 2;
@@ -68,7 +69,7 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 				stream = popen(default_pager, "w");
 				if(!stream) {
 					perror("Failed to open pipe");
-					free_results(res);
+					results_free(res);
 					return;
 				}
 				stype = 2;
@@ -76,7 +77,7 @@ static void go(SQLHDBC conn, sql_buffer *sqlbuf, char action, char *paramstring)
 		}
 
 		output_results(res, action, stream);
-		free_results(res);
+		results_free(res);
 
 		switch(stype) {
 		case 1:

@@ -9,13 +9,14 @@
 
 #include "common.h"
 #include "output.h"
+#include "results.h"
 
 
 #define NULL_DISPLAY "*NULL*"
 #define NULL_WIDTH 6
 
 
-void output_warnings(db_results *res, FILE *s)
+void output_warnings(results *res, FILE *s)
 {
 	SQLINTEGER i;
 	for(i = 0; i < res->nwarnings; i++) {
@@ -64,7 +65,7 @@ void output_horiz_row(FILE *s, const char **data, int widths[], SQLSMALLINT ncol
 	fputs("|\n", s);
 }
 
-void output_horiz(db_results *res, FILE *s)
+void output_horiz(results *res, FILE *s)
 {
 	SQLSMALLINT i;
 	SQLINTEGER j;
@@ -99,7 +100,7 @@ void output_horiz(db_results *res, FILE *s)
 		res->time_taken.tv_sec, res->time_taken.tv_usec);
 }
 
-void output_vert(db_results *res, FILE *s)
+void output_vert(results *res, FILE *s)
 {
 	int col_width;
 	SQLSMALLINT i;
@@ -158,7 +159,7 @@ void output_csv_row(FILE *s, const char **data, SQLSMALLINT ncols, char separato
 	fputc('\n', s);
 }
 
-void output_csv(db_results *res, FILE *s, char separator, char delimiter)
+void output_csv(results *res, FILE *s, char separator, char delimiter)
 {
 	SQLINTEGER j;
 
@@ -167,7 +168,7 @@ void output_csv(db_results *res, FILE *s, char separator, char delimiter)
 		output_csv_row(s, (const char **) res->data[j], res->ncols, separator, delimiter);
 }
 
-void output_results(db_results *res, char mode, FILE *s)
+void output_results(results *res, char mode, FILE *s)
 {
 	if(res->nrows == -1) {
 		output_warnings(res, s);

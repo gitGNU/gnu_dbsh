@@ -7,46 +7,39 @@
 #include "common.h"
 #include "db.h"
 #include "rc.h"
+#include "results.h"
 
 
 extern char **environ;
 
 
-static db_results *set(const char *name, const char *value)
+static results *set(const char *name, const char *value)
 {
-	db_results *res = calloc(1, sizeof(struct db_results));
+	results *res = calloc(1, sizeof(struct results));
 
 	if(!res) {
 		perror("Error allocating result set");
 		return 0;
 	}
 
-	res->ncols = 2;
-	res->cols = calloc(2, sizeof(char *));
-	res->cols[0] = strdup(_("name"));
-	res->cols[1] = strdup(_("value"));
-
+	results_set_cols(res, 2, _("name"), _("value"));
 
 	if(name) {
 		char *prefixed_name;
 
 		prefixed_name = prefix_var_name(name);
-		if(!prefixed_name) goto set_error;
 
 		if(value) {
 			if(setenv(prefixed_name, value, 1) == -1) {
-				res->nwarnings = 1;
-				res->warnings = calloc(1, sizeof(char *));
-				res->warnings[0] = malloc(64);
-				strerror_r(errno, res->warnings[0], 64);
+				char buf[64];
+				strerror_r(errno, buf, 64);
+				results_set_warnings(res, 1, buf);
 			}
 		} else {
 			value = getenv(prefixed_name);
 			if(!value) {
 				value = "";
-				res->nwarnings = 1;
-				res->warnings = calloc(1, sizeof(char *));
-				res->warnings[0] = strdup(_("Variable not set"));
+				results_set_warnings(res, 1, _("Variable not set"));
 			}
 		}
 
@@ -85,21 +78,16 @@ static db_results *set(const char *name, const char *value)
 	}
 
 	return res;
-
-	set_error:
-	perror("Error");
-	free_results(res);
-	return 0;
 }
 
-db_results *run_command(SQLHDBC conn, char *line)
+results *run_command(SQLHDBC conn, char *line)
 {
 	int i;
 	char command[32] = "";
 	char *dupline;
 	char *saveptr;
 	char *params[4];
-	db_results *res = 0;
+	results *res = 0;
 
 	for(i = 0; i < 31 && line[i+1] && !isspace(line[i+1]); i++) {
 		command[i] = tolower(line[i+1]);

@@ -3,8 +3,6 @@
 
 #include <sql.h>
 
-typedef struct results results;
-
 struct results {
 	SQLSMALLINT ncols;
 	SQLINTEGER nrows;

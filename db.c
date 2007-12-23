@@ -4,20 +4,20 @@
 
 #include "common.h"
 #include "db.h"
-
+#include "err.h"
+#include "results.h"
 
 #define SUCCESS(r) (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO)
 #define report_error(t, h) _report_error(t, h,  __FILE__, __LINE__)
 
 SQLHSTMT *current_statement;
 
-int list_dsns(SQLHENV, SQLUSMALLINT);
-void time_taken(struct timeval *);
-db_results *fetch_results(SQLHSTMT, struct timeval);
+static int list_dsns(SQLHENV, SQLUSMALLINT);
+static void time_taken(struct timeval *);
+static results *fetch_results(SQLHSTMT, struct timeval);
 
 
-
-int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, int line)
+static int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, int line)
 {
 	SQLRETURN r;
 	SQLCHAR message[256];
@@ -48,30 +48,28 @@ SQLHENV alloc_env()
 
 
 	r = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
-	if(!SUCCESS(r)) {
-		printf(_("Failed to allocate environment handle\n"));
-		exit(1);
-	}
+	if(!SUCCESS(r)) err_fatal(_("Failed to allocate environment handle\n"));
 
 	r = SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (SQLPOINTER) SQL_OV_ODBC3, 0);
 	if(!SUCCESS(r)) {
-		printf(_("Failed to set ODBC version to 3\n"));
 		SQLFreeHandle(SQL_HANDLE_ENV, env);
-		exit(1);
+		err_fatal(_("Failed to set ODBC version to 3\n"));
 	}
 
 	return env;
 }
 
-void list_all_dsns(SQLHENV env)
+void list_all_dsns()
 {
+	SQLHENV env = alloc_env();
+
 	printf(_("User Data Sources\n-----------------\n"));
 	if(!list_dsns(env, SQL_FETCH_FIRST_USER)) printf(_("(none)\n"));
 	printf(_("\nSystem Data Sources\n-------------------\n"));
 	if(!list_dsns(env, SQL_FETCH_FIRST_SYSTEM)) printf(_("(none)\n"));
 }
 
-int list_dsns(SQLHENV env, SQLUSMALLINT dir)
+static int list_dsns(SQLHENV env, SQLUSMALLINT dir)
 {
 	SQLCHAR dsn_buf[256], des_buf[256];
 	SQLSMALLINT dsn_len, des_len;
@@ -97,9 +95,8 @@ SQLHDBC connect_dsn(SQLHENV env, const char *dsn, const char *user, const char *
 
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
 	if(!SUCCESS(r)) {
-		printf(_("Failed to allocate connection handle\n"));
 		SQLFreeHandle(SQL_HANDLE_ENV, env);
-		exit(1);
+		err_fatal(_("Failed to allocate connection handle\n"));
 	}
 
 	r = SQLConnect(conn,
@@ -115,6 +112,9 @@ SQLHDBC connect_dsn(SQLHENV env, const char *dsn, const char *user, const char *
 
 	printf(_("Connected to %s\n"), dsn);
 
+	r = SQLGetInfo(conn, SQL_SERVER_NAME, buf, 256, 0);
+	if(SUCCESS(r)) printf(_("Server:  %s\n"), buf);
+
 	r = SQLGetInfo(conn, SQL_DBMS_NAME, buf, 256, 0);
 	if(SUCCESS(r)) printf(_("DBMS:    %s\n"), buf);
 
@@ -126,15 +126,34 @@ SQLHDBC connect_dsn(SQLHENV env, const char *dsn, const char *user, const char *
 	return conn;
 }
 
-void get_catalog_name(SQLHDBC conn, char *buf, int buflen)
+results *db_conn_info(SQLHDBC conn)
 {
 	SQLRETURN r;
+	results *res;
+	char buf[256];
 
-	r = SQLGetInfo(conn, SQL_CATALOG_NAME, buf, buflen, 0);
-	if(!SUCCESS(r)) buf[0] = 0;
+	res = calloc(1, sizeof(struct results));
+
+	res->ncols = 2;
+	res->cols = calloc(2, sizeof(char *));
+	res->cols[0] = strdup(_("name"));
+	res->cols[1] = strdup(_("value"));
+
+	r = SQLGetInfo(conn, SQL_SERVER_NAME, buf, 256, 0);
+	if(SUCCESS(r)) {
+
+	}
+
+	r = SQLGetInfo(conn, SQL_DBMS_NAME, buf, 256, 0);
+	if(SUCCESS(r)) printf(_("DBMS:    %s\n"), buf);
+
+	r = SQLGetInfo(conn, SQL_DBMS_VER, buf, 256, 0);
+	if(SUCCESS(r)) printf(_("Version: %s\n"), buf);
+
+	return res;
 }
 
-db_results *execute_query(SQLHDBC conn, const char *buf)
+results *execute_query(SQLHDBC conn, const char *buf)
 {
 	SQLHSTMT st;
 	SQLRETURN r;
@@ -163,16 +182,16 @@ db_results *execute_query(SQLHDBC conn, const char *buf)
 	return fetch_results(st, taken);
 }
 
-db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
+static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 {
 	// TODO: check return value of mallocs
 
-	db_results *res;
+	results *res;
 	SQLRETURN r;
 	SQLSMALLINT i;
 	SQLINTEGER j;
 
-	res = calloc(1, sizeof(db_results));
+	res = calloc(1, sizeof(results));
 
 	res->time_taken = time_taken;
 
@@ -192,7 +211,7 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		if(!report_error(SQL_HANDLE_STMT, st))
 			printf(_("Failed to retrieve number of rows\n"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		free_results(res);
+		results_free(res);
 		return 0;
 	}
 
@@ -206,7 +225,7 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		if(!report_error(SQL_HANDLE_STMT, st))
 			printf(_("Failed to retrieve number of columns\n"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		free_results(res);
+		results_free(res);
 		return 0;
 	}
 
@@ -231,7 +250,7 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 			if(!report_error(SQL_HANDLE_STMT, st))
 				printf(_("Failed to retrieve column data\n"));
 			SQLFreeHandle(SQL_HANDLE_STMT, st);
-			free_results(res);
+			results_free(res);
 			return 0;
 		}
 
@@ -243,6 +262,7 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		return res;
 	}
 
+
 	res->data = calloc(res->nrows, sizeof(char **));
 	for(j = 0; j < res->nrows; j++) {
 		r = SQLFetch(st);
@@ -250,7 +270,7 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 			if(!report_error(SQL_HANDLE_STMT, st))
 				printf(_("Failed to fetch row %ld (apparently %ld rows)\n"), j, res->nrows);
 			SQLFreeHandle(SQL_HANDLE_STMT, st);
-			free_results(res);
+			results_free(res);
 			return 0;
 		}
 
@@ -264,7 +284,7 @@ db_results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 				if(!report_error(SQL_HANDLE_STMT, st))
 					printf(_("Failed to fetch column %d from row %ld\n"), i, j);
 				SQLFreeHandle(SQL_HANDLE_STMT, st);
-				free_results(res);
+				results_free(res);
 				return 0;
 			}
 
@@ -287,7 +307,7 @@ void cancel_query()
 	}
 }
 
-db_results *get_tables(SQLHDBC conn, const char *catalog,
+results *get_tables(SQLHDBC conn, const char *catalog,
 		       const char *schema, const char *table)
 {
 	SQLHSTMT st;
@@ -319,7 +339,7 @@ db_results *get_tables(SQLHDBC conn, const char *catalog,
 	return fetch_results(st, taken);
 }
 
-db_results *get_columns(SQLHDBC conn, const char *catalog,
+results *get_columns(SQLHDBC conn, const char *catalog,
 			const char *schema, const char *table)
 {
 	SQLHSTMT st;
@@ -350,37 +370,7 @@ db_results *get_columns(SQLHDBC conn, const char *catalog,
 	return fetch_results(st, taken);
 }
 
-void free_results(db_results *r)
-{
-	SQLSMALLINT i;
-	SQLINTEGER j;
-
-	if(r->cols) {
-		for(i = 0; i< r->ncols; i++) if(r->cols[i]) free(r->cols[i]);
-		free(r->cols);
-	}
-
-	if(r->data) {
-		for(j = 0; j < r->nrows; j++) {
-			if(r->data[j]) {
-				for(i = 0; i < r->ncols; i++) {
-					if(r->data[j][i]) free(r->data[j][i]);
-				}
-				free(r->data[j]);
-			}
-		}
-		free(r->data);
-	}
-
-	if(r->warnings) {
-		for(j = 0; j < r->nwarnings; j++) if(r->warnings[j]) free(r->warnings[j]);
-		free(r->warnings);
-	}
-
-	free(r);
-}
-
-void time_taken(struct timeval *time_taken)
+static void time_taken(struct timeval *time_taken)
 {
 	struct timeval end_time;
 
