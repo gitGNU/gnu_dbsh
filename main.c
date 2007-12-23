@@ -55,7 +55,7 @@ void *main_loop(void *c)
 	sql_buffer *mainbuf;
 	char *line;
 	int len, i;
-	signed char action;
+	char action;
 	char *paramstring;
 
 	mainbuf = buffer_alloc(1024);
@@ -70,23 +70,23 @@ void *main_loop(void *c)
 		len = strlen(line);
 		if(len) {
 
-			action = -1;
+			action = 0;
 
 			for(i = 0; i < len; i++) {
 
 				if(strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
-					if(i < (len - 1)) {
-						if(!strchr(getenv("DBSH_ACTION_CHARS"), line[++i])) {
+					if(++i < len) {
+						if(!strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
 							action = line[i];
 							paramstring = line + i;
 						}
 					} else {
-						action = 0;  // default;
+						action = 1;  // default;
 						paramstring = "";
 					}
 				}
 
-				if(action != -1) {
+				if(action) {
 					buffer_append(mainbuf, '\0');
 
 					if(action == 'q') return 0;
@@ -101,8 +101,8 @@ void *main_loop(void *c)
 				}
 			}
 
-			if(action == -1) buffer_append(mainbuf, '\n');
-			else mainbuf->next = 0;
+			if(action) mainbuf->next = 0;
+			else buffer_append(mainbuf, '\n');
 		}
 
 		free(line);
@@ -144,7 +144,7 @@ int main(int argc, char *argv[])
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
 
 	res = db_conn_details(conn);
-	output_results(res, 0, stdout);
+	output_results(res, 1, stdout);
 
 	history_start();
 	signal_handler_install();

@@ -175,7 +175,7 @@ void output_csv(results *res, FILE *s, char separator, char delimiter)
 
 void output_results(results *res, char mode, FILE *s)
 {
-	if(!mode) mode = *getenv("DBSH_DEFAULT_ACTION");
+	if(mode == 1) mode = *getenv("DBSH_DEFAULT_ACTION");
 
 	if(res->nrows == -1) {
 		output_warnings(res, s);
