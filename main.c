@@ -69,11 +69,9 @@ void *main_loop(void *c)
 
 		len = strlen(line);
 		if(len) {
-
 			action = 0;
 
 			for(i = 0; i < len; i++) {
-
 				if(strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
 					if(++i < len) {
 						if(!strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
