@@ -104,6 +104,8 @@ results *run_command(SQLHDBC conn, char *line)
 		res = get_tables(conn, "%", 0, 0);
 	} else if(!strcmp(command, "columns")) {
 		res = get_columns(conn, params[0], params[1], params[2]);
+	} else if(!strcmp(command, "info")) {
+		res = db_conn_details(conn);
 	} else if(!strcmp(command, "schemas")) {
 		res = get_tables(conn, "%", "%", 0);
 	} else if(!strcmp(command, "set")) {
