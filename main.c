@@ -90,9 +90,11 @@ void *main_loop(void *c)
 					}
 
 					if(action == 'q') return 0;
-					run_action(connp, mainbuf, action, paramstring);
 
-					if(mainbuf->next) history_add(mainbuf, line + i);
+					if(action != 'c') {
+						run_action(connp, mainbuf, action, paramstring);
+						history_add(mainbuf, line + i);
+					}
 
 					reset = 1;
 
