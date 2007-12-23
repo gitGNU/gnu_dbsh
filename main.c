@@ -40,23 +40,17 @@
 #include "signal.h"
 
 
-struct main_data
-{
-	const char *dsn;
-	SQLHENV env;
-	SQLHDBC conn;
-};
-
 void usage(const char *cmd)
 {
 	printf(_("Usage: %s -l\n       %s <dsn> [<username>] [<password>]\n"),
 	       cmd, cmd);
 }
 
-void *main_loop(void *d)
+void *main_loop(void *c)
 {
-	struct main_data *data = (struct main_data *) d;
+	SQLHDBC conn = (SQLHDBC) c;
 	sql_buffer *mainbuf;
+	char dsn[64];
 	char prompt[64];  // TODO: dynamic?
 	char *line;
 	int lnum, len, i;
@@ -67,8 +61,10 @@ void *main_loop(void *d)
 	lnum = 1;
 	reset = 0;
 
+	db_info(conn, SQL_DATA_SOURCE_NAME, dsn, 64);
+
 	for(;;) {
-		snprintf(prompt, 64, "%s %d> ", data->dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
+		snprintf(prompt, 64, "%s %d> ", dsn, lnum);  // TODO: configurable prompt (eg current catalog, fetched using SQLGetInfo)
 
 		line = readline(prompt);
 		if(!line) {
@@ -101,7 +97,7 @@ void *main_loop(void *d)
 					}
 
 					if(action == 'q') return 0;
-					run_action(data->conn, mainbuf, action, paramstring);
+					run_action(conn, mainbuf, action, paramstring);
 
 					history_add(mainbuf, line + i);
 
@@ -138,13 +134,12 @@ void *main_loop(void *d)
 
 int main(int argc, char *argv[])
 {
+	SQLHDBC conn;
+	char *dsn = 0, *user = 0, *pass = 0;
 	int opt, i;
-	struct main_data data;
-	char *user = (char *) 0, *pass = (char *) 0;
 
 	setlocale(LC_ALL, "");
 
-	data.env = alloc_env();
 
 	while((opt = getopt(argc, argv, "l")) != -1) {
 		switch(opt) {
@@ -160,11 +155,11 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	data.dsn = argv[optind++];
+	dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];
 	if(argc - optind > 0) pass = argv[optind++];
 
-	data.conn = connect_dsn(data.env, data.dsn, user, pass);
+	conn = db_connect(dsn, user, pass);
 
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
 
@@ -172,13 +167,12 @@ int main(int argc, char *argv[])
 	history_start();
 	signal_handler_install();
 
-	scm_with_guile(main_loop, &data);
+	scm_with_guile(main_loop, conn);
 
 	history_end();
 
-	SQLDisconnect(data.conn);
-	SQLFreeHandle(SQL_HANDLE_DBC, data.conn);
-	SQLFreeHandle(SQL_HANDLE_ENV, data.env);
+	SQLDisconnect(conn);
+	SQLFreeHandle(SQL_HANDLE_DBC, conn);
 
 	return 0;
 }

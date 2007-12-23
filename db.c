@@ -41,7 +41,7 @@ static int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, i
 	return retval;
 }
 
-SQLHENV alloc_env()
+static SQLHENV alloc_env()
 {
 	SQLHENV env;
 	SQLRETURN r;
@@ -87,11 +87,14 @@ static int list_dsns(SQLHENV env, SQLUSMALLINT dir)
 	return n;
 }
 
-SQLHDBC connect_dsn(SQLHENV env, const char *dsn, const char *user, const char *pass)
+SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 {
+	SQLHENV env;
 	SQLHDBC conn;
 	SQLRETURN r;
 	SQLCHAR buf[256];
+
+	env = alloc_env();
 
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
 	if(!SUCCESS(r)) {
@@ -124,6 +127,18 @@ SQLHDBC connect_dsn(SQLHENV env, const char *dsn, const char *user, const char *
 	fputs("\n", stdout);
 
 	return conn;
+}
+
+void db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
+{
+	SQLRETURN r;
+
+	r = SQLGetInfo(conn, type, buf, len, 0);
+	if(!SUCCESS(r)) {
+		report_error(SQL_HANDLE_DBC, conn);
+		strncpy(buf, "(unknown)", len);
+		buf[len - 1] = 0;
+	}
 }
 
 results *db_conn_info(SQLHDBC conn)
