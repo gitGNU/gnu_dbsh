@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "err.h"
 #include "output.h"
 #include "results.h"
 
@@ -71,7 +72,7 @@ void output_horiz(results *res, FILE *s)
 	SQLINTEGER j;
 	int *col_widths;
 
- 	col_widths = calloc(res->ncols, sizeof(int));
+ 	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
 		col_widths[i] = strlen(res->cols[i]);
