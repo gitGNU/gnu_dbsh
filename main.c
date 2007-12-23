@@ -7,14 +7,22 @@
  *       cope with result set being too large to fit in memory
  *       separate history by DSN?
  *       newlines in data break horizontal display
+ *       reconnect if connection dies
+ *       do away with line numbers, since they don't make sense anyway? (or make them make sense by counting newlines?)
+ *       specify editor as argument to \e? (or named buffer?)
+ *       text truncated?
  *
  *       prepared statement support:
  *       SELECT * FROM <table> WHERE id = ?
  *       \g 1
  *       \g 2
  *       etc
+ *
+ *       commands:
+ *       *autocommit on|off
  */
 
+#include <locale.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -138,6 +146,7 @@ int main(int argc, char *argv[])
 	struct main_data data;
 	char *user = (char *) 0, *pass = (char *) 0;
 
+	setlocale(LC_ALL, "");
 
 	data.env = alloc_env();
 
