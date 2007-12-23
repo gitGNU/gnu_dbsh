@@ -128,27 +128,15 @@ SQLHDBC connect_dsn(SQLHENV env, const char *dsn, const char *user, const char *
 
 results *db_conn_info(SQLHDBC conn)
 {
-	SQLRETURN r;
+//	SQLRETURN r;
 	results *res;
-	char buf[256];
+//	char buf[256];
 
-	res = calloc(1, sizeof(struct results));
+	res = results_alloc();
 
-	res->ncols = 2;
-	res->cols = calloc(2, sizeof(char *));
-	res->cols[0] = strdup(_("name"));
-	res->cols[1] = strdup(_("value"));
+	results_set_cols(res, 2, _("name"), _("value"));
 
-	r = SQLGetInfo(conn, SQL_SERVER_NAME, buf, 256, 0);
-	if(SUCCESS(r)) {
-
-	}
-
-	r = SQLGetInfo(conn, SQL_DBMS_NAME, buf, 256, 0);
-	if(SUCCESS(r)) printf(_("DBMS:    %s\n"), buf);
-
-	r = SQLGetInfo(conn, SQL_DBMS_VER, buf, 256, 0);
-	if(SUCCESS(r)) printf(_("Version: %s\n"), buf);
+	// TODO
 
 	return res;
 }
@@ -184,20 +172,17 @@ results *execute_query(SQLHDBC conn, const char *buf)
 
 static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 {
-	// TODO: check return value of mallocs
-
 	results *res;
 	SQLRETURN r;
 	SQLSMALLINT i;
 	SQLINTEGER j;
 
-	res = calloc(1, sizeof(results));
-
+	res = results_alloc();
 	res->time_taken = time_taken;
 
 	SQLGetDiagField(SQL_HANDLE_STMT, st, 0, SQL_DIAG_NUMBER, &(res->nwarnings), 0, 0);
 	if(res->nwarnings) {
-		res->warnings = calloc(res->nwarnings, sizeof(char *));
+		if(!(res->warnings = calloc(res->nwarnings, sizeof(char *)))) err_system();
 		for(j = 0; j < res->nwarnings; j++) {
 			SQLCHAR buf[1024];  // TODO: cope with data bigger than this
 			SQLGetDiagField(SQL_HANDLE_STMT, st, j + 1,
@@ -234,7 +219,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		return res;
 	}
 
-	res->cols = calloc(res->ncols, sizeof(char *));
+	if(!(res->cols = calloc(res->ncols, sizeof(char *)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
 		SQLCHAR buf[1024];  // TODO: cope with data bigger than this
@@ -263,7 +248,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 	}
 
 
-	res->data = calloc(res->nrows, sizeof(char **));
+	if(!(res->data = calloc(res->nrows, sizeof(char **)))) err_system();
 	for(j = 0; j < res->nrows; j++) {
 		r = SQLFetch(st);
 		if(!SUCCESS(r)) {
@@ -274,7 +259,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 			return 0;
 		}
 
-		res->data[j] = calloc(res->ncols, sizeof(char *));
+		if(!(res->data[j] = calloc(res->ncols, sizeof(char *)))) err_system();
 
 		for(i = 0; i < res->ncols; i++) {
 			char buf[1024];  // TODO: cope with data bigger than this
