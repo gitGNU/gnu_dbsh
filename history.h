@@ -21,6 +21,7 @@
 
 void history_start();
 void history_add(sql_buffer *, const char *);
+const char *history_previous();
 void history_end();
 
 #endif
