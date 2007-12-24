@@ -39,10 +39,6 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstrin
 	int i;
 	char *default_pager;
 
-
-	if(!sqlbuf->buf[0]) return;
-
-
 	// TODO: proper parsing
 
 	if(strchr(getenv("DBSH_COMMAND_CHARS"), sqlbuf->buf[0])) {
@@ -149,6 +145,9 @@ static void print(sql_buffer *sqlbuf)
 void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	switch(action) {
+	case 'c':  // clear
+		sqlbuf->next = 0;
+		break;
 	case 'e':  // edit
 		edit(sqlbuf);
 		print(sqlbuf);
