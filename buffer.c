@@ -35,7 +35,7 @@ sql_buffer *buffer_alloc(size_t len)
 	return b;
 }
 
-int buffer_append(sql_buffer *buf, char c)
+void buffer_append(sql_buffer *buf, char c)
 {
 	if(buf->next >= buf->len) {
 		buf->len *= 2;
@@ -43,8 +43,6 @@ int buffer_append(sql_buffer *buf, char c)
 	}
 
 	buf->buf[buf->next++] = c;
-
-	return 1;
 }
 
 void buffer_free(sql_buffer *b)
