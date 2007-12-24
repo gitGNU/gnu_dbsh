@@ -4,6 +4,7 @@ batch mode?
 tab completion - commands as a minimum, maybe tables etc too?
 regression tests using SQLite
 separate history by DSN?
+multi-line history items get split when history is loaded from file
 newlines in data break horizontal display
 specify editor as argument to \e? (or named buffer?)
 actions as shortcuts for commands, eg \r for reconnect (or do away with commands and only have actions?)

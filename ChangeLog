@@ -1,4 +1,7 @@
-2007-12-23  Ben Spencer  <dangerous.ben@gmail.com>
+0.2a
+	Major tweaks to improve user interface.
+	Fixed bug with \e missing off last character.
+	Removed spurious guile dependency.
 
-	* action.c: Removed superfluous guile include
-
+0.1a
+	Initial release.
