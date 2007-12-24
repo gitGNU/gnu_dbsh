@@ -18,6 +18,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "buffer.h"
 #include "err.h"
@@ -43,6 +44,20 @@ void buffer_append(sql_buffer *buf, char c)
 	}
 
 	buf->buf[buf->next++] = c;
+}
+
+void buffer_set(sql_buffer *buf, const char *s)
+{
+	int l;
+
+	l = strlen(s);
+
+	if(l + 1 > buf->len) {
+		buf->len = l + 1;
+		if(!(buf->buf = realloc(buf->buf, buf->len))) err_system();
+	}
+
+	strcpy(buf->buf, s);
 }
 
 void buffer_free(sql_buffer *b)

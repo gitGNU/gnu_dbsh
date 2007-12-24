@@ -29,6 +29,7 @@ typedef struct {
 
 sql_buffer *buffer_alloc(size_t);
 void buffer_append(sql_buffer *, char);
+void buffer_set(sql_buffer *, const char *);
 void buffer_free(sql_buffer *);
 
 #endif
