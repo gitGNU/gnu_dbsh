@@ -203,7 +203,7 @@ results *db_conn_details(SQLHDBC conn)
 	return res;
 }
 
-results *execute_query(SQLHDBC conn, const char *buf)
+results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 {
 	SQLHSTMT st;
 	SQLRETURN r;
@@ -218,7 +218,7 @@ results *execute_query(SQLHDBC conn, const char *buf)
 	gettimeofday(&taken, 0);
 
 	current_statement = &st;
-	r = SQLExecDirect(st, (SQLCHAR *) buf, SQL_NTS);
+	r = SQLExecDirect(st, (SQLCHAR *) buf, buflen);
 
 	time_taken(&taken);
 

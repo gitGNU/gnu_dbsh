@@ -78,12 +78,9 @@ void *main_loop(void *c)
 				}
 
 				if(action) {
-
 					if(action == 'q') return 0;
 
-					if(mainbuf->next) {
-						buffer_append(mainbuf, '\0');
-					} else {
+					if(!mainbuf->next) {
 						if(prevbuf->next) buffer_copy(mainbuf, prevbuf);
 						else break;
 					}

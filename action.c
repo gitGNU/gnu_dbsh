@@ -42,9 +42,9 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstrin
 	// TODO: proper parsing
 
 	if(strchr(getenv("DBSH_COMMAND_CHARS"), sqlbuf->buf[0])) {
-		res = run_command(connp, sqlbuf->buf);
+		res = run_command(connp, sqlbuf->buf, sqlbuf->next);
 	} else {
-		res = execute_query(*connp, sqlbuf->buf);
+		res = execute_query(*connp, sqlbuf->buf, sqlbuf->next);
 	}
 
 	if(res) {
@@ -121,7 +121,7 @@ static void edit(sql_buffer *sqlbuf)
 		perror("Failed to open temporary file");
 		return;
 	}
-	write(f, sqlbuf->buf, sqlbuf->next - 1);
+	write(f, sqlbuf->buf, sqlbuf->next);
 	close(f);
 
 	snprintf(cmd, 1024, "%s %s", editor, path);
@@ -129,9 +129,9 @@ static void edit(sql_buffer *sqlbuf)
 
 	f = open(path, O_RDONLY);
 	if(f != -1) {
+		// TODO: resize buffer if necessary
 		sqlbuf->next = read(f, sqlbuf->buf, sqlbuf->len - 1);
 		close(f);
-		sqlbuf->buf[sqlbuf->next++] = 0;
 	}
 
 	unlink(path);
@@ -139,7 +139,8 @@ static void edit(sql_buffer *sqlbuf)
 
 static void print(sql_buffer *sqlbuf)
 {
-	printf("%s\n", sqlbuf->buf);
+	if(sqlbuf->buf[sqlbuf->next - 1] != '\n') buffer_append(sqlbuf, '\n');
+	fwrite(sqlbuf->buf, 1, sqlbuf->next, stdout);
 }
 
 void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)

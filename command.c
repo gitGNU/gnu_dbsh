@@ -93,29 +93,31 @@ static results *set(const char *name, const char *value)
 	return res;
 }
 
-results *run_command(SQLHDBC *connp, char *line)
+results *run_command(SQLHDBC *connp, char *buf, int buflen)
 {
 	int i;
 	char command[32] = "";
-	char *dupline;
+	char *line;
 	char *saveptr;
 	char *params[4];
 	results *res = 0;
+
+	if(!(line = malloc(buflen + 1))) err_system();
+	memcpy(line, buf, buflen);
+	line[buflen] = 0;
+
+	// TODO: parse properly, allow quoting / escaping etc
 
 	for(i = 0; i < 31 && line[i+1] && !isspace(line[i+1]); i++) {
 		command[i] = tolower(line[i+1]);
 	}
 	command[i] = 0;
 
-	// TODO: parse properly, allow quoting / escaping etc
-
-	dupline = strdup(line);
-
-	dupline += i + 1;
+	line += i + 1;
 	for(i = 0; i < 4; i++) {
-		params[i] = strtok_r(dupline, " \n\t", &saveptr);
+		params[i] = strtok_r(line, " \n\t", &saveptr);
 		if(params[i] && !strcmp(params[i], "NULL")) params[i] = 0;
-		dupline = 0;
+		line = 0;
 	}
 
 	if(!strcmp(command, "catalogs")) {
@@ -136,7 +138,7 @@ results *run_command(SQLHDBC *connp, char *line)
 		printf(_("Unrecognised command: %s\n"), command);
 	}
 
-	free(dupline);
+	free(line);
 
 	return res;
 }
