@@ -121,7 +121,7 @@ static void edit(sql_buffer *sqlbuf)
 		perror("Failed to open temporary file");
 		return;
 	}
-	write(f, sqlbuf->buf, sqlbuf->next - 2);
+	write(f, sqlbuf->buf, sqlbuf->next - 1);
 	close(f);
 
 	snprintf(cmd, 1024, "%s %s", editor, path);
