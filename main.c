@@ -79,14 +79,14 @@ void *main_loop(void *c)
 
 				if(action) {
 
+					if(action == 'q') return 0;
+
 					if(mainbuf->next) {
 						buffer_append(mainbuf, '\0');
 					} else {
 						if(prevbuf->next) buffer_copy(mainbuf, prevbuf);
 						else break;
 					}
-
-					if(action == 'q') return 0;
 
 					run_action(connp, mainbuf, action, paramstring);
 
@@ -105,7 +105,6 @@ void *main_loop(void *c)
 					break;
 
 				} else {
-
 					buffer_append(mainbuf, line[i]);
 				}
 			}
