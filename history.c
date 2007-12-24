@@ -68,21 +68,6 @@ void history_add(sql_buffer *buf, const char *action_line)
 	}
 }
 
-const char *history_previous()
-{
-	HIST_ENTRY *prev;
-	const char *line;
-
-	using_history();
-
-	prev = previous_history();
-	line = prev ? prev->line : 0;
-
-	using_history();
-
-	return line;
-}
-
 void history_end()
 {
 	write_history(get_history_filename());
