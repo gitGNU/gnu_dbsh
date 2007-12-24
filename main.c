@@ -44,13 +44,14 @@ void usage(const char *cmd)
 void *main_loop(void *c)
 {
 	SQLHDBC *connp = (SQLHDBC *) c;
-	sql_buffer *mainbuf;
+	sql_buffer *mainbuf, *prevbuf;
 	char *line;
 	int len, i;
 	char action;
 	char *paramstring;
 
-	mainbuf = buffer_alloc(1024);
+	mainbuf = buffer_alloc(256);
+	prevbuf = buffer_alloc(256);
 
 	for(;;) {
 		line = readline(prompt_render(*connp, mainbuf));
@@ -77,22 +78,41 @@ void *main_loop(void *c)
 				}
 
 				if(action) {
-					buffer_append(mainbuf, '\0');
+
+					if(mainbuf->next) {
+						buffer_append(mainbuf, '\0');
+					} else {
+						if(prevbuf->next) buffer_copy(mainbuf, prevbuf);
+						else break;
+					}
 
 					if(action == 'q') return 0;
-					if(action != 'c') {
-						run_action(connp, mainbuf, action, paramstring);
+
+					run_action(connp, mainbuf, action, paramstring);
+
+					switch(action) {
+					case 'c':
+					case 'e':
+					case 'p':
+						// don't add to history or reset buffer (\c has already reset)
+						break;
+					default:
 						history_add(mainbuf, line + i - 1);
+						buffer_copy(prevbuf, mainbuf);
+						mainbuf->next = 0;
 					}
 
 					break;
+
 				} else {
+
 					buffer_append(mainbuf, line[i]);
 				}
 			}
 
-			if(action) mainbuf->next = 0;
-			else buffer_append(mainbuf, '\n');
+			if(!action) {
+				buffer_append(mainbuf, '\n');
+			}
 		}
 
 		free(line);
