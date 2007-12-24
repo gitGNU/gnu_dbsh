@@ -36,6 +36,17 @@ sql_buffer *buffer_alloc(size_t len)
 	return b;
 }
 
+void buffer_copy(sql_buffer *dest, sql_buffer *src)
+{
+	if(dest->len < src->len) {
+		dest->len = src->len;
+		if(!(dest->buf = realloc(dest->buf, dest->len))) err_system();
+	}
+
+	memcpy(dest->buf, src->buf, src->next);
+	dest->next = src->next;
+}
+
 void buffer_append(sql_buffer *buf, char c)
 {
 	if(buf->next >= buf->len) {
@@ -44,20 +55,6 @@ void buffer_append(sql_buffer *buf, char c)
 	}
 
 	buf->buf[buf->next++] = c;
-}
-
-void buffer_set(sql_buffer *buf, const char *s)
-{
-	int l;
-
-	l = strlen(s);
-
-	if(l + 1 > buf->len) {
-		buf->len = l + 1;
-		if(!(buf->buf = realloc(buf->buf, buf->len))) err_system();
-	}
-
-	strcpy(buf->buf, s);
 }
 
 void buffer_free(sql_buffer *b)
