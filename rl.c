@@ -51,14 +51,18 @@ char *rl_readline(const char *prompt)
 
 void rl_history_start()
 {
+	const char *hf;
+
 	using_history();
-	read_history(get_history_filename());
+	hf = get_history_filename();
+	if(hf) read_history(hf);
 }
 
 void rl_history_add(sql_buffer *buf, const char *action_line)
 {
 	char *histentry;
 	HIST_ENTRY *prev;
+	const char *hf;
 
 	histentry = malloc(buf->next + strlen(action_line) + 1);
 
@@ -76,13 +80,16 @@ void rl_history_add(sql_buffer *buf, const char *action_line)
 		using_history();
 
 		// This can be removed once this client is stable enough to trust
-		write_history(get_history_filename());
+		hf = get_history_filename();
+		if(hf) write_history(hf);
 	}
 }
 
 void rl_history_end()
 {
-	write_history(get_history_filename());
+	const char *hf;
+	hf = get_history_filename();
+	if(hf) write_history(hf);
 }
 
 #else
