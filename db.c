@@ -84,10 +84,10 @@ void list_all_dsns()
 {
 	SQLHENV env = alloc_env();
 
-	printf(_("User Data Sources\n-----------------\n"));
-	if(!list_dsns(env, SQL_FETCH_FIRST_USER)) printf(_("(none)\n"));
-	printf(_("\nSystem Data Sources\n-------------------\n"));
-	if(!list_dsns(env, SQL_FETCH_FIRST_SYSTEM)) printf(_("(none)\n"));
+	puts(_("User Data Sources\n-----------------"));
+	if(!list_dsns(env, SQL_FETCH_FIRST_USER)) puts(_("(none)"));
+	puts(_("\nSystem Data Sources\n-------------------"));
+	if(!list_dsns(env, SQL_FETCH_FIRST_SYSTEM)) puts(_("(none)"));
 }
 
 static int list_dsns(SQLHENV env, SQLUSMALLINT dir)
@@ -214,7 +214,7 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SUCCESS(r)) {
-		printf(_("Failed to allocate statement handle\n"));
+		puts(_("Failed to allocate statement handle"));
 		return 0;
 	}
 
@@ -227,7 +227,7 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
-			printf(_("Failed to execute statement\n"));
+			puts(_("Failed to execute statement"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		return 0;
 	}
@@ -273,7 +273,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 	r = SQLRowCount(st, &(res->nrows));
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
-			printf(_("Failed to retrieve number of rows\n"));
+			puts(_("Failed to retrieve number of rows"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		results_free(res);
 		return 0;
@@ -287,7 +287,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 	r = SQLNumResultCols(st, &(res->ncols));
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
-			printf(_("Failed to retrieve number of columns\n"));
+			puts(_("Failed to retrieve number of columns"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		results_free(res);
 		return 0;
@@ -321,7 +321,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 
 		if(!SUCCESS(r)) {
 			if(!report_error(SQL_HANDLE_STMT, st))
-				printf(_("Failed to retrieve column data\n"));
+				puts(_("Failed to retrieve column data"));
 			SQLFreeHandle(SQL_HANDLE_STMT, st);
 			results_free(res);
 			return 0;
@@ -398,7 +398,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
-			printf(_("Failed to allocate statement handle\n"));
+			puts(_("Failed to allocate statement handle"));
 		return 0;
 	}
 
@@ -413,7 +413,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
-			printf(_("Failed to list tables\n"));
+			puts(_("Failed to list tables"));
 	}
 
 	return fetch_results(st, taken);
@@ -429,7 +429,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
-			printf(_("Failed to allocate statement handle\n"));
+			puts(_("Failed to allocate statement handle"));
 		return 0;
 	}
 
@@ -445,7 +445,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
-			printf(_("Failed to list columns\n"));
+			puts(_("Failed to list columns"));
 	}
 
 	return fetch_results(st, taken);
