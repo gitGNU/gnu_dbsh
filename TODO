@@ -14,6 +14,7 @@ better portability - for one thing, make readline optional
 better support for non-ASCII character sets
 copyright message and version on startup
 redirects and pipes don't work for \p
+replace calls to getenv with rc_get or similar to avoid hardcoded prefix
 
 prepared statement support:
 SELECT * FROM <table> WHERE id = ?
