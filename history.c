@@ -18,6 +18,8 @@
 
 #include <config.h>
 
+#ifdef HAVE_LIBREADLINE
+
 #include <stdlib.h>
 #include <string.h>
 #include <readline/history.h>
@@ -76,3 +78,19 @@ void history_end()
 {
 	write_history(get_history_filename());
 }
+
+#else
+
+void history_start()
+{
+}
+
+void history_add(sql_buffer *buf, const char *action_line)
+{
+}
+
+void history_end()
+{
+}
+
+#endif
