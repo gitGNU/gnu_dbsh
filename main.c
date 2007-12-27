@@ -46,21 +46,19 @@ void usage(const char *cmd)
 
 int process_line(char *line)
 {
-	int len, i;
 	char *actionchars, action, *paramstring;
 	sql_buffer *tempbuf;
 
-	if(!(len = strlen(line))) return 0;
 	action = 0;
 	actionchars = getenv("DBSH_ACTION_CHARS");
 
-	for(i = 0; i < len; i++) {
+	for(; *line; line++) {
 
-		if(strchr(actionchars, line[i])) {
-			if(++i < len) {
-				if(!strchr(actionchars, line[i])) {
-					action = line[i];
-					paramstring = line + i;
+		if(strchr(actionchars, *line)) {
+			if(*++line) {
+				if(!strchr(actionchars, *line)) {
+					action = *line;
+					paramstring = line;
 				}
 			} else {
 				action = 1;  // default;
@@ -86,7 +84,7 @@ int process_line(char *line)
 				if(action == 'e' || action == 'p') {
 					history_add(mainbuf, "");
 				} else {
-					history_add(mainbuf, line + i - 1);
+					history_add(mainbuf, line - 1);
 				}
 
 				tempbuf = prevbuf;
@@ -98,18 +96,18 @@ int process_line(char *line)
 			return 0;
 
 		} else {
-			buffer_append(mainbuf, line[i]);
+			buffer_append(mainbuf, *line);
 		}
 	}
 
-	buffer_append(mainbuf, '\n');
+	if(mainbuf->next) buffer_append(mainbuf, '\n');
 	return 0;
 }
 
 int main(int argc, char *argv[])
 {
 	char *dsn = 0, *user = 0, *pass = 0;
-	int opt, i;
+	int opt;
 	char *line;
 
 	setlocale(LC_ALL, "");
@@ -139,7 +137,7 @@ int main(int argc, char *argv[])
 	     "This is free software: "
 	     "you are welcome to modify and redistribute it\n"
 	     "under certain conditions; for details type:\n"
-	     "> *copying\\ | more\n\n");
+	     "> *copying\\ | more\n");
 
 	dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];
@@ -147,7 +145,7 @@ int main(int argc, char *argv[])
 
 	conn = db_connect(dsn, user, pass);
 
-	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
+	if(pass) for(; *pass; pass++) *pass = 'x';
 	history_start();
 	signal_handler_install();
 
