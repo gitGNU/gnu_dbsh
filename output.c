@@ -121,7 +121,6 @@ void output_vert(results *res, FILE *s)
 	int col_width;
 	SQLSMALLINT i;
 	SQLINTEGER j;
-	int k;
 
 	col_width = 0;
 	for(i = 0; i < res->ncols; i++) {
@@ -137,12 +136,8 @@ void output_vert(results *res, FILE *s)
 		fprintf(s, "******************************** Row %ld ********************************\n", j + 1);
 
 		for(i = 0; i < res->ncols; i++) {
-
-			for(k = 0; k < col_width - strlen(res->cols[i]); k++) {
-				fputc(' ', s);
-			}
-
-			fprintf(s, "%s | %s\n", res->cols[i], res->data[j][i] ? res->data[j][i] : NULL_DISPLAY);
+			fprintf(s, "%*s | %s\n", col_width, res->cols[i],
+				res->data[j][i] ? res->data[j][i] : NULL_DISPLAY);
 		}
 	}
 
