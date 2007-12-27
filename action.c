@@ -139,16 +139,13 @@ static void edit(sql_buffer *sqlbuf)
 
 static void print(sql_buffer *sqlbuf)
 {
-	if(sqlbuf->buf[sqlbuf->next - 1] != '\n') buffer_append(sqlbuf, '\n');
 	fwrite(sqlbuf->buf, 1, sqlbuf->next, stdout);
+	fputc('\n', stdout);
 }
 
 void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	switch(action) {
-	case 'c':  // clear
-		sqlbuf->next = 0;
-		break;
 	case 'e':  // edit
 		edit(sqlbuf);
 		print(sqlbuf);

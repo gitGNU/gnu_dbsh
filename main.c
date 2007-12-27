@@ -35,94 +35,83 @@
 #include "sig.h"
 
 
+SQLHDBC conn;
+sql_buffer *mainbuf, *prevbuf;
+
+
 void usage(const char *cmd)
 {
 	printf(_("Usage: %s -l\n       %s <dsn> [<username>] [<password>]\n"),
 	       cmd, cmd);
 }
 
-void *main_loop(void *c)
+int process_line(char *line)
 {
-	SQLHDBC *connp = (SQLHDBC *) c;
-	sql_buffer *mainbuf, *prevbuf;
-	char *line;
 	int len, i;
-	char action;
-	char *paramstring;
+	char *actionchars, action, *paramstring;
+	sql_buffer *tempbuf;
 
-	mainbuf = buffer_alloc(256);
-	prevbuf = buffer_alloc(256);
+	if(!(len = strlen(line))) return 0;
+	action = 0;
+	actionchars = getenv("DBSH_ACTION_CHARS");
 
-	for(;;) {
-		line = readline(prompt_render(*connp, mainbuf));
-		if(!line) {
-			printf("\n");
-			break;
+	for(i = 0; i < len; i++) {
+
+		if(strchr(actionchars, line[i])) {
+			if(++i < len) {
+				if(!strchr(actionchars, line[i])) {
+					action = line[i];
+					paramstring = line + i;
+				}
+			} else {
+				action = 1;  // default;
+				paramstring = "";
+			}
 		}
 
-		len = strlen(line);
-		if(len) {
-			action = 0;
+		if(action) {
+			if(action == 'q') return -1;
 
-			for(i = 0; i < len; i++) {
-				if(strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
-					if(++i < len) {
-						if(!strchr(getenv("DBSH_ACTION_CHARS"), line[i])) {
-							action = line[i];
-							paramstring = line + i;
-						}
-					} else {
-						action = 1;  // default;
-						paramstring = "";
-					}
-				}
+			if(!mainbuf->next) {
+				if(prevbuf->next) {
+					tempbuf = mainbuf;
+					mainbuf = prevbuf;
+					prevbuf = tempbuf;
+				} else return 0;
+			}
 
-				if(action) {
-					if(action == 'q') return 0;
+			if(action != 'c') {
+				run_action(&conn, mainbuf,
+					   action, paramstring);
 
-					if(!mainbuf->next) {
-						if(prevbuf->next) buffer_copy(mainbuf, prevbuf);
-						else break;
-					}
-
-					run_action(connp, mainbuf, action, paramstring);
-
-					switch(action) {
-					case 'c':
-					case 'e':
-					case 'p':
-						// don't add to history or reset buffer (\c has already reset)
-						break;
-					default:
-						history_add(mainbuf, line + i - 1);
-						buffer_copy(prevbuf, mainbuf);
-						mainbuf->next = 0;
-					}
-
-					break;
-
+				if(action == 'e' || action == 'p') {
+					history_add(mainbuf, "");
 				} else {
-					buffer_append(mainbuf, line[i]);
+					history_add(mainbuf, line + i - 1);
 				}
+
+				tempbuf = prevbuf;
+				prevbuf = mainbuf;
+				mainbuf = tempbuf;
 			}
 
-			if(!action) {
-				buffer_append(mainbuf, '\n');
-			}
+			mainbuf->next = 0;
+			return 0;
+
+		} else {
+			buffer_append(mainbuf, line[i]);
 		}
-
-		free(line);
 	}
 
+	buffer_append(mainbuf, '\n');
 	return 0;
 }
 
 int main(int argc, char *argv[])
 {
-	SQLHDBC conn;
 	char *dsn = 0, *user = 0, *pass = 0;
 	int opt, i;
-	results *res;
+	char *line;
 
 	setlocale(LC_ALL, "");
 	read_rc_file();
@@ -149,13 +138,23 @@ int main(int argc, char *argv[])
 
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
 
-	res = db_conn_details(conn);
-	output_results(res, 1, stdout);
+	output_results(db_conn_details(conn), 1, stdout);
 
 	history_start();
 	signal_handler_install();
 
-	main_loop(&conn);
+	mainbuf = buffer_alloc(256);
+	prevbuf = buffer_alloc(256);
+
+	/* Main loop */
+	for(;;) {
+		line = readline(prompt_render(conn, mainbuf));
+		if(!line || process_line(line)) {
+			printf("\n");
+			break;
+		}
+		free(line);
+	}
 
 	history_end();
 
