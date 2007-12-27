@@ -31,13 +31,9 @@
 #include "results.h"
 
 
-static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
+static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, FILE *stream)
 {
 	results *res = NULL;
-	FILE *stream;
-	int stype;
-	int i;
-	char *default_pager;
 
 	// TODO: proper parsing
 
@@ -48,57 +44,8 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstrin
 	}
 
 	if(res) {
-		stream = stdout;
-		stype = 0;
-
-		for(i = 0; i < strlen(paramstring); i++) {
-			if(paramstring[i] == '>') {
-				char *filename;
-				filename = strtok(paramstring + i + 1, " ");
-				stream = fopen(filename, "w");
-				if(!stream) {
-					perror("Failed to open output file");
-					results_free(res);
-					return;
-				}
-				stype = 1;
-				break;
-			} else if(paramstring[i] == '|') {
-				stream = popen(paramstring + i + 1, "w");
-				if(!stream) {
-					perror("Failed to open pipe");
-					results_free(res);
-					return;
-				}
-				stype = 2;
-				break;
-			}
-		}
-
-		if(stype == 0) {
-			default_pager = getenv("DBSH_DEFAULT_PAGER");
-			if(default_pager) {
-				stream = popen(default_pager, "w");
-				if(!stream) {
-					perror("Failed to open pipe");
-					results_free(res);
-					return;
-				}
-				stype = 2;
-			}
-		}
-
 		output_results(res, action, stream);
 		results_free(res);
-
-		switch(stype) {
-		case 1:
-			fclose(stream);
-			break;
-		case 2:
-			pclose(stream);
-			break;
-		}
 	}
 }
 
@@ -137,30 +84,80 @@ static void edit(sql_buffer *sqlbuf)
 	unlink(path);
 }
 
-static void print(sql_buffer *sqlbuf)
+static void print(sql_buffer *sqlbuf, FILE *stream)
 {
-	fwrite(sqlbuf->buf, 1, sqlbuf->next, stdout);
-	fputc('\n', stdout);
+	fwrite(sqlbuf->buf, 1, sqlbuf->next, stream);
+	fputc('\n', stream);
 }
 
 void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
+	FILE *stream;
+	int stype, i;
+
+	stream = stdout;
+	stype = 0;
+
+	for(i = 0; i < strlen(paramstring); i++) {
+		if(paramstring[i] == '>') {
+			char *filename;
+			filename = strtok(paramstring + i + 1, " ");
+			stream = fopen(filename, "w");
+			if(!stream) {
+				perror("Failed to open output file");
+				return;
+			}
+			stype = 1;
+			break;
+		} else if(paramstring[i] == '|') {
+			stream = popen(paramstring + i + 1, "w");
+			if(!stream) {
+				perror("Failed to open pipe");
+				return;
+			}
+			stype = 2;
+			break;
+		}
+	}
+
+	if(stype == 0) {
+		char *default_pager;
+		default_pager = getenv("DBSH_DEFAULT_PAGER");
+		if(default_pager) {
+			stream = popen(default_pager, "w");
+			if(!stream) {
+				perror("Failed to open pipe");
+				return;
+			}
+			stype = 2;
+		}
+	}
+
 	switch(action) {
 	case 'e':  // edit
 		edit(sqlbuf);
-		print(sqlbuf);
+		print(sqlbuf, stdout);
 		break;
 	case 'l':  // load
 		// TODO: load named buffer (or should that be a command?)
 		break;
 	case 'p':  // print
-		print(sqlbuf);
+		print(sqlbuf, stream);
 		break;
 	case 's':  // save
 		// TODO: save to named buffer
 		break;
 	default:
-		go(connp, sqlbuf, action, paramstring);
+		go(connp, sqlbuf, action, stream);
+		break;
+	}
+
+	switch(stype) {
+	case 1:
+		fclose(stream);
+		break;
+	case 2:
+		pclose(stream);
 		break;
 	}
 }

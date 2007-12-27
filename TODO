@@ -14,8 +14,8 @@ better portability - for one thing, make readline optional
 ncurses / locale-aware display mode (can handle tabs, multibyte chars etc)
 ODBC unicode mode?
 copyright message and version on startup
-redirects and pipes don't work for \p
 replace calls to getenv with rc_get or similar to avoid hardcoded prefix
+pager gets run even if no result set is generated (is this a problem?)
 
 aliases/prepared statements
 *alias getrow SELECT * FROM TABLE WHERE id = ?;
