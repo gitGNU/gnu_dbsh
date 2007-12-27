@@ -93,15 +93,16 @@ static void print(sql_buffer *sqlbuf, FILE *stream)
 void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	FILE *stream;
-	int stype, i;
+	int stype;
+	char *p;
 
 	stream = stdout;
 	stype = 0;
 
-	for(i = 0; i < strlen(paramstring); i++) {
-		if(paramstring[i] == '>') {
+	for(p = paramstring; *p; p++) {
+		if(*p == '>') {
 			char *filename;
-			filename = strtok(paramstring + i + 1, " ");
+			filename = strtok(p + 1, " ");
 			stream = fopen(filename, "w");
 			if(!stream) {
 				perror("Failed to open output file");
@@ -109,8 +110,8 @@ void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstri
 			}
 			stype = 1;
 			break;
-		} else if(paramstring[i] == '|') {
-			stream = popen(paramstring + i + 1, "w");
+		} else if(*p == '|') {
+			stream = popen(p + 1, "w");
 			if(!stream) {
 				perror("Failed to open pipe");
 				return;
