@@ -22,6 +22,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <readline/readline.h>
 #include <readline/history.h>
 
 #include "common.h"
@@ -43,13 +44,18 @@ static const char *get_history_filename()
 	return 0;
 }
 
-void history_start()
+char *rl_readline(const char *prompt)
+{
+	return readline(prompt);
+}
+
+void rl_history_start()
 {
 	using_history();
 	read_history(get_history_filename());
 }
 
-void history_add(sql_buffer *buf, const char *action_line)
+void rl_history_add(sql_buffer *buf, const char *action_line)
 {
 	char *histentry;
 	HIST_ENTRY *prev;
@@ -74,22 +80,38 @@ void history_add(sql_buffer *buf, const char *action_line)
 	}
 }
 
-void history_end()
+void rl_history_end()
 {
 	write_history(get_history_filename());
 }
 
 #else
 
-void history_start()
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "common.h"
+#include "buffer.h"
+#include "err.h"
+
+char *rl_readline(const char *prompt)
+{
+	char *buf;
+	fputs(prompt, stdout);
+	if(!(buf = (char *) malloc(1024))) err_system();
+	fgets(buf, 1024, stdin);
+	return buf;
+}
+
+void rl_history_start()
 {
 }
 
-void history_add(sql_buffer *buf, const char *action_line)
+void rl_history_add(sql_buffer *buf, const char *action_line)
 {
 }
 
-void history_end()
+void rl_history_end()
 {
 }
 

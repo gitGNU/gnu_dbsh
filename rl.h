@@ -16,11 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef HISTORY_H
-#define HISTORY_H
+#ifndef RL_H
+#define RL_H
 
-void history_start();
-void history_add(sql_buffer *, const char *);
-void history_end();
+char *rl_readline(const char *);
+
+void rl_history_start();
+void rl_history_add(sql_buffer *, const char *);
+void rl_history_end();
 
 #endif

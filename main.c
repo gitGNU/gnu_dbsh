@@ -22,17 +22,16 @@
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
-
-#include <readline/readline.h>
 
 #include "common.h"
 #include "action.h"
 #include "buffer.h"
 #include "db.h"
-#include "history.h"
 #include "prompt.h"
 #include "rc.h"
+#include "rl.h"
 #include "sig.h"
 
 
@@ -84,9 +83,9 @@ int process_line(char *line)
 					   action, paramstring);
 
 				if(action == 'e' || action == 'p') {
-					history_add(mainbuf, "");
+					rl_history_add(mainbuf, "");
 				} else {
-					history_add(mainbuf, line - 1);
+					rl_history_add(mainbuf, line - 1);
 				}
 
 				tempbuf = prevbuf;
@@ -148,7 +147,7 @@ int main(int argc, char *argv[])
 	conn = db_connect(dsn, user, pass);
 
 	if(pass) for(; *pass; pass++) *pass = 'x';
-	history_start();
+	rl_history_start();
 	signal_handler_install();
 
 	mainbuf = buffer_alloc(256);
@@ -156,7 +155,7 @@ int main(int argc, char *argv[])
 
 	/* Main loop */
 	for(;;) {
-		line = readline(prompt_render(conn, mainbuf));
+		line = rl_readline(prompt_render(conn, mainbuf));
 		if(!line || process_line(line)) {
 			fputc('\n', stdout);
 			break;
@@ -164,7 +163,7 @@ int main(int argc, char *argv[])
 		free(line);
 	}
 
-	history_end();
+	rl_history_end();
 
 	SQLDisconnect(conn);
 	SQLFreeHandle(SQL_HANDLE_DBC, conn);

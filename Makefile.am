@@ -8,10 +8,10 @@ dbsh_SOURCES = main.c common.h \
                command.h command.c \
                db.h db.c \
                err.h err.c \
-               history.h history.c \
                output.h output.c \
                prompt.h prompt.c \
                rc.h rc.c \
+               rl.h rl.c \
                results.h results.c \
                sig.h sig.c
 
