@@ -11,7 +11,7 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 
 # Checks for libraries.
-AC_CHECK_LIB([readline], [readline], , AC_MSG_ERROR([failed to find readline library]))
+AC_CHECK_LIB([readline], [readline])
 AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], , AC_MSG_ERROR([failed to find an ODBC library]))
 
 # Checks for header files.
