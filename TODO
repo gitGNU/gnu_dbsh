@@ -11,7 +11,8 @@ actions as shortcuts for commands, eg \r for reconnect (or do away with commands
 interpret single chars on a line as actions? (eg q) - configurable
 guile support?
 better portability - for one thing, make readline optional
-better support for non-ASCII character sets
+ncurses / locale-aware display mode (can handle tabs, multibyte chars etc)
+ODBC unicode mode?
 copyright message and version on startup
 redirects and pipes don't work for \p
 replace calls to getenv with rc_get or similar to avoid hardcoded prefix
