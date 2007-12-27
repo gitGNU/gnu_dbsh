@@ -40,9 +40,8 @@ const char *prompt_render(SQLHDBC conn, sql_buffer *buf)
 {
 	static char prompt[256];
 
-	const char *tpl;
+	const char *tpl, *s;
 	char *p;
-	int i, l;
 	char info[64];
 
 	tpl = getenv("DBSH_PROMPT");
@@ -50,9 +49,8 @@ const char *prompt_render(SQLHDBC conn, sql_buffer *buf)
 
 	// TODO: check for overflow
 
-	l = strlen(tpl);
-	for(i = 0; i < l; i++) {
-		switch(tpl[i]) {
+	for(s = tpl; *s; s++) {
+		switch(*s) {
 		case 'd':
 			db_info(conn, SQL_DATA_SOURCE_NAME, info, 64);
 			strcpy(p, info);
@@ -62,7 +60,7 @@ const char *prompt_render(SQLHDBC conn, sql_buffer *buf)
 			p += sprintf(p, "%d", get_lnum(buf));
 			break;
 		default:
-			*p++ = tpl[i];
+			*p++ = *s;
 		}
 	}
 
