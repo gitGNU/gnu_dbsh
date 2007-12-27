@@ -20,6 +20,7 @@
 #include <string.h>
 #include <readline/history.h>
 
+#include "common.h"
 #include "buffer.h"
 
 
@@ -31,7 +32,7 @@ static const char *get_history_filename()
 	home = getenv("HOME");
 
 	if(home) {
-		snprintf(filename, 1024, "%s/.dbsh_history", home);
+		snprintf(filename, 1024, "%s/.%s_history", home, PACKAGE);
 		return filename;
 	}
 

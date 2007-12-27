@@ -114,7 +114,7 @@ static void edit(sql_buffer *sqlbuf)
 	if(!editor) editor = "vi";
 
 	// FIXME: make this safe
-	snprintf(path, 1024, "/tmp/dbsh-edit.%d", getpid());
+	snprintf(path, 1024, "/tmp/%s-edit.%d", PACKAGE, getpid());
 
 	f = open(path, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 	if(f == -1) {

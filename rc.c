@@ -34,7 +34,7 @@ void read_rc_file()
 
 	if((home = getenv("HOME"))) {
 
-		snprintf(buffer, 1024, "%s/.dbshrc", home);
+		snprintf(buffer, 1024, "%s/.%src", home, PACKAGE);
 
 		if((rc = fopen(buffer, "r"))) {
 
