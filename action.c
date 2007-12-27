@@ -93,46 +93,35 @@ static void print(sql_buffer *sqlbuf, FILE *stream)
 void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
 {
 	FILE *stream;
-	int stype;
-	char *p;
+	char *pipeline, *p;
+	int m;
 
-	stream = stdout;
-	stype = 0;
+	pipeline = 0;
+	m = 0;
 
 	for(p = paramstring; *p; p++) {
 		if(*p == '>') {
-			char *filename;
-			filename = strtok(p + 1, " ");
-			stream = fopen(filename, "w");
-			if(!stream) {
-				perror("Failed to open output file");
-				return;
-			}
-			stype = 1;
+			pipeline = calloc(1, strlen(p) + 5);
+			m = 1;
+			sprintf(pipeline, "cat %s", p);
 			break;
 		} else if(*p == '|') {
-			stream = popen(p + 1, "w");
-			if(!stream) {
-				perror("Failed to open pipe");
-				return;
-			}
-			stype = 2;
+			pipeline = p + 1;
 			break;
 		}
 	}
 
-	if(stype == 0) {
-		char *default_pager;
-		default_pager = getenv("DBSH_DEFAULT_PAGER");
-		if(default_pager) {
-			stream = popen(default_pager, "w");
-			if(!stream) {
-				perror("Failed to open pipe");
-				return;
-			}
-			stype = 2;
+	if(!pipeline) pipeline = getenv("DBSH_DEFAULT_PAGER");
+
+	if(pipeline) {
+		stream = popen(pipeline, "w");
+		if(!stream) {
+			perror("Failed to open pipe");
+			return;
 		}
-	}
+		if(m) free(pipeline);
+	} else stream = stdout;
+
 
 	switch(action) {
 	case 'e':  // edit
@@ -153,12 +142,6 @@ void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstri
 		break;
 	}
 
-	switch(stype) {
-	case 1:
-		fclose(stream);
-		break;
-	case 2:
-		pclose(stream);
-		break;
-	}
+
+	if(pipeline) pclose(stream);
 }
