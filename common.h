@@ -19,8 +19,6 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#include <config.h>
-
 #define _(String) String
 
 typedef struct results results;
