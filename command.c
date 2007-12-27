@@ -24,13 +24,31 @@
 
 #include "common.h"
 #include "db.h"
+#include "gplv3.h"
 #include "err.h"
 #include "rc.h"
 #include "results.h"
 
-
 extern char **environ;
 
+
+static results *get_warranty()
+{
+	results *res = results_alloc();
+	results_set_cols(res, 1, _("WARRANTY"));
+	results_set_rows(res, 1);
+	res->data[0][0] = strdup(GPL_WARRANTY);
+	return res;
+}
+
+static results *get_copying()
+{
+	results *res = results_alloc();
+	results_set_cols(res, 1, _("COPYING"));
+	results_set_rows(res, 1);
+	res->data[0][0] = strdup(GPL_COPYING);
+	return res;
+}
 
 static results *set(const char *name, const char *value)
 {
@@ -122,6 +140,8 @@ results *run_command(SQLHDBC *connp, char *buf, int buflen)
 
 	if(!strcmp(command, "catalogs")) {
 		res = get_tables(*connp, "%", 0, 0);
+	} else if(!strcmp(command, "copying")) {
+		res = get_copying();
 	} else if(!strcmp(command, "columns")) {
 		res = get_columns(*connp, params[0], params[1], params[2]);
 	} else if(!strcmp(command, "info")) {
@@ -134,6 +154,8 @@ results *run_command(SQLHDBC *connp, char *buf, int buflen)
 		res = set(params[0], params[1]);
 	} else if(!strcmp(command, "tables")) {
 		res = get_tables(*connp, params[0], params[1], params[2]);
+	} else if(!strcmp(command, "warranty")) {
+		res = get_warranty();
 	} else {
 		printf(_("Unrecognised command: %s\n"), command);
 	}
