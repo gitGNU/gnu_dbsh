@@ -115,12 +115,17 @@ int main(int argc, char *argv[])
 	setlocale(LC_ALL, "");
 	read_rc_file();
 
-	while((opt = getopt(argc, argv, "l")) != -1) {
+	while((opt = getopt(argc, argv, "lv")) != -1) {
 		switch(opt) {
 		case 'l':
 			list_all_dsns();
 			return 0;
 			break;
+		case 'v':
+			printf("%s\n", PACKAGE_STRING);
+			return 0;
+			break;
+		}
 	}
 
 	if(argc - optind < 1) {
@@ -135,7 +140,6 @@ int main(int argc, char *argv[])
 	conn = db_connect(dsn, user, pass);
 
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
-
 	history_start();
 	signal_handler_install();
 
