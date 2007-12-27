@@ -17,11 +17,12 @@ copyright message and version on startup
 redirects and pipes don't work for \p
 replace calls to getenv with rc_get or similar to avoid hardcoded prefix
 
-prepared statement support:
-SELECT * FROM <table> WHERE id = ?
-\g 1
-\g 2
+aliases/prepared statements
+*alias getrow SELECT * FROM TABLE WHERE id = ?;
+*getrow 1;
+*getrow 2;
 etc
++ some way to save them for future use
 
 commands:
 *autocommit on|off
