@@ -127,7 +127,7 @@ results *run_command(SQLHDBC *connp, char *buf, int buflen)
 	} else if(!strcmp(command, "info")) {
 		res = db_conn_details(*connp);
 	} else if(!strcmp(command, "reconnect")) {
-		if(!db_reconnect(connp, params[0])) res = db_conn_details(*connp);
+		db_reconnect(connp, params[0]);
 	} else if(!strcmp(command, "schemas")) {
 		res = get_tables(*connp, "%", "%", 0);
 	} else if(!strcmp(command, "set")) {

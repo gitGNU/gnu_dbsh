@@ -29,7 +29,6 @@
 #include "buffer.h"
 #include "db.h"
 #include "history.h"
-#include "output.h"
 #include "prompt.h"
 #include "rc.h"
 #include "sig.h"
@@ -122,7 +121,6 @@ int main(int argc, char *argv[])
 			list_all_dsns();
 			return 0;
 			break;
-		}
 	}
 
 	if(argc - optind < 1) {
@@ -137,8 +135,6 @@ int main(int argc, char *argv[])
 	conn = db_connect(dsn, user, pass);
 
 	if(pass) for(i = 0; i < strlen(pass); i++) pass[i] = 'x';
-
-	output_results(db_conn_details(conn), 1, stdout);
 
 	history_start();
 	signal_handler_install();

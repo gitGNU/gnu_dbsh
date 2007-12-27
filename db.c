@@ -129,6 +129,8 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 		exit(1);
 	}
 
+	printf(_("Connected to %s\n"), dsn);
+
 	return conn;
 }
 
@@ -153,6 +155,7 @@ int db_reconnect(SQLHDBC *conn, const char *pass)
 		       (SQLCHAR *) pass, SQL_NTS);
 
 	if(SUCCESS(r)) {
+		printf(_("Connected to %s\n"), dsn);
 		SQLDisconnect(*conn);
 		SQLFreeHandle(SQL_HANDLE_DBC, *conn);
 		*conn = newconn;
