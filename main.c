@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 			return 0;
 			break;
 		case 'v':
-			printf("%s\n", PACKAGE_STRING);
+			puts(PACKAGE_STRING);
 			return 0;
 			break;
 		}
@@ -156,7 +156,7 @@ int main(int argc, char *argv[])
 	for(;;) {
 		line = readline(prompt_render(conn, mainbuf));
 		if(!line || process_line(line)) {
-			printf("\n");
+			fputc('\n', stdout);
 			break;
 		}
 		free(line);
