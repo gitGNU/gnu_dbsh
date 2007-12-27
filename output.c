@@ -26,9 +26,43 @@
 #include "results.h"
 
 
+typedef struct {
+	int width;
+	int height;
+} dim;
+
+
 #define NULL_DISPLAY "*NULL*"
 #define NULL_WIDTH 6
 
+
+static dim get_dimensions(const char *s)
+{
+	dim d;
+	const char *p;
+	int w;
+
+	if(s) {
+		d.width = w = 0;
+		d.height = 1;
+
+		for(p = s; *p; p++) {
+			if(*p == '\n') {
+				if(w > d.width) d.width = w;
+				w = 0;
+				d.height++;
+			} else w++;
+		}
+
+		if(w > d.width) d.width = w;
+
+	} else {
+		d.width = NULL_WIDTH;
+		d.height = 1;
+	}
+
+	return d;
+}
 
 void output_warnings(results *res, FILE *s)
 {
@@ -36,6 +70,14 @@ void output_warnings(results *res, FILE *s)
 	for(i = 0; i < res->nwarnings; i++) {
 		fprintf(s, "%s\n", res->warnings[i]);
 	}
+}
+
+void output_size_and_time(results *res, FILE *s)
+{
+	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
+		fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
+			res->time_taken.tv_sec, res->time_taken.tv_usec);
+
 }
 
 void output_horiz_separator(FILE *s, int col_widths[], SQLSMALLINT ncols)
@@ -52,31 +94,40 @@ void output_horiz_separator(FILE *s, int col_widths[], SQLSMALLINT ncols)
 
 void output_horiz_row(FILE *s, const char **data, int widths[], SQLSMALLINT ncols)
 {
+	const char **pos, *p;
 	SQLSMALLINT i;
-	int j, len;
+	int j;
 
-	for(i = 0; i < ncols; i++) {
-		fputs("| ", s);
+	int more_lines;
 
-		if(data[i]) {
-			len = strlen(data[i]);
-			if(len > widths[i]) len = widths[i];
-			fwrite(data[i], 1, len, s);
-		} else {
-			len = NULL_WIDTH;
-			fputs(NULL_DISPLAY, s);
-		}
+	pos = calloc(ncols, sizeof(char *));
+	memcpy(pos, data, ncols * sizeof(char *));
 
-		if(len < widths[i]) {
-			for(j = 0; j < widths[i] - len; j++) {
-				fputc(' ', s);
+	do {
+		more_lines = 0;
+
+		for(i = 0; i < ncols; i++) {
+
+			fputs("| ", s);
+
+			j = 0;
+			for(p = pos[i]; *p; p++) {
+				if(*p == '\n') {
+					pos[i] = p + 1;
+					more_lines = 1;
+					break;
+				} else {
+					fputc(*p, s);
+					j++;
+				}
 			}
+
+			for(; j <= widths[i]; j++) fputc(' ', s);
 		}
 
-		fputc(' ', s);
-	}
+		fputs("|\n", s);
 
-	fputs("|\n", s);
+	} while(more_lines);
 }
 
 void output_horiz(results *res, FILE *s)
@@ -84,19 +135,22 @@ void output_horiz(results *res, FILE *s)
 	SQLSMALLINT i;
 	SQLINTEGER j;
 	int *col_widths;
+	int *row_heights;
+	dim d;
 
- 	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
+	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
+        if(!(row_heights = calloc(res->nrows, sizeof(int)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
-		col_widths[i] = strlen(res->cols[i]);
+		d = get_dimensions(res->cols[i]);
+		col_widths[i] = d.width;
 	}
 
 	for(j = 0; j < res->nrows; j++) {
 		for(i = 0; i < res->ncols; i++) {
-			int w;
-			if(res->data[j][i]) w = strlen(res->data[j][i]);
-			else w = NULL_WIDTH;
-			if(w > col_widths[i]) col_widths[i] = w;
+			d = get_dimensions(res->data[j][i]);
+			if(d.width > col_widths[i]) col_widths[i] = d.width;
+			if(d.height > row_heights[j]) row_heights[j] = d.height;
 		}
 	}
 
@@ -110,10 +164,7 @@ void output_horiz(results *res, FILE *s)
 	free(col_widths);
 
 	output_warnings(res, s);
-
-	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
-		fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
-			res->time_taken.tv_sec, res->time_taken.tv_usec);
+	output_size_and_time(res, s);
 }
 
 void output_vert(results *res, FILE *s)
@@ -123,12 +174,12 @@ void output_vert(results *res, FILE *s)
 	SQLINTEGER j;
 	int k;
 	char *p;
+	dim d;
 
 	col_width = 0;
 	for(i = 0; i < res->ncols; i++) {
-		int w;
-		w = strlen(res->cols[i]);
-		if(w > col_width) col_width = w;
+		d = get_dimensions(res->cols[i]);
+		if(d.width > col_width) col_width = d.width;
 	}
 
 	col_width++;
@@ -157,25 +208,22 @@ void output_vert(results *res, FILE *s)
 	}
 
 	output_warnings(res, s);
-
-	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
-		fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
-			res->time_taken.tv_sec, res->time_taken.tv_usec);
+	output_size_and_time(res, s);
 }
 
 void output_csv_row(FILE *s, const char **data, SQLSMALLINT ncols, char separator, char delimiter)
 {
 	SQLSMALLINT i;
-	int j;
+	const char *p;
 
 	for(i = 0; i < ncols; i++) {
 
 		if(delimiter) fputc(delimiter, s);
 
 		if(data[i]) {
-			for(j = 0; j < strlen(data[i]); j++) {
-				if(data[i][j] == delimiter) fputc(delimiter, s);
-				fputc(data[i][j], s);
+			for(p = data[i]; *p; p++) {
+				if(*p == delimiter) fputc(delimiter, s);
+				fputc(*p, s);
 			}
 		}
 
