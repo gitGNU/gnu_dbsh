@@ -136,6 +136,9 @@ parsed_line *parse_string(const char *s)
 
 void free_parsed_line(parsed_line *l)
 {
+	int i;
+
+	for(i = 0; i < l->nchunks; i++) free(l->chunks[i]);
 	free(l->chunks);
 	free(l);
 }
