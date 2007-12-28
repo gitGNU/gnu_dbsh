@@ -9,10 +9,8 @@ specify editor as argument to \e? (or named buffer?)
 commands which don't return result sets could be actions instead, eg \r for reconnect
 interpret single chars on a line as actions? (eg q) - configurable
 guile support?
-better portability - for one thing, make readline optional
 ncurses / locale-aware display mode (can handle tabs, multibyte chars etc)
 ODBC unicode mode?
-copyright message and version on startup
 replace calls to getenv with rc_get or similar to avoid hardcoded prefix
 pager gets run even if no result set is generated (is this a problem?)
 more consistency in error handling (less random perrors and printfs)
