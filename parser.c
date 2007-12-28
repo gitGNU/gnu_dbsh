@@ -90,7 +90,7 @@ static void parse_char(char c, parser_state *st)
 				return;
 			}
 
-			if(c == '>' || c == '|') st->pipe = 0;
+			if(c == '>' || c == '|') st->pipe = 1;
 		}
 	}
 
