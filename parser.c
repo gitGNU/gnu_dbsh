@@ -30,6 +30,11 @@
 typedef struct {
 	char quote;
 	int escape;
+	int pipe;
+
+	buffer *buf;
+	int nchunks;
+	char *chunks[MAX_CHUNKS];
 } parser_state;
 
 
@@ -48,68 +53,75 @@ buffer_type get_buffer_type(buffer *b)
 	return BUFFER_SQL;
 }
 
-static char parse_char(char c, parser_state *st)
+static void parse_start(parser_state *st)
 {
-	if(st->escape) {
-		st->escape = 0;
-	} else {
-		if(isspace(c) && !st->quote) return 1;
+	st->quote = 0;
+	st->escape = 0;
+	st->pipe = 0;
 
-		if((c == '"' || c == '\'') && (!st->quote || st->quote == c)) {
+	st->buf = buffer_alloc(16);
+	st->nchunks = 0;
+}
+
+static void parse_char(char c, parser_state *st)
+{
+	if(st->nchunks == MAX_CHUNKS) return;
+
+	if(!st->pipe) {
+		if(st->escape) {
+			st->escape = 0;
+		} else {
+			if(isspace(c) && !st->quote) {
+				if(st->buf->next) {
+					st->chunks[st->nchunks++] = buffer_dup2str(st->buf);
+					st->buf->next = 0;
+					return;
+				}
+			}
+
+			if((c == '"' || c == '\'') &&
+			   (!st->quote || st->quote == c)) {
 				st->quote = (st->quote ? 0 : c);
-				return 0;
-		}
+				return;
+			}
 
-		if(c == '\\') {
-			st->escape = 1;
-			return 0;
+			if(c == '\\') {
+				st->escape = 1;
+				return;
+			}
+
+			if(c == '>' || c == '|') st->pipe = 0;
 		}
 	}
 
-	return c;
+	buffer_append(st->buf, c);
+}
+
+static parsed_line *parse_end(parser_state *st)
+{
+	parsed_line *l;
+	int i;
+
+	if(st->buf->next) st->chunks[st->nchunks++] = buffer_dup2str(st->buf);
+	buffer_free(st->buf);
+
+	if(!(l = calloc(1, sizeof(parsed_line)))) err_system();
+	if(!(l->chunks = calloc(st->nchunks, sizeof(char *)))) err_system();
+
+	l->nchunks = st->nchunks;
+	for(i = 0; i < st->nchunks; i++) l->chunks[i] = st->chunks[i];
+
+	return l;
 }
 
 parsed_line *parse_buffer(buffer *b)
 {
-	parser_state st = {0};
-	buffer *t;
-	int nchunks;
-	char *chunks[MAX_CHUNKS];
+	parser_state st;
 	int i;
-	char c;
-	parsed_line *l;
 
-	t = buffer_alloc(16);
-	nchunks = 0;
-
-	for(i = 0; i < b->next; i++) {
-		c = parse_char(b->buf[i], &st);
-		switch(c) {
-		case 0:
-			break;
-		case 1:
-			if(t->next) {
-				chunks[nchunks++] = buffer_dup2str(t);
-				t->next = 0;
-			}
-			break;
-		default:
-			buffer_append(t, c);
-		}
-
-		if(nchunks == MAX_CHUNKS) break;
-	}
-
-	if(t->next) chunks[nchunks++] = buffer_dup2str(t);
-	buffer_free(t);
-
-	if(!(l = calloc(1, sizeof(parsed_line)))) err_system();
-	if(!(l->chunks = calloc(nchunks, sizeof(char *)))) err_system();
-
-	l->nchunks = nchunks;
-	for(i = 0; i < nchunks; i++) l->chunks[i] = chunks[i];
-
-	return l;
+	parse_start(&st);
+	for(i = 0; i < b->next; i++) parse_char(b->buf[i], &st);
+	return parse_end(&st);
 }
 
 void free_parsed_line(parsed_line *l)
