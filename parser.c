@@ -124,6 +124,16 @@ parsed_line *parse_buffer(buffer *b)
 	return parse_end(&st);
 }
 
+parsed_line *parse_string(const char *s)
+{
+	parser_state st;
+	const char *p;
+
+	parse_start(&st);
+	for(p = s; *p; p++) parse_char(*p, &st);
+	return parse_end(&st);
+}
+
 void free_parsed_line(parsed_line *l)
 {
 	free(l->chunks);

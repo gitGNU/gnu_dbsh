@@ -33,6 +33,7 @@ typedef struct {
 
 buffer_type get_buffer_type(buffer *);
 parsed_line *parse_buffer(buffer *);
+parsed_line *parse_string(const char *);
 void free_parsed_line(parsed_line *);
 
 #endif
