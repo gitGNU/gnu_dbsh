@@ -46,6 +46,17 @@ void buffer_append(buffer *buf, char c)
 	buf->buf[buf->next++] = c;
 }
 
+char *buffer_dup2str(buffer *b)
+{
+	char *s;
+
+	if(!(s = malloc(b->next + 1))) err_system();
+	memcpy(s, b->buf, b->next);
+	s[b->next] = 0;
+
+	return s;
+}
+
 void buffer_free(buffer *b)
 {
 	free(b->buf);
