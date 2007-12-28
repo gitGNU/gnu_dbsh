@@ -36,7 +36,7 @@
 
 
 SQLHDBC conn;
-sql_buffer *mainbuf, *prevbuf;
+buffer *mainbuf, *prevbuf;
 
 
 void usage(const char *cmd)
@@ -48,7 +48,7 @@ void usage(const char *cmd)
 int process_line(char *line)
 {
 	char *actionchars, action, *paramstring;
-	sql_buffer *tempbuf;
+	buffer *tempbuf;
 
 	action = 0;
 	actionchars = getenv("DBSH_ACTION_CHARS");

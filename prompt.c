@@ -27,7 +27,7 @@
 #include "db.h"
 
 
-static int get_lnum(sql_buffer *buf)
+static int get_lnum(buffer *buf)
 {
 	int i, n = 1;
 
@@ -36,7 +36,7 @@ static int get_lnum(sql_buffer *buf)
 	return n;
 }
 
-const char *prompt_render(SQLHDBC conn, sql_buffer *buf)
+const char *prompt_render(SQLHDBC conn, buffer *buf)
 {
 	static char prompt[256];
 

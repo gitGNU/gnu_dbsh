@@ -22,7 +22,7 @@
 char *rl_readline(const char *);
 
 void rl_history_start();
-void rl_history_add(sql_buffer *, const char *);
+void rl_history_add(buffer *, const char *);
 void rl_history_end();
 
 #endif

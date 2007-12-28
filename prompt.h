@@ -21,6 +21,6 @@
 
 #include "buffer.h"
 
-const char *prompt_render(SQLHDBC, sql_buffer *);
+const char *prompt_render(SQLHDBC, buffer *);
 
 #endif

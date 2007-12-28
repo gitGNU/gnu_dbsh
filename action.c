@@ -33,7 +33,7 @@
 #include "results.h"
 
 
-static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, FILE *stream)
+static void go(SQLHDBC *connp, buffer *sqlbuf, char action, FILE *stream)
 {
 	results *res = NULL;
 
@@ -52,7 +52,7 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, FILE *stream)
 	}
 }
 
-static void edit(sql_buffer *sqlbuf)
+static void edit(buffer *sqlbuf)
 {
 	char *editor;
 	char path[1024];
@@ -87,13 +87,13 @@ static void edit(sql_buffer *sqlbuf)
 	unlink(path);
 }
 
-static void print(sql_buffer *sqlbuf, FILE *stream)
+static void print(buffer *sqlbuf, FILE *stream)
 {
 	fwrite(sqlbuf->buf, 1, sqlbuf->next, stream);
 	fputc('\n', stream);
 }
 
-void run_action(SQLHDBC *connp, sql_buffer *sqlbuf, char action, char *paramstring)
+void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 {
 	FILE *stream;
 	char *pipeline, *p;

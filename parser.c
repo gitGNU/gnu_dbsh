@@ -24,7 +24,7 @@
 #include "parser.h"
 
 
-buffer_type get_buffer_type(sql_buffer *b)
+buffer_type get_buffer_type(buffer *b)
 {
 	int i;
 

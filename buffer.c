@@ -23,11 +23,11 @@
 #include "buffer.h"
 #include "err.h"
 
-sql_buffer *buffer_alloc(size_t len)
+buffer *buffer_alloc(size_t len)
 {
-	sql_buffer *b;
+	buffer *b;
 
-	if(!(b = malloc(sizeof(sql_buffer)))) err_system();
+	if(!(b = malloc(sizeof(buffer)))) err_system();
 	if(!(b->buf = malloc(len))) err_system();
 
 	b->len  = len;
@@ -36,7 +36,7 @@ sql_buffer *buffer_alloc(size_t len)
 	return b;
 }
 
-void buffer_copy(sql_buffer *dest, sql_buffer *src)
+void buffer_copy(buffer *dest, buffer *src)
 {
 	if(dest->len < src->len) {
 		dest->len = src->len;
@@ -47,7 +47,7 @@ void buffer_copy(sql_buffer *dest, sql_buffer *src)
 	dest->next = src->next;
 }
 
-void buffer_append(sql_buffer *buf, char c)
+void buffer_append(buffer *buf, char c)
 {
 	if(buf->next >= buf->len) {
 		buf->len *= 2;
@@ -57,7 +57,7 @@ void buffer_append(sql_buffer *buf, char c)
 	buf->buf[buf->next++] = c;
 }
 
-void buffer_free(sql_buffer *b)
+void buffer_free(buffer *b)
 {
 	free(b->buf);
 	free(b);

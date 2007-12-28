@@ -25,11 +25,11 @@ typedef struct {
 	char *buf;
 	size_t len;
 	int next;
-} sql_buffer;
+} buffer;
 
-sql_buffer *buffer_alloc(size_t);
-void buffer_copy(sql_buffer *, sql_buffer *);
-void buffer_append(sql_buffer *, char);
-void buffer_free(sql_buffer *);
+buffer *buffer_alloc(size_t);
+void buffer_copy(buffer *, buffer *);
+void buffer_append(buffer *, char);
+void buffer_free(buffer *);
 
 #endif

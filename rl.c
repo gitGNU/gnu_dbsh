@@ -58,7 +58,7 @@ void rl_history_start()
 	if(hf) read_history(hf);
 }
 
-void rl_history_add(sql_buffer *buf, const char *action_line)
+void rl_history_add(buffer *buf, const char *action_line)
 {
 	char *histentry;
 	HIST_ENTRY *prev;
@@ -114,7 +114,7 @@ void rl_history_start()
 {
 }
 
-void rl_history_add(sql_buffer *buf, const char *action_line)
+void rl_history_add(buffer *buf, const char *action_line)
 {
 }
 

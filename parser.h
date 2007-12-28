@@ -26,7 +26,7 @@ typedef enum {
 	BUFFER_COMMAND
 } buffer_type;
 
-buffer_type get_buffer_type(sql_buffer *);
+buffer_type get_buffer_type(buffer *);
 
 #endif
 
