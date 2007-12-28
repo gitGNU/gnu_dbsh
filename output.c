@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wchar.h>
 
 #include "common.h"
 #include "err.h"
@@ -27,41 +28,66 @@
 
 
 typedef struct {
-	int width;
-	int height;
+	int lines;
+	int *widths;
+	int max_width;
 } dim;
 
 
 #define NULL_DISPLAY "*NULL*"
-#define NULL_WIDTH 6
 
 
-static dim get_dimensions(const char *s)
+static wchar_t *strdup2wcs(const char *s)
 {
-	dim d;
-	const char *p;
-	int w;
+	mbstate_t ps;
+	size_t len;
+	wchar_t *wcs;
 
-	if(s) {
-		d.width = w = 0;
-		d.height = 1;
+	memset(&ps, 0, sizeof(ps));
 
-		for(p = s; *p; p++) {
-			if(*p == '\n') {
-				if(w > d.width) d.width = w;
-				w = 0;
-				d.height++;
-			} else w++;
+	len = mbsrtowcs(0, &s, 0, &ps);
+	if(len == -1) err_system();
+
+	if(!(wcs = calloc(len + 1, sizeof(wchar_t)))) err_system();
+	mbsrtowcs(wcs, &s, len, &ps);
+
+	return wcs;
+}
+
+static dim *get_dimensions(const wchar_t *s)
+{
+	dim *d;
+	const wchar_t *p;
+	int line, w;
+
+	if(!(d = calloc(1, sizeof(dim)))) err_system();
+
+	d->lines = 1;
+	for(p = s; *p; p++)  if(*p == L'\n') d->lines++;
+
+	if(!(d->widths = calloc(d->lines, sizeof(int)))) err_system();
+
+	line = 0;
+	for(p = s; *p; p++) {
+		if(*p == L'\n') {
+			if(d->widths[line] > d->max_width)
+				d->max_width = d->widths[line];
+			line++;
+		} else {
+			w = wcwidth(*p);
+			if(w > 0) d->widths[line] += w;
 		}
-
-		if(w > d.width) d.width = w;
-
-	} else {
-		d.width = NULL_WIDTH;
-		d.height = 1;
 	}
 
+	if(d->widths[line] > d->max_width) d->max_width = d->widths[line];
+
 	return d;
+}
+
+static void free_dimensions(dim *d)
+{
+	free(d->widths);
+	free(d);
 }
 
 void output_warnings(results *res, FILE *s)
@@ -135,22 +161,30 @@ void output_horiz(results *res, FILE *s)
 	SQLSMALLINT i;
 	SQLINTEGER j;
 	int *col_widths;
-	int *row_heights;
-	dim d;
+	dim *d;
+	wchar_t *wcs;
+
 
 	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
-        if(!(row_heights = calloc(res->nrows, sizeof(int)))) err_system();
+
 
 	for(i = 0; i < res->ncols; i++) {
-		d = get_dimensions(res->cols[i]);
-		col_widths[i] = d.width;
+		wcs = strdup2wcs(res->cols[i]);
+		d = get_dimensions(wcs);
+		col_widths[i] = d->max_width;
+		free_dimensions(d);
+		free(wcs);
 	}
 
 	for(j = 0; j < res->nrows; j++) {
 		for(i = 0; i < res->ncols; i++) {
-			d = get_dimensions(res->data[j][i]);
-			if(d.width > col_widths[i]) col_widths[i] = d.width;
-			if(d.height > row_heights[j]) row_heights[j] = d.height;
+			wcs = strdup2wcs(res->data[j][i] ?
+					 res->data[j][i] : NULL_DISPLAY);
+			d = get_dimensions(wcs);
+			if(d->max_width > col_widths[i])
+				col_widths[i] = d->max_width;
+			free_dimensions(d);
+			free(wcs);
 		}
 	}
 
@@ -174,12 +208,16 @@ void output_vert(results *res, FILE *s)
 	SQLINTEGER j;
 	int k;
 	char *p;
-	dim d;
+	wchar_t *wcs;
+	dim *d;
 
 	col_width = 0;
 	for(i = 0; i < res->ncols; i++) {
-		d = get_dimensions(res->cols[i]);
-		if(d.width > col_width) col_width = d.width;
+		wcs = strdup2wcs(res->cols[i]);
+		d = get_dimensions(wcs);
+		if(d->max_width > col_width) col_width = d->max_width;
+		free_dimensions(d);
+		free(wcs);
 	}
 
 	col_width++;
