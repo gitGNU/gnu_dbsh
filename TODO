@@ -14,6 +14,7 @@ ODBC unicode mode?
 replace calls to getenv with rc_get or similar to avoid hardcoded prefix
 pager gets run even if no result set is generated (is this a problem?)
 more consistency in error handling (less random perrors and printfs)
+tidy up function names
 
 aliases/prepared statements
 *alias getrow SELECT * FROM TABLE WHERE id = ?;
