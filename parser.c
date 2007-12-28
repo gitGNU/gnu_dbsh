@@ -21,7 +21,16 @@
 #include <string.h>
 
 #include "common.h"
+#include "err.h"
 #include "parser.h"
+
+
+#define MAX_CHUNKS 16
+
+typedef struct {
+	char quote;
+	int escape;
+} parser_state;
 
 
 buffer_type get_buffer_type(buffer *b)
@@ -39,3 +48,72 @@ buffer_type get_buffer_type(buffer *b)
 	return BUFFER_SQL;
 }
 
+static char parse_char(char c, parser_state *st)
+{
+	if(st->escape) {
+		st->escape = 0;
+	} else {
+		if(isspace(c) && !st->quote) return 1;
+
+		if((c == '"' || c == '\'') && (!st->quote || st->quote == c)) {
+				st->quote = (st->quote ? 0 : c);
+				return 0;
+		}
+
+		if(c == '\\') {
+			st->escape = 1;
+			return 0;
+		}
+	}
+
+	return c;
+}
+
+parsed_line *parse_buffer(buffer *b)
+{
+	parser_state st = {0};
+	buffer *t;
+	int nchunks;
+	char *chunks[MAX_CHUNKS];
+	int i;
+	char c;
+	parsed_line *l;
+
+	t = buffer_alloc(16);
+	nchunks = 0;
+
+	for(i = 0; i < b->next; i++) {
+		c = parse_char(b->buf[i], &st);
+		switch(c) {
+		case 0:
+			break;
+		case 1:
+			if(t->next) {
+				chunks[nchunks++] = buffer_dup2str(t);
+				t->next = 0;
+			}
+			break;
+		default:
+			buffer_append(t, c);
+		}
+
+		if(nchunks == MAX_CHUNKS) break;
+	}
+
+	if(t->next) chunks[nchunks++] = buffer_dup2str(t);
+	buffer_free(t);
+
+	if(!(l = calloc(1, sizeof(parsed_line)))) err_system();
+	if(!(l->chunks = calloc(nchunks, sizeof(char *)))) err_system();
+
+	l->nchunks = nchunks;
+	for(i = 0; i < nchunks; i++) l->chunks[i] = chunks[i];
+
+	return l;
+}
+
+void free_parsed_line(parsed_line *l)
+{
+	free(l->chunks);
+	free(l);
+}

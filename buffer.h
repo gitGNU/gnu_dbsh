@@ -21,11 +21,11 @@
 
 #include <sys/types.h>
 
-typedef struct {
+struct buffer {
 	char *buf;
 	size_t len;
 	int next;
-} buffer;
+};
 
 buffer *buffer_alloc(size_t);
 void buffer_append(buffer *, char);

@@ -39,7 +39,7 @@ static void go(SQLHDBC *connp, buffer *sqlbuf, char action, FILE *stream)
 
 	switch(get_buffer_type(sqlbuf)) {
 	case BUFFER_COMMAND:
-		res = run_command(connp, sqlbuf->buf, sqlbuf->next);
+		res = run_command(connp, sqlbuf);
 		break;
 	case BUFFER_SQL:
 		res = execute_query(*connp, sqlbuf->buf, sqlbuf->next);

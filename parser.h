@@ -26,7 +26,14 @@ typedef enum {
 	BUFFER_COMMAND
 } buffer_type;
 
+typedef struct {
+	int nchunks;
+	char **chunks;
+} parsed_line;
+
 buffer_type get_buffer_type(buffer *);
+parsed_line *parse_buffer(buffer *);
+void free_parsed_line(parsed_line *);
 
 #endif
 

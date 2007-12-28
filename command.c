@@ -26,6 +26,7 @@
 #include "db.h"
 #include "gplv3.h"
 #include "err.h"
+#include "parser.h"
 #include "rc.h"
 #include "results.h"
 
@@ -111,56 +112,54 @@ static results *set(const char *name, const char *value)
 	return res;
 }
 
-results *run_command(SQLHDBC *connp, char *buf, int buflen)
+results *run_command(SQLHDBC *connp, buffer *buf)
 {
-	int i;
-	char command[32] = "";
-	char *line;
-	char *saveptr;
-	char *params[4];
+	parsed_line *l;
 	results *res = 0;
 
-	if(!(line = malloc(buflen + 1))) err_system();
-	memcpy(line, buf, buflen);
-	line[buflen] = 0;
+	l = parse_buffer(buf);
+	if(l->nchunks < 1) return 0;
 
-	// TODO: parse properly, allow quoting / escaping etc
-
-	for(i = 0; i < 31 && line[i+1] && !isspace(line[i+1]); i++) {
-		command[i] = tolower(line[i+1]);
-	}
-	command[i] = 0;
-
-	line += i + 1;
-	for(i = 0; i < 4; i++) {
-		params[i] = strtok_r(line, " \n\t", &saveptr);
-		if(params[i] && !strcmp(params[i], "NULL")) params[i] = 0;
-		line = 0;
-	}
-
-	if(!strcmp(command, "catalogs")) {
-		res = get_tables(*connp, "%", 0, 0);
-	} else if(!strcmp(command, "copying")) {
+	// Help commands
+	if(!strcmp(l->chunks[0] + 1, "copying")) {
 		res = get_copying();
-	} else if(!strcmp(command, "columns")) {
-		res = get_columns(*connp, params[0], params[1], params[2]);
-	} else if(!strcmp(command, "info")) {
-		res = db_conn_details(*connp);
-	} else if(!strcmp(command, "reconnect")) {
-		db_reconnect(connp, params[0]);
-	} else if(!strcmp(command, "schemas")) {
-		res = get_tables(*connp, "%", "%", 0);
-	} else if(!strcmp(command, "set")) {
-		res = set(params[0], params[1]);
-	} else if(!strcmp(command, "tables")) {
-		res = get_tables(*connp, params[0], params[1], params[2]);
-	} else if(!strcmp(command, "warranty")) {
+	} else if(!strcmp(l->chunks[0] + 1, "warranty")) {
 		res = get_warranty();
-	} else {
-		printf(_("Unrecognised command: %s\n"), command);
 	}
 
-	free(line);
+	// Catalog commands
+	else if(!strcmp(l->chunks[0] + 1, "catalogs")) {
+		res = get_tables(*connp, "%", 0, 0);
+	} else if(!strcmp(l->chunks[0] + 1, "schemas")) {
+		res = get_tables(*connp, "%", "%", 0);
+	} else if(!strcmp(l->chunks[0] + 1, "tables")) {
+		res = get_tables(*connp,
+				 l->nchunks > 1 ? l->chunks[1] : 0,
+				 l->nchunks > 2 ? l->chunks[2] : 0,
+				 l->nchunks > 3 ? l->chunks[3] : 0);
+	} else if(!strcmp(l->chunks[0] + 1, "columns")) {
+		res = get_columns(*connp,
+				 l->nchunks > 1 ? l->chunks[1] : 0,
+				 l->nchunks > 2 ? l->chunks[2] : 0,
+				 l->nchunks > 3 ? l->chunks[3] : 0);
+	}
+
+	// Connection commands
+	else if(!strcmp(l->chunks[0] + 1, "info")) {
+		res = db_conn_details(*connp);
+	} else if(!strcmp(l->chunks[0] + 1, "reconnect")) {
+		db_reconnect(connp, l->nchunks > 1 ? l->chunks[1] : 0);
+	}
+
+	// Other commands
+	else if(!strcmp(l->chunks[0] + 1, "set")) {
+		res = set(l->nchunks > 1 ? l->chunks[1] : 0,
+			  l->nchunks > 2 ? l->chunks[2] : 0);
+	} else {
+		printf(_("Unrecognised command: %s\n"), l->chunks[0] + 1);
+	}
+
+	free_parsed_line(l);
 
 	return res;
 }

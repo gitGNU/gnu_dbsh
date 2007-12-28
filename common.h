@@ -21,6 +21,7 @@
 
 #define _(String) String
 
+typedef struct buffer buffer;
 typedef struct results results;
 
 #endif
