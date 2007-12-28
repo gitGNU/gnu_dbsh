@@ -21,7 +21,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -30,6 +29,7 @@
 #include "buffer.h"
 #include "command.h"
 #include "output.h"
+#include "parser.h"
 #include "results.h"
 
 
@@ -37,12 +37,13 @@ static void go(SQLHDBC *connp, sql_buffer *sqlbuf, char action, FILE *stream)
 {
 	results *res = NULL;
 
-	// TODO: proper parsing
-
-	if(strchr(getenv("DBSH_COMMAND_CHARS"), sqlbuf->buf[0])) {
+	switch(get_buffer_type(sqlbuf)) {
+	case BUFFER_COMMAND:
 		res = run_command(connp, sqlbuf->buf, sqlbuf->next);
-	} else {
+		break;
+	case BUFFER_SQL:
 		res = execute_query(*connp, sqlbuf->buf, sqlbuf->next);
+		break;
 	}
 
 	if(res) {
