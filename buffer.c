@@ -36,17 +36,6 @@ buffer *buffer_alloc(size_t len)
 	return b;
 }
 
-void buffer_copy(buffer *dest, buffer *src)
-{
-	if(dest->len < src->len) {
-		dest->len = src->len;
-		if(!(dest->buf = realloc(dest->buf, dest->len))) err_system();
-	}
-
-	memcpy(dest->buf, src->buf, src->next);
-	dest->next = src->next;
-}
-
 void buffer_append(buffer *buf, char c)
 {
 	if(buf->next >= buf->len) {

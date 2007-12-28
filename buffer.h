@@ -28,7 +28,6 @@ typedef struct {
 } buffer;
 
 buffer *buffer_alloc(size_t);
-void buffer_copy(buffer *, buffer *);
 void buffer_append(buffer *, char);
 void buffer_free(buffer *);
 
