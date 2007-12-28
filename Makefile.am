@@ -1,4 +1,4 @@
-AM_CFLAGS = -Wall -Werror
+AM_CFLAGS = -Wall -Werror -D_XOPEN_SOURCE=600
 
 bin_PROGRAMS = dbsh
 

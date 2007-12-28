@@ -19,6 +19,7 @@
 #ifndef RESULTS_H
 #define RESULTS_H
 
+#include <sys/time.h>
 #include <sql.h>
 
 struct results {
