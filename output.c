@@ -118,17 +118,17 @@ void output_horiz_separator(FILE *s, int col_widths[], SQLSMALLINT ncols)
 	fputs("+\n", s);
 }
 
-void output_horiz_row(FILE *s, const char **data, int widths[], SQLSMALLINT ncols)
+void output_horiz_row(FILE *s, const char **data,
+		      dim **dims, int widths[], SQLSMALLINT ncols)
 {
 	const char **pos, *p;
 	SQLSMALLINT i;
-	int j;
-
-	int more_lines;
+	int j, k, more_lines;
 
 	pos = calloc(ncols, sizeof(char *));
 	memcpy(pos, data, ncols * sizeof(char *));
 
+	j = 0;
 	do {
 		more_lines = 0;
 
@@ -136,66 +136,79 @@ void output_horiz_row(FILE *s, const char **data, int widths[], SQLSMALLINT ncol
 
 			fputs("| ", s);
 
-			j = 0;
 			for(p = pos[i]; *p; p++) {
 				if(*p == '\n') {
 					pos[i] = p + 1;
 					more_lines = 1;
 					break;
-				} else {
-					fputc(*p, s);
-					j++;
-				}
+				} else fputc(*p, s);
 			}
 
-			for(; j <= widths[i]; j++) fputc(' ', s);
+			for(k = dims[i]->widths[j]; k <= widths[i]; k++) fputc(' ', s);
 		}
 
 		fputs("|\n", s);
+		j++;
 
 	} while(more_lines);
+
+	free(pos);
 }
 
 void output_horiz(results *res, FILE *s)
 {
 	SQLSMALLINT i;
 	SQLINTEGER j;
+	dim **head_dims, ***row_dims;
 	int *col_widths;
-	dim *d;
 	wchar_t *wcs;
 
 
 	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
-
+	if(!(head_dims = calloc(res->ncols, sizeof(dim *)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
 		wcs = strdup2wcs(res->cols[i]);
-		d = get_dimensions(wcs);
-		col_widths[i] = d->max_width;
-		free_dimensions(d);
+		head_dims[i] = get_dimensions(wcs);
+		col_widths[i] = head_dims[i]->max_width;
 		free(wcs);
 	}
 
+	if(!(row_dims = calloc(res->nrows, sizeof(dim **)))) err_system();
+
 	for(j = 0; j < res->nrows; j++) {
+		if(!(row_dims[j] = calloc(res->ncols, sizeof(dim *)))) err_system();
 		for(i = 0; i < res->ncols; i++) {
 			wcs = strdup2wcs(res->data[j][i] ?
 					 res->data[j][i] : NULL_DISPLAY);
-			d = get_dimensions(wcs);
-			if(d->max_width > col_widths[i])
-				col_widths[i] = d->max_width;
-			free_dimensions(d);
+			row_dims[j][i] = get_dimensions(wcs);
+			if(row_dims[j][i]->max_width > col_widths[i])
+				col_widths[i] = row_dims[j][i]->max_width;
 			free(wcs);
 		}
 	}
 
 	output_horiz_separator(s, col_widths, res->ncols);
-	output_horiz_row(s, (const char **) res->cols, col_widths, res->ncols);
+	output_horiz_row(s, (const char **) res->cols, head_dims, col_widths, res->ncols);
 	output_horiz_separator(s, col_widths, res->ncols);
 	for(j = 0; j < res->nrows; j++)
-		output_horiz_row(s, (const char **) res->data[j], col_widths, res->ncols);
+		output_horiz_row(s, (const char **) res->data[j], row_dims[j], col_widths, res->ncols);
 	output_horiz_separator(s, col_widths, res->ncols);
 
 	free(col_widths);
+
+	for(i = 0; i < res->ncols; i++) {
+		free_dimensions(head_dims[i]);
+	}
+	free(head_dims);
+
+	for(j = 0; j < res->nrows; j++) {
+		for(i = 0; i < res->ncols; i++) {
+			free_dimensions(row_dims[j][i]);
+		}
+		free(row_dims[j]);
+	}
+	free(row_dims);
 
 	output_warnings(res, s);
 	output_size_and_time(res, s);
