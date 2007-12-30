@@ -197,9 +197,7 @@ void output_horiz(results *res, FILE *s)
 
 	free(col_widths);
 
-	for(i = 0; i < res->ncols; i++) {
-		free_dimensions(head_dims[i]);
-	}
+	for(i = 0; i < res->ncols; i++) free_dimensions(head_dims[i]);
 	free(head_dims);
 
 	for(j = 0; j < res->nrows; j++) {
@@ -222,24 +220,26 @@ void output_vert(results *res, FILE *s)
 	int k;
 	char *p;
 	wchar_t *wcs;
-	dim *d;
+	dim **head_dims;
+
+	if(!(head_dims = calloc(res->ncols, sizeof(dim *)))) err_system();
 
 	col_width = 0;
 	for(i = 0; i < res->ncols; i++) {
 		wcs = strdup2wcs(res->cols[i]);
-		d = get_dimensions(wcs);
-		if(d->max_width > col_width) col_width = d->max_width;
-		free_dimensions(d);
+		head_dims[i] = get_dimensions(wcs);
+		if(head_dims[i]->max_width > col_width) col_width = head_dims[i]->max_width;
 		free(wcs);
 	}
-
-	col_width++;
 
 	for(j = 0; j < res->nrows; j++) {
 
 		fprintf(s, "******************************** Row %ld ********************************\n", j + 1);
 
 		for(i = 0; i < res->ncols; i++) {
+
+			for(k = 0; k <= col_width - head_dims[i]->widths[0]; k++) fputc(' ', s);
+
 			fprintf(s, "%*s | ", col_width, res->cols[i]);
 
 			if(res->data[j][i]) {
@@ -247,7 +247,7 @@ void output_vert(results *res, FILE *s)
 					fputc(*p, s);
 
 					if(*p == '\n') {
-						for(k = 0; k < col_width + 3; k++) fputc(' ', s);
+						for(k = 0; k < col_width + 4; k++) fputc(' ', s);
 					}
 				}
 			} else {
@@ -257,6 +257,9 @@ void output_vert(results *res, FILE *s)
 			fputc('\n', s);
 		}
 	}
+
+	for(i = 0; i < res->ncols; i++) free_dimensions(head_dims[i]);
+	free(head_dims);
 
 	output_warnings(res, s);
 	output_size_and_time(res, s);
