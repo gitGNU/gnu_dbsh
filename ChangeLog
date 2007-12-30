@@ -1,7 +1,7 @@
 0.3a
 	Further UI tweaks.
-	Don't display full info on connect, just a 'connected' message.
-	Vertical and horizontal output now correctly handle newlines.
+	Vertical and horizontal output now correctly handle newlines and
+	multibyte chars.
 	Half-decent parsing for command parameters etc.
 
 0.2a
