@@ -20,7 +20,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <alloca.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,6 +30,7 @@
 #include "action.h"
 #include "buffer.h"
 #include "command.h"
+#include "err.h"
 #include "output.h"
 #include "parser.h"
 #include "results.h"
@@ -101,15 +101,18 @@ void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 	parsed_line *l;
 	char *pipeline, *p;
 	FILE *stream;
+	int m;
 
 	pipeline = 0;
+	m = 0;
 
 	l = parse_string(paramstring);
 
 	if(l->nchunks) {
 		p = l->chunks[l->nchunks - 1];
 		if(*p == '>') {
-			pipeline = alloca(strlen(p) + 5);
+			if(!(pipeline = malloc(strlen(p) + 5))) err_system();
+			m = 1;
 			sprintf(pipeline, "cat %s", p);
 		} else if(*p == '|') {
 			pipeline = p + 1;
@@ -124,6 +127,7 @@ void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 			perror("Failed to open pipe");
 			return;
 		}
+		if(m) free(pipeline);
 	} else stream = stdout;
 
 
