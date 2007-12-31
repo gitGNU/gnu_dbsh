@@ -1,7 +1,7 @@
 0.3a
 	Further UI tweaks.
-	Vertical and horizontal output now correctly handle newlines and
-	multibyte chars.
+	Vertical and horizontal output now correctly handle newlines, tabs
+	and multibyte chars.
 	Half-decent parsing for command parameters etc.
 
 0.2a
