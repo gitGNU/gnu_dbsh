@@ -108,7 +108,6 @@ void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 
 	if(l->nchunks) {
 		p = l->chunks[l->nchunks - 1];
-		printf("Last chunk: %s\n", p);
 		if(*p == '>') {
 			pipeline = alloca(strlen(p) + 5);
 			sprintf(pipeline, "cat %s", p);
