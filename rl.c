@@ -18,17 +18,25 @@
 
 #include <config.h>
 
-#ifdef HAVE_LIBREADLINE
+#if defined(HAVE_LIBREADLINE) || defined(HAVE_LIBEDIT) || defined(HAVE_LIBEDITLINE)
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(HAVE_LIBREADLINE)
 #include <readline/readline.h>
 #include <readline/history.h>
+#elif defined(HAVE_LIBEDIT)
+#include <editline/readline.h>
+#elif defined(HAVE_LIBEDITLINE)
+#include <editline.h>
+#endif
 
 #include "common.h"
 #include "buffer.h"
 
-
+#ifndef HAVE_LIBEDITLINE
 static const char *get_history_filename()
 {
 	static char filename[1024];
@@ -43,6 +51,7 @@ static const char *get_history_filename()
 
 	return 0;
 }
+#endif
 
 char *rl_readline(const char *prompt)
 {
@@ -51,18 +60,25 @@ char *rl_readline(const char *prompt)
 
 void rl_history_start()
 {
+#ifndef HAVE_LIBEDITLINE
+
 	const char *hf;
 
 	using_history();
 	hf = get_history_filename();
 	if(hf) read_history(hf);
+
+#endif
 }
 
 void rl_history_add(buffer *buf, const char *action_line)
 {
 	char *histentry;
+
+#ifndef HAVE_LIBEDITLINE
 	HIST_ENTRY *prev;
 	const char *hf;
+#endif
 
 	histentry = malloc(buf->next + strlen(action_line) + 1);
 
@@ -70,6 +86,10 @@ void rl_history_add(buffer *buf, const char *action_line)
 		memcpy(histentry, buf->buf, buf->next);
 		strcpy(histentry + buf->next, action_line);
 
+#ifdef HAVE_LIBEDITLINE
+
+		add_history(histentry);
+#else
 		using_history();
 
 		prev = previous_history();
@@ -82,14 +102,19 @@ void rl_history_add(buffer *buf, const char *action_line)
 		// This can be removed once this client is stable enough to trust
 		hf = get_history_filename();
 		if(hf) write_history(hf);
+#endif
 	}
 }
 
 void rl_history_end()
 {
+#ifndef HAVE_LIBEDITLINE
+
 	const char *hf;
 	hf = get_history_filename();
 	if(hf) write_history(hf);
+
+#endif
 }
 
 #else
