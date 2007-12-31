@@ -73,6 +73,8 @@ static dim *get_dimensions(const wchar_t *s)
 			if(d->widths[line] > d->max_width)
 				d->max_width = d->widths[line];
 			line++;
+		} else if(*p == L'\t') {
+			d->widths[line] += 8;
 		} else {
 			w = wcwidth(*p);
 			if(w > 0) d->widths[line] += w;
@@ -141,7 +143,11 @@ void output_horiz_row(FILE *s, const char **data,
 					pos[i] = p + 1;
 					more_lines = 1;
 					break;
-				} else fputc(*p, s);
+				} else if(*p == '\t') {
+					fputs("        ", s);
+				} else {
+					fputc(*p, s);
+				}
 			}
 
 			for(k = dims[i]->widths[j]; k <= widths[i]; k++) fputc(' ', s);
@@ -240,7 +246,12 @@ void output_vert(results *res, FILE *s)
 
 			for(k = 0; k <= col_width - head_dims[i]->widths[0]; k++) fputc(' ', s);
 
-			fprintf(s, "%*s | ", col_width, res->cols[i]);
+			for(p = res->cols[i]; *p; p++) {
+				if(*p == '\t') fputs("        ", s);
+				else fputc(*p, s);
+			}
+
+			fputs(" | ", s);
 
 			if(res->data[j][i]) {
 				for(p = res->data[j][i]; *p; p++) {
