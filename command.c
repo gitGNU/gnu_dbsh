@@ -25,6 +25,7 @@
 #include "common.h"
 #include "db.h"
 #include "gplv3.h"
+#include "help.h"
 #include "err.h"
 #include "parser.h"
 #include "rc.h"
@@ -33,12 +34,18 @@
 extern char **environ;
 
 
-static results *get_warranty()
+static results *get_help(const char *topic)
 {
-	results *res = results_alloc();
-	results_set_cols(res, 1, _("WARRANTY"));
+	const char *text;
+	results *res;
+
+	if(!strcmp(topic, "intro")) text = HELP_INTRO;
+	else text = HELP_NOTFOUND;
+
+	res = results_alloc();
+	results_set_cols(res, 1, topic);
 	results_set_rows(res, 1);
-	res->data[0][0] = strdup(GPL_WARRANTY);
+	res->data[0][0] = strdup(text);
 	return res;
 }
 
@@ -48,6 +55,15 @@ static results *get_copying()
 	results_set_cols(res, 1, _("COPYING"));
 	results_set_rows(res, 1);
 	res->data[0][0] = strdup(GPL_COPYING);
+	return res;
+}
+
+static results *get_warranty()
+{
+	results *res = results_alloc();
+	results_set_cols(res, 1, _("WARRANTY"));
+	results_set_rows(res, 1);
+	res->data[0][0] = strdup(GPL_WARRANTY);
 	return res;
 }
 
@@ -121,11 +137,11 @@ results *run_command(SQLHDBC *connp, buffer *buf)
 	if(l->nchunks < 1) return 0;
 
 	// Help commands
-	if(!strcmp(l->chunks[0] + 1, "copying")) {
-		res = get_copying();
-	} else if(!strcmp(l->chunks[0] + 1, "warranty")) {
-		res = get_warranty();
+	if(!strcmp(l->chunks[0] + 1, "help")) {
+		res = get_help(l->nchunks > 1 ? l->chunks[1] : "intro");
 	}
+	else if(!strcmp(l->chunks[0] + 1, "copying")) res = get_copying();
+	else if(!strcmp(l->chunks[0] + 1, "warranty")) res = get_warranty();
 
 	// Catalog commands
 	else if(!strcmp(l->chunks[0] + 1, "catalogs")) {

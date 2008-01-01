@@ -138,7 +138,8 @@ int main(int argc, char *argv[])
 	     "This is free software: "
 	     "you are welcome to modify and redistribute it\n"
 	     "under certain conditions; for details type "
-	     "`/copying; | more'\n");
+	     "`/copying; | more'\n"
+	     "Type `/help;' for help or `\\q' to quit.\n");
 
 	dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];

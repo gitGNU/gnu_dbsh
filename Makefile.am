@@ -9,6 +9,7 @@ dbsh_SOURCES = main.c common.h \
                db.h db.c \
                err.h err.c \
                gplv3.h \
+               help.h \
                output.h output.c \
                parser.h parser.c \
                prompt.h prompt.c \
