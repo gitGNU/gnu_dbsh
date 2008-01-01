@@ -29,6 +29,7 @@
 #include "action.h"
 #include "buffer.h"
 #include "db.h"
+#include "parser.h"
 #include "prompt.h"
 #include "rc.h"
 #include "rl.h"
@@ -101,7 +102,20 @@ int process_line(char *line)
 		}
 	}
 
-	if(mainbuf->next) buffer_append(mainbuf, '\n');
+	if(mainbuf->next) {
+		switch(get_buffer_type(mainbuf)) {
+		case BUFFER_COMMAND:
+			run_action(&conn, mainbuf, 1, "");
+			rl_history_add(mainbuf, "");
+			tempbuf = prevbuf;
+			prevbuf = mainbuf;
+			mainbuf = tempbuf;
+			break;
+		default:
+			buffer_append(mainbuf, '\n');
+		}
+	}
+
 	return 0;
 }
 
