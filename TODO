@@ -6,7 +6,6 @@ regression tests using SQLite
 separate history by DSN?
 multi-line history items get split when history is loaded from file
 specify editor as argument to \e? (or named buffer?)
-interpret single chars on a line as actions? (eg q) - configurable
 guile support?
 ODBC unicode mode?
 replace calls to getenv with rc_get or similar to avoid hardcoded prefix
