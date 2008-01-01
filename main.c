@@ -110,6 +110,7 @@ int process_line(char *line)
 			tempbuf = prevbuf;
 			prevbuf = mainbuf;
 			mainbuf = tempbuf;
+			mainbuf->next = 0;
 			break;
 		default:
 			buffer_append(mainbuf, '\n');
