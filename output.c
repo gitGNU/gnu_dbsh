@@ -130,6 +130,8 @@ void output_horiz_row(FILE *s, const char **data,
 	pos = calloc(ncols, sizeof(char *));
 	memcpy(pos, data, ncols * sizeof(char *));
 
+	for(i = 0; i < ncols; i++) if(!pos[i]) pos[i] = NULL_DISPLAY;
+
 	j = 0;
 	do {
 		more_lines = 0;
