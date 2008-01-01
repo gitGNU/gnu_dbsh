@@ -1,6 +1,6 @@
 /*
     dbsh - text-based ODBC client
-    Copyright (C) 2007 Ben Spencer
+    Copyright (C) 2007, 2008 Ben Spencer
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
