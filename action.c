@@ -99,6 +99,7 @@ static void print(buffer *sqlbuf, FILE *stream)
 void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 {
 	parsed_line *l;
+	int nchunks;
 	char *pipeline, *p;
 	FILE *stream;
 	int m;
@@ -107,15 +108,18 @@ void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 	m = 0;
 
 	l = parse_string(paramstring);
+	nchunks = l->nchunks;
 
-	if(l->nchunks) {
-		p = l->chunks[l->nchunks - 1];
+	if(nchunks) {
+		p = l->chunks[nchunks - 1];
 		if(*p == '>') {
 			if(!(pipeline = malloc(strlen(p) + 5))) err_system();
 			m = 1;
 			sprintf(pipeline, "cat %s", p);
+			nchunks--;
 		} else if(*p == '|') {
 			pipeline = p + 1;
+			nchunks--;
 		}
 	}
 
