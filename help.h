@@ -15,7 +15,8 @@
 "  reconnect [<password>]\n" \
 "\n" \
 "Other commands:\n" \
-"  set [<variable>] [<value>]"
+"  set [<variable>] [<value>]\n" \
+"  quit"
 
 #define HELP_NOTFOUND "Help topic doesn't exist"
 
