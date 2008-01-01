@@ -6,7 +6,6 @@ regression tests using SQLite
 separate history by DSN?
 multi-line history items get split when history is loaded from file
 specify editor as argument to \e? (or named buffer?)
-commands which don't return result sets could be actions instead, eg \r for reconnect
 interpret single chars on a line as actions? (eg q) - configurable
 guile support?
 ODBC unicode mode?

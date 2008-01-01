@@ -2,6 +2,5 @@ Design notes
 ------------
 
 Use commands when there is a result set returned.
-Use actions when they act on the contents of the buffer, or when a
-command would be unnecessarily long-winded.
+Use actions when they act on the contents of the buffer.
 Action parameters are at a premium - conserve where possible.
