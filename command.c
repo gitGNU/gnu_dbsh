@@ -32,6 +32,7 @@
 #include "results.h"
 
 extern char **environ;
+extern int quit;
 
 
 static results *get_help(const char *topic)
@@ -137,23 +138,21 @@ results *run_command(SQLHDBC *connp, buffer *buf)
 	if(l->nchunks < 1) return 0;
 
 	// Help commands
-	if(!strcmp(l->chunks[0] + 1, "help")) {
-		res = get_help(l->nchunks > 1 ? l->chunks[1] : "intro");
-	}
-	else if(!strcmp(l->chunks[0] + 1, "copying")) res = get_copying();
-	else if(!strcmp(l->chunks[0] + 1, "warranty")) res = get_warranty();
+	if(l->chunks[0][1] == 'h') res = get_help(l->nchunks > 1 ? l->chunks[1] : "intro");
+	else if(!strncmp(l->chunks[0] + 1, "cop", 3)) res = get_copying();
+	else if(!strncmp(l->chunks[0] + 1, "war", 3)) res = get_warranty();
 
 	// Catalog commands
-	else if(!strcmp(l->chunks[0] + 1, "catalogs")) {
+	else if(!strncmp(l->chunks[0] + 1, "cat", 3)) {
 		res = get_tables(*connp, "%", 0, 0);
-	} else if(!strcmp(l->chunks[0] + 1, "schemas")) {
+	} else if(!strncmp(l->chunks[0] + 1, "sch", 3)) {
 		res = get_tables(*connp, "%", "%", 0);
-	} else if(!strcmp(l->chunks[0] + 1, "tables")) {
+	} else if(!strncmp(l->chunks[0] + 1, "tab", 3)) {
 		res = get_tables(*connp,
 				 l->nchunks > 1 ? l->chunks[1] : 0,
 				 l->nchunks > 2 ? l->chunks[2] : 0,
 				 l->nchunks > 3 ? l->chunks[3] : 0);
-	} else if(!strcmp(l->chunks[0] + 1, "columns")) {
+	} else if(!strncmp(l->chunks[0] + 1, "col", 3)) {
 		res = get_columns(*connp,
 				 l->nchunks > 1 ? l->chunks[1] : 0,
 				 l->nchunks > 2 ? l->chunks[2] : 0,
@@ -161,19 +160,19 @@ results *run_command(SQLHDBC *connp, buffer *buf)
 	}
 
 	// Connection commands
-	else if(!strcmp(l->chunks[0] + 1, "info")) {
+	else if(!strncmp(l->chunks[0] + 1, "inf", 3)) {
 		res = db_conn_details(*connp);
-	} else if(!strcmp(l->chunks[0] + 1, "reconnect")) {
+	} else if(l->chunks[0][1] == 'r') {
 		db_reconnect(connp, l->nchunks > 1 ? l->chunks[1] : 0);
 	}
 
 	// Other commands
-	else if(!strcmp(l->chunks[0] + 1, "set")) {
+	else if(!strcmp(l->chunks[0] + 1, "set"))
 		res = set(l->nchunks > 1 ? l->chunks[1] : 0,
 			  l->nchunks > 2 ? l->chunks[2] : 0);
-	} else {
-		printf(_("Unrecognised command: %s\n"), l->chunks[0] + 1);
-	}
+	else if(l->chunks[0][1] == 'q') quit = 1;
+
+	else printf(_("Unrecognised command: %s\n"), l->chunks[0] + 1);
 
 	free_parsed_line(l);
 

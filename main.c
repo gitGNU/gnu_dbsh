@@ -38,6 +38,7 @@
 
 SQLHDBC conn;
 buffer *mainbuf, *prevbuf;
+int quit;
 
 
 void usage(const char *cmd)
@@ -55,7 +56,6 @@ int process_line(char *line)
 	actionchars = getenv("DBSH_ACTION_CHARS");
 
 	for(; *line; line++) {
-
 		if(strchr(actionchars, *line)) {
 			if(*++line) {
 				if(!strchr(actionchars, *line)) {
@@ -69,8 +69,6 @@ int process_line(char *line)
 		}
 
 		if(action) {
-			if(action == 'q') return -1;
-
 			if(!mainbuf->next) {
 				if(prevbuf->next) {
 					tempbuf = mainbuf;
@@ -97,9 +95,7 @@ int process_line(char *line)
 			mainbuf->next = 0;
 			return 0;
 
-		} else {
-			buffer_append(mainbuf, *line);
-		}
+		} else buffer_append(mainbuf, *line);
 	}
 
 	if(mainbuf->next) {
@@ -154,7 +150,7 @@ int main(int argc, char *argv[])
 	     "you are welcome to modify and redistribute it\n"
 	     "under certain conditions; for details type "
 	     "`/copying; | more'\n"
-	     "Type `/help;' for help or `\\q' to quit.\n");
+	     "Type `/h' for help or `/q' to quit.\n");
 
 	dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];
@@ -169,10 +165,12 @@ int main(int argc, char *argv[])
 	mainbuf = buffer_alloc(256);
 	prevbuf = buffer_alloc(256);
 
+	quit = 0;
+
 	/* Main loop */
 	for(;;) {
 		line = rl_readline(prompt_render(conn, mainbuf));
-		if(!line || process_line(line)) {
+		if(!line || process_line(line) || quit) {
 			fputc('\n', stdout);
 			break;
 		}
