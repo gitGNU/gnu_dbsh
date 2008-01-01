@@ -57,8 +57,8 @@ void read_rc_file()
 	}
 
 	// Default settings
-	if(!getenv("DBSH_ACTION_CHARS"))   setenv("DBSH_ACTION_CHARS",   "\\", 1);
-	if(!getenv("DBSH_COMMAND_CHARS"))  setenv("DBSH_COMMAND_CHARS",  "*", 1);
+	if(!getenv("DBSH_ACTION_CHARS"))   setenv("DBSH_ACTION_CHARS",   "\\;", 1);
+	if(!getenv("DBSH_COMMAND_CHARS"))  setenv("DBSH_COMMAND_CHARS",  "/", 1);
 	if(!getenv("DBSH_DEFAULT_ACTION")) setenv("DBSH_DEFAULT_ACTION", "g", 1);
 	if(!getenv("DBSH_PROMPT"))         setenv("DBSH_PROMPT",         "d l> ", 1);
 }

@@ -132,13 +132,13 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	puts(PACKAGE_STRING " Copyright (C) 2007 Ben Spencer\n"
+	puts(PACKAGE_STRING " Copyright (C) 2007, 2008 Ben Spencer\n"
 	     "This program comes with ABSOLUTELY NO WARRANTY; "
-	     "for details type:\n> *warranty\\ | more\n"
+	     "for details type `/warranty; | more'\n"
 	     "This is free software: "
 	     "you are welcome to modify and redistribute it\n"
-	     "under certain conditions; for details type:\n"
-	     "> *copying\\ | more\n");
+	     "under certain conditions; for details type "
+	     "`/copying; | more'\n");
 
 	dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];
