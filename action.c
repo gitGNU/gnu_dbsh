@@ -41,6 +41,9 @@ static void go(SQLHDBC *connp, buffer *sqlbuf, char action, FILE *stream)
 	results *res = NULL;
 
 	switch(get_buffer_type(sqlbuf)) {
+	case BUFFER_EMPTY:
+		// do nothing
+		break;
 	case BUFFER_COMMAND:
 		res = run_command(connp, sqlbuf);
 		break;
