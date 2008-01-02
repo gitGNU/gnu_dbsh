@@ -27,6 +27,9 @@
 #include "db.h"
 
 
+#define MAX_LEN 64
+
+
 static int get_lnum(buffer *buf)
 {
 	int i, n = 1;
@@ -38,31 +41,30 @@ static int get_lnum(buffer *buf)
 
 const char *prompt_render(SQLHDBC conn, buffer *buf)
 {
-	static char prompt[256];
+	static char prompt[MAX_LEN];
 
-	const char *tpl, *s;
-	char *p;
-	char info[64];
+	const char *s;
+	int i;
 
-	tpl = getenv("DBSH_PROMPT");
-	p = prompt;
+	s = getenv("DBSH_PROMPT");
 
-	// TODO: check for overflow
-
-	for(s = tpl; *s; s++) {
+	i = 0;
+	for(; *s; s++) {
 		switch(*s) {
 		case 'd':
-			db_info(conn, SQL_DATA_SOURCE_NAME, info, 64);
-			strcpy(p, info);
-			p += strlen(info);
+			i += db_info(conn, SQL_DATA_SOURCE_NAME, prompt + i, MAX_LEN - i);
 			break;
 		case 'l':
-			p += sprintf(p, "%d", get_lnum(buf));
+			i += snprintf(prompt + i, MAX_LEN - i, "%d", get_lnum(buf));
 			break;
 		default:
-			*p++ = *s;
+			prompt[i++] = *s;
 		}
+
+		if(i >= MAX_LEN - 1) break;
 	}
+
+	prompt[i] = 0;
 
 	return prompt;
 }
