@@ -169,16 +169,19 @@ int db_reconnect(SQLHDBC *conn, const char *pass)
 	}
 }
 
-void db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
+SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 {
 	SQLRETURN r;
+	SQLSMALLINT l;
 
-	r = SQLGetInfo(conn, type, buf, len, 0);
+	r = SQLGetInfo(conn, type, buf, len, &l);
 	if(!SUCCESS(r)) {
 		report_error(SQL_HANDLE_DBC, conn);
 		strncpy(buf, "(unknown)", len);
 		buf[len - 1] = 0;
 	}
+
+	return l;
 }
 
 results *db_conn_details(SQLHDBC conn)
