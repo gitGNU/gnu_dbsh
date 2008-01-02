@@ -3,6 +3,8 @@
 	Vertical and horizontal output now correctly handle newlines, tabs
 	and multibyte chars.
 	Half-decent parsing for command parameters etc.
+	Improved portability - verified to compile on Debian, Fedora,
+	FreeBSD and OpenBSD.
 
 0.2a
 	Major tweaks to improve user interface.
