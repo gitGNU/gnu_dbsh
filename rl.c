@@ -73,18 +73,28 @@ void rl_history_start()
 
 void rl_history_add(buffer *buf, const char *action_line)
 {
-	char *histentry;
+	int len, i;
+	char *actionchars, *histentry, *p;
 
 #ifndef HAVE_LIBEDITLINE
 	HIST_ENTRY *prev;
 	const char *hf;
 #endif
 
-	histentry = malloc(buf->next + strlen(action_line) + 1);
+	actionchars = getenv("DBSH_ACTION_CHARS");
+
+	len = buf->next + strlen(action_line) + 1;
+	for(i = 0; i < buf->next; i++) if(strchr(actionchars, buf->buf[i])) len++;
+
+	histentry = malloc(len);
 
 	if(histentry) {
-		memcpy(histentry, buf->buf, buf->next);
-		strcpy(histentry + buf->next, action_line);
+		p = histentry;
+		for(i = 0; i < buf->next; i++) {
+			if(strchr(actionchars, buf->buf[i])) *p++ = actionchars[0];
+			*p++ = buf->buf[i];
+		}
+		strcpy(p, action_line);
 
 #ifdef HAVE_LIBEDITLINE
 
