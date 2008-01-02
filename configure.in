@@ -11,13 +11,14 @@ AC_CONFIG_HEADER([config.h])
 AC_PROG_CC
 
 # Checks for libraries.
+LDFLAGS="$LDFLAGS -L/usr/local/lib"
 AC_SEARCH_LIBS([tgetent], [ncurses curses termcap])
 AC_CHECK_LIB([readline], [readline], [], [AC_CHECK_LIB([edit], [readline], [], [AC_CHECK_LIB([editline], [readline])])])
 AC_CHECK_LIB([pthread], [pthread_create])
 AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [], [AC_MSG_ERROR([failed to find an ODBC library])])
 
-
 # Checks for header files.
+CPPFLAGS="$CPPFLAGS -I/usr/local/include"
 AC_HEADER_STDC
 AC_CHECK_HEADERS([sql.h sqlext.h], [], [AC_MSG_ERROR([failed to find ODBC headers])])
 
