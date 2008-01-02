@@ -77,8 +77,8 @@ static void parse_char(char c, parser_state *st)
 				if(st->buf->next) {
 					st->chunks[st->nchunks++] = buffer_dup2str(st->buf);
 					st->buf->next = 0;
-					return;
 				}
+				return;
 			}
 
 			if((c == '"' || c == '\'') &&
