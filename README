@@ -48,9 +48,9 @@ to connect to one.
 Actions
 -------
 
-The default action character is '\'.  This will send the SQL you've
-typed to the server.  The action character can optionally be followed
-by a letter:
+The default action character is '\' or ';'.  This will send the SQL
+you've typed to the server.  The action character can optionally be
+followed by a letter:
 
 \g - (default) horizontal output
 \G - vertical output
@@ -63,12 +63,13 @@ stuff instead:
 \e - edit buffer using $EDITOR
 \p - print contents of buffer
 \c - clear (discard) buffer
+\r - reconnect to server (you may need to supply the password)
 \q - quit
 
 Any action can then be followed by a pipe ('|') or a file redirect
 ('>').  These behave pretty much like you'd expect them to in the
-bourne shell (in fact, the pipe just opens a pipe straight to
-/bin/sh).
+bourne shell (in fact, they just open a pipe to /bin/sh and let it
+handle everything from there on).
 
 Examples:
 
@@ -80,27 +81,20 @@ Examples:
 dbsh commands
 -------------
 
-If the buffer begins with the command character (default '*'), it is
-treated as a dbsh command rather than SQL.  Currently available
-commands are:
-
-*set [<variable>] [<value>] - show or set config variables
-*info - connection info as displayed when you first connect
-*reconnect [<password>] - reconnect to server
-*catalogs - List catalogs
-*schemas - List schemas
-*tables - List tables
-*columns - List columns
-
-The catalog commands work with varying success among different
-drivers.  *columns doesn't seem to work at all yet.
+If the buffer begins with the command character (default '/'), it is
+treated as a dbsh command rather than SQL.  Type /help for a list of
+available commands.  One of the most useful is /set, which on its own
+will display the current values of all dbsh config variables, and with
+parameters will set them.
 
 
 .dbshrc
 -------
 
-You can put config variables in ~/.dbshrc.  For example, the author's
-currently looks like this:
+You can put config variables in ~/.dbshrc.  For example:
 
-action_chars=\;
+prompt=[d] 
+action_chars=;
+command_chars=*
+default_action=G
 default_pager=less -FSin
