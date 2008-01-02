@@ -14,9 +14,8 @@ AC_PROG_CC
 AC_SEARCH_LIBS([tgetent], [ncurses curses termcap])
 AC_CHECK_LIB([readline], [readline], [], [AC_CHECK_LIB([edit], [readline], [], [AC_CHECK_LIB([editline], [readline])])])
 AC_CHECK_LIB([pthread], [pthread_create])
-AC_ARG_WITH([odbc], [AS_HELP_STRING([--with-odbc=<path>], [specify path to ODBC library])],
-		    [LIBS="$LIBS -l $withval"],
-		    [AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [], [AC_MSG_ERROR([failed to find an ODBC library])])])
+AC_SEARCH_LIBS([SQLConnect], [odbc iodbc], [], [AC_MSG_ERROR([failed to find an ODBC library])])
+
 
 # Checks for header files.
 AC_HEADER_STDC
