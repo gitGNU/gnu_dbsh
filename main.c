@@ -97,19 +97,20 @@ int process_line(char *line)
 		} else buffer_append(mainbuf, *line);
 	}
 
-	if(mainbuf->next) {
-		switch(get_buffer_type(mainbuf)) {
-		case BUFFER_COMMAND:
-			run_action(&conn, mainbuf, 1, "");
-			rl_history_add(mainbuf, "");
-			tempbuf = prevbuf;
-			prevbuf = mainbuf;
-			mainbuf = tempbuf;
-			mainbuf->next = 0;
-			break;
-		default:
-			buffer_append(mainbuf, '\n');
-		}
+	switch(get_buffer_type(mainbuf)) {
+	case BUFFER_EMPTY:
+		// do nothing
+		break;
+	case BUFFER_COMMAND:
+		run_action(&conn, mainbuf, 1, "");
+		rl_history_add(mainbuf, "");
+		tempbuf = prevbuf;
+		prevbuf = mainbuf;
+		mainbuf = tempbuf;
+		mainbuf->next = 0;
+		break;
+	default:
+		buffer_append(mainbuf, '\n');
 	}
 
 	return 0;
