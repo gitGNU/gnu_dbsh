@@ -52,8 +52,9 @@ int process_line(char *line)
 	char *actionchars, action, *paramstring;
 	buffer *tempbuf;
 
-	action = 0;
 	actionchars = getenv("DBSH_ACTION_CHARS");
+	action = 0;
+	paramstring = "";
 
 	for(; *line; line++) {
 		if(strchr(actionchars, *line)) {
@@ -62,10 +63,7 @@ int process_line(char *line)
 					action = *line;
 					paramstring = line;
 				}
-			} else {
-				action = 1;  // default;
-				paramstring = "";
-			}
+			} else action = 1;  // default;
 		}
 
 		if(action) {
