@@ -92,7 +92,7 @@ static void parse_char(char c, parser_state *st)
 				return;
 			}
 
-			if(c == '>' || c == '|') st->pipe = 1;
+			if((c == '>' || c == '|') && !st->quote) st->pipe = 1;
 		}
 	}
 
