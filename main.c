@@ -38,7 +38,6 @@
 
 SQLHDBC conn;
 buffer *mainbuf, *prevbuf;
-int quit;
 
 
 void usage(const char *cmd)
@@ -61,18 +60,20 @@ int process_line(char *line)
 			if(*++line) {
 				if(!strchr(actionchars, *line)) {
 					action = *line;
-					paramstring = line;
+					paramstring = line + 1;
 				}
 			} else action = 1;  // default;
 		}
 
 		if(action) {
+			if(action == 'q') return -1;
+
 			if(!mainbuf->next) {
 				if(prevbuf->next) {
 					tempbuf = mainbuf;
 					mainbuf = prevbuf;
 					prevbuf = tempbuf;
-				} else return 0;
+				}
 			}
 
 			if(action != 'c') {
@@ -148,7 +149,7 @@ int main(int argc, char *argv[])
 	     "you are welcome to modify and redistribute it\n"
 	     "under certain conditions; for details type "
 	     "`/copying; | more'\n"
-	     "Type `/h' for help or `/q' to quit.\n");
+	     "Type `/help' for help or `\q' to quit.\n");
 
 	dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];
@@ -163,12 +164,10 @@ int main(int argc, char *argv[])
 	mainbuf = buffer_alloc(256);
 	prevbuf = buffer_alloc(256);
 
-	quit = 0;
-
 	/* Main loop */
 	for(;;) {
 		line = rl_readline(prompt_render(conn, mainbuf));
-		if(!line || process_line(line) || quit) {
+		if(!line || process_line(line)) {
 			fputc('\n', stdout);
 			break;
 		}

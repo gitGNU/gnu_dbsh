@@ -32,7 +32,6 @@
 #include "results.h"
 
 extern char **environ;
-extern int quit;
 
 
 static results *get_help(const char *topic)
@@ -159,18 +158,13 @@ results *run_command(SQLHDBC *connp, buffer *buf)
 				 l->nchunks > 3 ? l->chunks[3] : 0);
 	}
 
-	// Connection commands
-	else if(!strncmp(l->chunks[0] + 1, "inf", 3)) {
-		res = db_conn_details(*connp);
-	} else if(l->chunks[0][1] == 'r') {
-		db_reconnect(connp, l->nchunks > 1 ? l->chunks[1] : 0);
-	}
-
 	// Other commands
-	else if(!strcmp(l->chunks[0] + 1, "set"))
+	else if(!strcmp(l->chunks[0] + 1, "set")) {
 		res = set(l->nchunks > 1 ? l->chunks[1] : 0,
 			  l->nchunks > 2 ? l->chunks[2] : 0);
-	else if(l->chunks[0][1] == 'q') quit = 1;
+	} else if(!strncmp(l->chunks[0] + 1, "inf", 3)) {
+		res = db_conn_details(*connp);
+	}
 
 	else printf(_("Unrecognised command: %s\n"), l->chunks[0] + 1);
 

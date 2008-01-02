@@ -10,13 +10,9 @@
 "  tables\n" \
 "  columns [<table>]\n" \
 "\n" \
-"Connection commands:\n" \
-"  info\n" \
-"  reconnect [<password>]\n" \
-"\n" \
 "Other commands:\n" \
 "  set [<variable>] [<value>]\n" \
-"  quit"
+"  info"
 
 #define HELP_NOTFOUND "Help topic doesn't exist"
 

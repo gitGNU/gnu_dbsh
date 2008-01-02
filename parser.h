@@ -22,6 +22,7 @@
 #include "buffer.h"
 
 typedef enum {
+	BUFFER_EMPTY,
 	BUFFER_SQL,
 	BUFFER_COMMAND
 } buffer_type;

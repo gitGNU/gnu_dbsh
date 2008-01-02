@@ -42,6 +42,8 @@ buffer_type get_buffer_type(buffer *b)
 {
 	int i;
 
+	if(!b->next) return BUFFER_EMPTY;
+
 	for(i = 0; i < b->next; i++) {
 		if(!isspace(b->buf[i])) {
 			if(strchr(getenv("DBSH_COMMAND_CHARS"), b->buf[i]))
