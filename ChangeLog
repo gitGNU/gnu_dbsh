@@ -4,7 +4,7 @@
 	and multibyte chars.
 	Half-decent parsing for command parameters etc.
 	Improved portability - verified to compile on Debian, Fedora,
-	FreeBSD and OpenBSD.
+	FreeBSD, OpenBSD and Mac OS X.
 
 0.2a
 	Major tweaks to improve user interface.
