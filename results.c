@@ -30,6 +30,16 @@ results *results_alloc()
 	results *res;
 
 	if(!(res = calloc(1, sizeof(struct results)))) err_system();
+
+	res->ncols = 0;
+	res->nrows = 0;
+	res->nwarnings = 0;
+	res->cols = 0;
+	res->data = 0;
+	res->warnings = 0;
+	res->time_taken.tv_sec = 0;
+	res->time_taken.tv_usec = 0;
+
 	return res;
 }
 
