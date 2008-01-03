@@ -130,11 +130,11 @@ void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 
 	if(pipeline) {
 		stream = popen(pipeline, "w");
+		if(m) free(pipeline);
 		if(!stream) {
 			perror("Failed to open pipe");
 			return;
 		}
-		if(m) free(pipeline);
 	} else stream = stdout;
 
 
