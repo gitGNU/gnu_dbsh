@@ -68,7 +68,7 @@ int process_line(char *line)
 		if(action) {
 			if(action == 'q') return -1;
 
-			if(!mainbuf->next) {
+			if(!mainbuf->next && action != 'r') {
 				if(prevbuf->next) {
 					tempbuf = mainbuf;
 					mainbuf = prevbuf;
