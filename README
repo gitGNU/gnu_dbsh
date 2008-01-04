@@ -34,8 +34,9 @@ make install
 
 You'll need an ODBC library - I've tested with unixODBC
 (http://www.unixodbc.org) and iODBC (http://www.iodbc.org).  Consult
-the manual for your ODBC implementation for instructions on setting
-up drivers and data sources.
+the manual for your ODBC implementation for instructions on setting up
+drivers and data sources.  A readline library is also a good idea (but
+optional).
 
 
 Invoking
