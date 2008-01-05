@@ -30,6 +30,7 @@ struct results {
 	char ***data;
 	char **warnings;
 	struct timeval time_taken;
+	results *next;
 };
 
 results *results_alloc();

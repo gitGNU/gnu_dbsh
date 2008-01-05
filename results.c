@@ -39,6 +39,7 @@ results *results_alloc()
 	res->warnings = 0;
 	res->time_taken.tv_sec = 0;
 	res->time_taken.tv_usec = 0;
+	res->next = 0;
 
 	return res;
 }
@@ -90,6 +91,8 @@ void results_free(results *r)
 {
 	SQLSMALLINT i;
 	SQLINTEGER j;
+
+	if(r->next) results_free(r->next);
 
 	if(r->cols) {
 		for(i = 0; i< r->ncols; i++) if(r->cols[i]) free(r->cols[i]);
