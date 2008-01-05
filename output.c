@@ -315,36 +315,37 @@ void output_results(results *res, char mode, FILE *s)
 {
 	if(mode == 1) mode = *getenv("DBSH_DEFAULT_ACTION");
 
-	if(res->nrows == -1) {
-		output_warnings(res, s);
-		fputs(_("Success\n"), s);
-	} else if(!res->ncols) {
-		output_warnings(res, s);
-		fprintf(s, _("%ld rows affected (%ld.%06lds)\n"), res->nrows,
-			res->time_taken.tv_sec, res->time_taken.tv_usec);
-	} else {
-
-		switch(mode) {
-		case 'C':  // CSV
-			output_csv(res, s, ',', '"');
-			break;
-		case 'G':  // Vertical
-			output_vert(res, s);
-			break;
-		case 'H':  // HTML
-			fprintf(s, "TODO\n");
-			break;
-		case 'J':  // JSON
-			fprintf(s, "TODO\n");
-			break;
-		case 'T':  // TSV
-			output_csv(res, s, '\t', 0);
-			break;
-		case 'X':  // XMLS
-			fprintf(s, "TODO\n");
-			break;
-		default:
-			output_horiz(res, s);
+	do {
+		if(res->nrows == -1) {
+			output_warnings(res, s);
+			fputs(_("Success\n"), s);
+		} else if(!res->ncols) {
+			output_warnings(res, s);
+			fprintf(s, _("%ld rows affected (%ld.%06lds)\n"), res->nrows,
+				res->time_taken.tv_sec, res->time_taken.tv_usec);
+		} else {
+			switch(mode) {
+			case 'C':  // CSV
+				output_csv(res, s, ',', '"');
+				break;
+			case 'G':  // Vertical
+				output_vert(res, s);
+				break;
+			case 'H':  // HTML
+				fprintf(s, "TODO\n");
+				break;
+			case 'J':  // JSON
+				fprintf(s, "TODO\n");
+				break;
+			case 'T':  // TSV
+				output_csv(res, s, '\t', 0);
+				break;
+			case 'X':  // XMLS
+				fprintf(s, "TODO\n");
+				break;
+			default:
+				output_horiz(res, s);
+			}
 		}
-	}
+	} while((res = res->next));
 }
