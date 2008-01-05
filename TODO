@@ -1,5 +1,4 @@
 make signal stuff work
-multiple result sets (SQLMoreResults)
 batch mode?
 tab completion - commands as a minimum, maybe tables etc too?
 regression tests using SQLite
