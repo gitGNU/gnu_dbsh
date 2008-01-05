@@ -103,7 +103,7 @@ void output_warnings(results *res, FILE *s)
 void output_size_and_time(results *res, FILE *s)
 {
 	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
-		fprintf(s, _("%ld rows in set (%ld.%06lds)\n"), res->nrows,
+		fprintf(s, _("%ld rows in set (%ld.%06lds)\n\n"), res->nrows,
 			res->time_taken.tv_sec, res->time_taken.tv_usec);
 
 }
