@@ -33,7 +33,7 @@ SQLHSTMT *current_statement;
 static int list_dsns(SQLHENV, SQLUSMALLINT);
 static void time_taken(struct timeval *);
 static results *fetch_results(SQLHSTMT, struct timeval);
-
+static results *fetch_resultset(SQLHSTMT, struct timeval);
 
 static int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, int line)
 {
@@ -240,6 +240,23 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 
 static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 {
+	results *res, **resp;
+
+	resp = &res;
+
+	do {
+		*resp = fetch_resultset(st, time_taken);
+		resp = &((*resp)->next);
+	} while(SUCCESS(SQLMoreResults(st)));
+
+	current_statement = 0;
+	SQLFreeHandle(SQL_HANDLE_STMT, st);
+
+	return res;
+}
+
+static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken)
+{
 	results *res;
 	SQLRETURN r;
 	SQLSMALLINT i;
@@ -375,8 +392,6 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		}
 	}
 
-	current_statement = 0;
-	SQLFreeHandle(SQL_HANDLE_STMT, st);
 	return res;
 }
 
