@@ -92,7 +92,7 @@ static void free_dimensions(dim *d)
 	free(d);
 }
 
-void output_warnings(results *res, FILE *s)
+static void output_warnings(results *res, FILE *s)
 {
 	SQLINTEGER i;
 	for(i = 0; i < res->nwarnings; i++) {
@@ -100,7 +100,7 @@ void output_warnings(results *res, FILE *s)
 	}
 }
 
-void output_size_and_time(results *res, FILE *s)
+static void output_size_and_time(results *res, FILE *s)
 {
 	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
 		fprintf(s, _("%ld rows in set (%ld.%06lds)\n\n"), res->nrows,
