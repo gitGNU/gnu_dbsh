@@ -81,7 +81,7 @@ void results_set_warnings(results *res, int nwarnings, ...)
 	va_start(ap, nwarnings);
 
 	res->nwarnings = nwarnings;
-	if(!(res->cols = calloc(nwarnings, sizeof(char *)))) err_system();
+	if(!(res->warnings = calloc(nwarnings, sizeof(char *)))) err_system();
 
 	for(i = 0; i < nwarnings; i++)
 		if(!(res->warnings[i] = strdup(va_arg(ap, const char *)))) err_system();
