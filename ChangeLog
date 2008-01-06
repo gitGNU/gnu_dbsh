@@ -1,4 +1,6 @@
 0.4a	Support for multiple result sets.
+	No longer rely on SQLRowCount for number of rows returned by
+	SELECTs etc (apparently some drivers don't do it).
 	Various bug fixes.
 
 0.3a
