@@ -281,7 +281,7 @@ static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken, buffer *
 						SQL_DIAG_MESSAGE_TEXT, buf->buf, buf->len, 0);
 			}
 
-			res->warnings[j] = strdup(buf->buf);
+			if(!(res->warnings[j] = strdup(buf->buf))) err_system();
 		}
 	}
 
@@ -327,7 +327,7 @@ static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken, buffer *
 			return 0;
 		}
 
-		res->cols[i] = strdup(buf->buf);
+		if(!(res->cols[i] = strdup(buf->buf))) err_system();
 	}
 
 	for(rowp = &(res->rows);;) {
@@ -367,7 +367,8 @@ static row *fetch_row(SQLHSTMT st, int ncols, buffer *buf)
 			return 0;
 		}
 
-		if(reqlen != SQL_NULL_DATA) row->data[i] = strdup(buf->buf);
+		if(reqlen != SQL_NULL_DATA &&
+		   !(row->data[i] = strdup(buf->buf))) err_system();
 	}
 
 	return row;
