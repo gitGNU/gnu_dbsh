@@ -92,19 +92,12 @@ static void free_dimensions(dim *d)
 	free(d);
 }
 
-static void output_warnings(results *res, FILE *s)
+static void output_size(resultset *res, FILE *s)
 {
-	SQLINTEGER i;
-	for(i = 0; i < res->nwarnings; i++) {
-		fprintf(s, "%s\n", res->warnings[i]);
-	}
-}
-
-static void output_size_and_time(results *res, FILE *s)
-{
-	if(res->time_taken.tv_sec || res->time_taken.tv_usec)
-		fprintf(s, _("%ld rows in set (%ld.%06lds)\n\n"), res->nrows,
-			res->time_taken.tv_sec, res->time_taken.tv_usec);
+	fprintf(s, res->nrows == 1 ?
+		_("1 row in set\n") :
+		_("%ld rows in set\n"),
+		res->nrows);
 
 }
 
@@ -163,7 +156,7 @@ void output_horiz_row(FILE *s, const char **data,
 	free(pos);
 }
 
-void output_horiz(results *res, FILE *s)
+void output_horiz(resultset *res, FILE *s)
 {
 	SQLSMALLINT i;
 	SQLINTEGER j;
@@ -216,11 +209,10 @@ void output_horiz(results *res, FILE *s)
 	}
 	free(row_dims);
 
-	output_warnings(res, s);
-	output_size_and_time(res, s);
+	output_size(res, s);
 }
 
-void output_vert(results *res, FILE *s)
+void output_vert(resultset *res, FILE *s)
 {
 	int col_width;
 	SQLSMALLINT i;
@@ -275,8 +267,7 @@ void output_vert(results *res, FILE *s)
 	for(i = 0; i < res->ncols; i++) free_dimensions(head_dims[i]);
 	free(head_dims);
 
-	output_warnings(res, s);
-	output_size_and_time(res, s);
+	output_size(res, s);
 }
 
 void output_csv_row(FILE *s, const char **data, SQLSMALLINT ncols, char separator, char delimiter)
@@ -303,7 +294,7 @@ void output_csv_row(FILE *s, const char **data, SQLSMALLINT ncols, char separato
 	fputc('\n', s);
 }
 
-void output_csv(results *res, FILE *s, char separator, char delimiter)
+void output_csv(resultset *res, FILE *s, char separator, char delimiter)
 {
 	row *r;
 
@@ -314,23 +305,23 @@ void output_csv(results *res, FILE *s, char separator, char delimiter)
 
 void output_results(results *res, char mode, FILE *s)
 {
+	SQLINTEGER i;
+	resultset *set;
+
 	if(mode == 1) mode = *getenv("DBSH_DEFAULT_ACTION");
 
-	do {
-		if(res->nrows == -1) {
-			output_warnings(res, s);
+	for(set = res->sets; set; set = set->next) {
+		if(set->nrows == -1) {
 			fputs(_("Success\n"), s);
-		} else if(!res->ncols) {
-			output_warnings(res, s);
-			fprintf(s, _("%ld rows affected (%ld.%06lds)\n"), res->nrows,
-				res->time_taken.tv_sec, res->time_taken.tv_usec);
+		} else if(!set->ncols) {
+			fprintf(s, _("%ld rows affected\n"), set->nrows);
 		} else {
 			switch(mode) {
 			case 'C':  // CSV
-				output_csv(res, s, ',', '"');
+				output_csv(set, s, ',', '"');
 				break;
 			case 'G':  // Vertical
-				output_vert(res, s);
+				output_vert(set, s);
 				break;
 			case 'H':  // HTML
 				fprintf(s, "TODO\n");
@@ -339,14 +330,24 @@ void output_results(results *res, char mode, FILE *s)
 				fprintf(s, "TODO\n");
 				break;
 			case 'T':  // TSV
-				output_csv(res, s, '\t', 0);
+				output_csv(set, s, '\t', 0);
 				break;
 			case 'X':  // XMLS
 				fprintf(s, "TODO\n");
 				break;
 			default:
-				output_horiz(res, s);
+				output_horiz(set, s);
 			}
+			fputc('\n', s);
 		}
-	} while((res = res->next));
+	}
+
+	for(i = 0; i < res->nwarnings; i++) {
+		fprintf(s, "WARNING: %s\n", res->warnings[i]);
+	}
+
+	if((mode == 'G' || mode == 'g') &&
+	   (res->time_taken.tv_sec || res->time_taken.tv_usec))
+		fprintf(s, _("(%ld.%06lds)\n"),
+			res->time_taken.tv_sec, res->time_taken.tv_usec);
 }

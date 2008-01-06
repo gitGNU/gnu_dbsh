@@ -22,17 +22,22 @@
 #include <sys/time.h>
 #include <sql.h>
 
+typedef struct resultset resultset;
 typedef struct row row;
 
 struct results {
-	SQLSMALLINT ncols;
-	SQLINTEGER nrows;
+	resultset *sets;
 	SQLINTEGER nwarnings;
-	char **cols;
-	row *rows;
 	char **warnings;
 	struct timeval time_taken;
-	results *next;
+};
+
+struct resultset {
+	SQLSMALLINT ncols;
+	SQLINTEGER nrows;
+	char **cols;
+	row *rows;
+	resultset *next;
 };
 
 struct row {
@@ -41,11 +46,19 @@ struct row {
 };
 
 results *results_alloc();
-row *results_row_alloc();
-void results_set_cols(results *, int, ...);
+results *results_single_alloc();
+resultset *results_add_set();
 void results_set_warnings(results *, int, ...);
+void results_set_cols(results *, int, ...);
 row *results_add_row(results *, ...);
 void results_free(results *);
-void results_row_free(row *);
+
+resultset *resultset_alloc();
+void resultset_set_cols(resultset *, int, ...);
+row *resultset_add_row(resultset *, ...);
+void resultset_free(resultset *);
+
+row *results_row_alloc(int);
+void results_row_free(row *, int);
 
 #endif

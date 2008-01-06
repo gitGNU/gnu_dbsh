@@ -95,7 +95,7 @@ static results *set(const char *name, const char *value)
 		row **rp;
 		int i;
 
-		rp = &(res->rows);
+		rp = &(res->sets->rows);
 
 		for(v = environ; *v; v++) {
 			if(!strncmp(*v, "DBSH_", 5)) {
@@ -103,7 +103,7 @@ static results *set(const char *name, const char *value)
 				value_ptr = strchr(name_ptr, '=');
 				if(!value_ptr) continue;
 
-				*rp = results_row_alloc(res->ncols);
+				*rp = results_row_alloc(2);
 
 				if(!((*rp)->data[0] = calloc((value_ptr - name_ptr) + 1, sizeof(char)))) err_system();
 
@@ -112,7 +112,7 @@ static results *set(const char *name, const char *value)
 
 				if(!((*rp)->data[1] = strdup(++value_ptr))) err_system();
 
-				res->nrows++;
+				res->sets->nrows++;
 				rp = &(*rp)->next;
 			}
 		}

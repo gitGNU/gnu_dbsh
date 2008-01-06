@@ -25,20 +25,43 @@
 #include "results.h"
 
 
+static void v_resultset_set_cols(resultset *, int, va_list);
+static row *v_resultset_add_row(resultset *, va_list);
+
+
 results *results_alloc()
 {
 	results *res;
 
 	if(!(res = malloc(sizeof(results)))) err_system();
 
-	res->ncols = 0;
-	res->nrows = 0;
+	res->sets = 0;
 	res->nwarnings = 0;
-	res->cols = 0;
-	res->rows = 0;
 	res->warnings = 0;
 	res->time_taken.tv_sec = 0;
 	res->time_taken.tv_usec = 0;
+
+	return res;
+}
+
+results *results_single_alloc()
+{
+	results *res = results_alloc();
+	res->sets = resultset_alloc();
+
+	return res;
+}
+
+resultset *resultset_alloc()
+{
+	resultset *res;
+
+	if(!(res = malloc(sizeof(resultset)))) err_system();
+
+	res->ncols = 0;
+	res->nrows = 0;
+	res->cols = 0;
+	res->rows = 0;
 	res->next = 0;
 
 	return res;
@@ -57,20 +80,14 @@ row *results_row_alloc(int ncols)
 	return row;
 }
 
-void results_set_cols(results *res, int ncols, ...)
+resultset *results_add_set(results *res)
 {
-	va_list ap;
-	int i;
+	resultset **sp;
 
-	va_start(ap, ncols);
+	for(sp = &res->sets; *sp; sp = &(*sp)->next);
+	*sp = resultset_alloc();
 
-	res->ncols = ncols;
-	if(!(res->cols = calloc(ncols, sizeof(char *)))) err_system();
-
-	for(i = 0; i < ncols; i++)
-		if(!(res->cols[i] = strdup(va_arg(ap, const char *)))) err_system();
-
-	va_end(ap);
+	return *sp;
 }
 
 void results_set_warnings(results *res, int nwarnings, ...)
@@ -89,23 +106,71 @@ void results_set_warnings(results *res, int nwarnings, ...)
 	va_end(ap);
 }
 
+void results_set_cols(results *res, int ncols, ...)
+{
+	va_list ap;
+
+	va_start(ap, ncols);
+	v_resultset_set_cols(res->sets, ncols, ap);
+	va_end(ap);
+}
+
+void resultset_set_cols(resultset *res, int ncols, ...)
+{
+	va_list ap;
+
+	va_start(ap, ncols);
+	v_resultset_set_cols(res, ncols, ap);
+	va_end(ap);
+}
+
+static void v_resultset_set_cols(resultset *res, int ncols, va_list ap)
+{
+	int i;
+
+	res->ncols = ncols;
+	if(!(res->cols = calloc(ncols, sizeof(char *)))) err_system();
+
+	for(i = 0; i < ncols; i++)
+		if(!(res->cols[i] = strdup(va_arg(ap, const char *)))) err_system();
+}
+
 row *results_add_row(results *res, ...)
 {
-	row **rp;
 	va_list ap;
-	int i;
-	const char *d;
+	row *r;
 
 	va_start(ap, res);
+	r = v_resultset_add_row(res->sets, ap);
+	va_end(ap);
+
+	return r;
+}
+
+row *resultset_add_row(resultset *res, ...)
+{
+	va_list ap;
+	row *r;
+
+	va_start(ap, res);
+	r = v_resultset_add_row(res, ap);
+	va_end(ap);
+
+	return r;
+}
+
+static row *v_resultset_add_row(resultset *res, va_list ap)
+{
+	row **rp;
+	int i;
+	const char *d;
 
 	/*
 	  This is inefficient but I think it makes the code
 	  clearer than passing a 'latest row' around.
 	*/
 
-	rp = &(res->rows);
-	while(*rp) rp = &(*rp)->next;
-
+	for(rp = &(res->rows); *rp; rp = &(*rp)->next);
 	*rp = results_row_alloc(res->ncols);
 
 	for(i = 0; i < res->ncols; i++) {
@@ -115,42 +180,49 @@ row *results_add_row(results *res, ...)
 
 	res->nrows++;
 
-	va_end(ap);
-
 	return *rp;
 }
 
 void results_free(results *r)
 {
+	SQLINTEGER i;
+
+	if(r->warnings) {
+		for(i = 0; i < r->nwarnings; i++) if(r->warnings[i]) free(r->warnings[i]);
+		free(r->warnings);
+	}
+
+	if(r->sets) resultset_free(r->sets);
+
+	free(r);
+}
+
+void resultset_free(resultset *r)
+{
 	SQLSMALLINT i;
-	SQLINTEGER j;
-	row *row, **rowp;
 
-
-	if(r->next) results_free(r->next);
+	if(r->next) resultset_free(r->next);
 
 	if(r->cols) {
 		for(i = 0; i< r->ncols; i++) if(r->cols[i]) free(r->cols[i]);
 		free(r->cols);
 	}
 
-	for(rowp = &(r->rows); *rowp;) {
-		row = *rowp;
-		for(i = 0; i < r->ncols; i++) if(row->data[i]) free(row->data[i]);
-		rowp = &row->next;
-		results_row_free(row);
-	}
-
-	if(r->warnings) {
-		for(j = 0; j < r->nwarnings; j++) if(r->warnings[j]) free(r->warnings[j]);
-		free(r->warnings);
-	}
+	if(r->rows) results_row_free(r->rows, r->ncols);
 
 	free(r);
 }
 
-void results_row_free(row *r)
+void results_row_free(row *r, int ncols)
 {
-	free(r->data);
+	SQLSMALLINT i;
+
+	if(r->next) results_row_free(r->next, ncols);
+
+	if(r->data) {
+		for(i = 0; i < ncols; i++) if(r->data[i]) free(r->data[i]);
+		free(r->data);
+	}
+
 	free(r);
 }
