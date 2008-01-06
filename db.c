@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "common.h"
+#include "buffer.h"
 #include "db.h"
 #include "err.h"
 #include "results.h"
@@ -33,7 +34,8 @@ SQLHSTMT *current_statement;
 static int list_dsns(SQLHENV, SQLUSMALLINT);
 static void time_taken(struct timeval *);
 static results *fetch_results(SQLHSTMT, struct timeval);
-static results *fetch_resultset(SQLHSTMT, struct timeval);
+static results *fetch_resultset(SQLHSTMT, struct timeval, buffer *);
+static row *fetch_row(SQLHSTMT, int, buffer *);
 
 static int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, int line)
 {
@@ -192,19 +194,15 @@ results *db_conn_details(SQLHDBC conn)
 	res = results_alloc();
 
 	results_set_cols(res, 2, _("name"), _("value"));
-	results_set_rows(res, 3);
 
 	db_info(conn, SQL_SERVER_NAME, buf, 256);
-	res->data[0][0] = strdup(_("Server"));
-	res->data[0][1] = strdup(buf);
+	results_add_row(res, _("Server"), buf);
 
 	db_info(conn, SQL_DBMS_NAME, buf, 256);
-	res->data[1][0] = strdup(_("DBMS"));
-	res->data[1][1] = strdup(buf);
+	results_add_row(res, _("DBMS"), buf);
 
 	db_info(conn, SQL_DBMS_VER, buf, 256);
-	res->data[2][0] = strdup(_("Version"));
-	res->data[2][1] = strdup(buf);
+	results_add_row(res, _("Version"), buf);
 
 	return res;
 }
@@ -240,32 +238,35 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 
 static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 {
+	buffer *b;
 	results *res, **resp;
+
+	b = buffer_alloc(1024);
 
 	resp = &res;
 
 	do {
-		*resp = fetch_resultset(st, time_taken);
+		*resp = fetch_resultset(st, time_taken, b);
 		resp = &((*resp)->next);
 	} while(SUCCESS(SQLMoreResults(st)));
 
+	buffer_free(b);
 	current_statement = 0;
 	SQLFreeHandle(SQL_HANDLE_STMT, st);
 
 	return res;
 }
 
-static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken)
+static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken, buffer *buf)
 {
 	results *res;
 	SQLRETURN r;
 	SQLSMALLINT i;
 	SQLINTEGER j;
-	SQLCHAR *buf;
-	SQLINTEGER buflen;
+	SQLSMALLINT reqlen;
+	row **rowp;
 
-	buflen = 1024;
-	if(!(buf = malloc(buflen))) err_system();
+	buf = buffer_alloc(1024);
 
 	res = results_alloc();
 	res->time_taken = time_taken;
@@ -274,125 +275,109 @@ static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken)
 	if(res->nwarnings) {
 		if(!(res->warnings = calloc(res->nwarnings, sizeof(char *)))) err_system();
 		for(j = 0; j < res->nwarnings; j++) {
-			SQLSMALLINT reqlen;
 			SQLGetDiagField(SQL_HANDLE_STMT, st, j + 1,
-					SQL_DIAG_MESSAGE_TEXT, buf, buflen, &reqlen);
+					SQL_DIAG_MESSAGE_TEXT, buf->buf, buf->len, &reqlen);
 
-			if(reqlen + 1 > buflen) {
-				buflen = reqlen + 1;
-				if(!(buf = realloc(buf, buflen))) err_system();
-
+			if(reqlen + 1 > buf->len) {
+				buffer_realloc(buf, reqlen + 1);
 				SQLGetDiagField(SQL_HANDLE_STMT, st, j + 1,
-						SQL_DIAG_MESSAGE_TEXT, buf, buflen, 0);
+						SQL_DIAG_MESSAGE_TEXT, buf->buf, buf->len, 0);
 			}
 
-			res->warnings[j] = strdup((char *) buf);
+			res->warnings[j] = strdup(buf->buf);
 		}
-	}
-
-	r = SQLRowCount(st, &(res->nrows));
-	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_STMT, st))
-			puts(_("Failed to retrieve number of rows"));
-		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		results_free(res);
-		return 0;
-	}
-
-	if(res->nrows == -1) {
-		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		return res;
 	}
 
 	r = SQLNumResultCols(st, &(res->ncols));
 	if(!SUCCESS(r)) {
 		if(!report_error(SQL_HANDLE_STMT, st))
 			puts(_("Failed to retrieve number of columns"));
-		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		results_free(res);
 		return 0;
 	}
 
-	if(!res->ncols) {
-		SQLFreeHandle(SQL_HANDLE_STMT, st);
+	if(!res->ncols) {  // non-SELECT
+		r = SQLRowCount(st, &(res->nrows));
+		if(!SUCCESS(r)) {
+			if(!report_error(SQL_HANDLE_STMT, st))
+				puts(_("Failed to retrieve rows affected"));
+			results_free(res);
+			return 0;
+		}
+
 		return res;
 	}
 
 	if(!(res->cols = calloc(res->ncols, sizeof(char *)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
-		SQLSMALLINT reqlen;
 		SQLSMALLINT type;
 		SQLUINTEGER size;
 		SQLSMALLINT digits;
 		SQLSMALLINT nullable;
 
 		// TODO: is there a way to just get the name?
-		r = SQLDescribeCol(st, i + 1, buf, buflen, &reqlen,
+		r = SQLDescribeCol(st, i + 1, (SQLCHAR *) buf->buf, buf->len, &reqlen,
 				   &type, &size, &digits, &nullable);
 
-		if(reqlen + 1 > buflen) {
-			buflen = reqlen + 1;
-			if(!(buf = realloc(buf, buflen))) err_system();
-
-			r = SQLDescribeCol(st, i + 1, buf, buflen, 0,
+		if(reqlen + 1 > buf->len) {
+			buffer_realloc(buf, reqlen + 1);
+			r = SQLDescribeCol(st, i + 1, (SQLCHAR *) buf->buf, buf->len, 0,
 					   &type, &size, &digits, &nullable);
 		}
 
 		if(!SUCCESS(r)) {
 			if(!report_error(SQL_HANDLE_STMT, st))
 				puts(_("Failed to retrieve column data"));
-			SQLFreeHandle(SQL_HANDLE_STMT, st);
 			results_free(res);
 			return 0;
 		}
 
-		res->cols[i] = strdup((char *) buf);
+		res->cols[i] = strdup(buf->buf);
 	}
 
-	if(!res->nrows) {
-		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		return res;
-	}
-
-
-	if(!(res->data = calloc(res->nrows, sizeof(char **)))) err_system();
-	for(j = 0; j < res->nrows; j++) {
-		r = SQLFetch(st);
-		if(!SUCCESS(r)) {
-			if(!report_error(SQL_HANDLE_STMT, st))
-				printf(_("Failed to fetch row %ld (apparently %ld rows)\n"), j, res->nrows);
-			SQLFreeHandle(SQL_HANDLE_STMT, st);
-			results_free(res);
-			return 0;
-		}
-
-		if(!(res->data[j] = calloc(res->ncols, sizeof(char *)))) err_system();
-
-		for(i = 0; i < res->ncols; i++) {
-			SQLINTEGER reqlen;
-			r = SQLGetData(st, i + 1, SQL_C_CHAR, buf, buflen, &reqlen);
-
-			if(reqlen + 1 > buflen) {
-				buflen = reqlen + 1;
-				if(!(buf = realloc(buf, buflen))) err_system();
-
-				r = SQLGetData(st, i + 1, SQL_C_CHAR, buf, buflen, &reqlen);
-			}
-
-			if(!SUCCESS(r)) {
-				if(!report_error(SQL_HANDLE_STMT, st))
-					printf(_("Failed to fetch column %d from row %ld\n"), i, j);
-				SQLFreeHandle(SQL_HANDLE_STMT, st);
-				results_free(res);
-				return 0;
-			}
-
-			if(reqlen != SQL_NULL_DATA) res->data[j][i] = strdup((char *) buf);
-		}
+	for(rowp = &(res->rows);;) {
+		*rowp = fetch_row(st, res->ncols, buf);
+		if(!*rowp) break;
+		rowp = &(*rowp)->next;
+		res->nrows++;
 	}
 
 	return res;
+}
+
+static row *fetch_row(SQLHSTMT st, int ncols, buffer *buf)
+{
+	row *row;
+	SQLRETURN r;
+	SQLSMALLINT i;
+	SQLINTEGER reqlen;
+
+	r = SQLFetch(st);
+	if(!SUCCESS(r)) return 0;
+
+	row = results_row_alloc(ncols);
+
+	for(i = 0; i < ncols; i++) {
+
+		r = SQLGetData(st, i + 1, SQL_C_CHAR, buf->buf, buf->len, &reqlen);
+
+		if(reqlen + 1 > buf->len) {
+			buffer_realloc(buf, reqlen + 1);
+			r = SQLGetData(st, i + 1, SQL_C_CHAR, buf->buf, buf->len, 0);
+		}
+
+		if(!SUCCESS(r)) {
+			if(!report_error(SQL_HANDLE_STMT, st))
+				printf(_("Failed to fetch row"));
+			results_row_free(row);
+			return 0;
+		}
+
+		if(reqlen != SQL_NULL_DATA) row->data[i] = strdup(buf->buf);
+	}
+
+	return row;
 }
 
 void cancel_query()

@@ -167,6 +167,7 @@ void output_horiz(results *res, FILE *s)
 {
 	SQLSMALLINT i;
 	SQLINTEGER j;
+	row *r;
 	dim **head_dims, ***row_dims;
 	int *col_widths;
 	wchar_t *wcs;
@@ -184,11 +185,10 @@ void output_horiz(results *res, FILE *s)
 
 	if(!(row_dims = calloc(res->nrows, sizeof(dim **)))) err_system();
 
-	for(j = 0; j < res->nrows; j++) {
+	for(r = res->rows, j = 0; r; r = r->next, j++) {
 		if(!(row_dims[j] = calloc(res->ncols, sizeof(dim *)))) err_system();
 		for(i = 0; i < res->ncols; i++) {
-			wcs = strdup2wcs(res->data[j][i] ?
-					 res->data[j][i] : NULL_DISPLAY);
+			wcs = strdup2wcs(r->data[i] ? r->data[i] : NULL_DISPLAY);
 			row_dims[j][i] = get_dimensions(wcs);
 			if(row_dims[j][i]->max_width > col_widths[i])
 				col_widths[i] = row_dims[j][i]->max_width;
@@ -199,8 +199,8 @@ void output_horiz(results *res, FILE *s)
 	output_horiz_separator(s, col_widths, res->ncols);
 	output_horiz_row(s, (const char **) res->cols, head_dims, col_widths, res->ncols);
 	output_horiz_separator(s, col_widths, res->ncols);
-	for(j = 0; j < res->nrows; j++)
-		output_horiz_row(s, (const char **) res->data[j], row_dims[j], col_widths, res->ncols);
+	for(r = res->rows, j = 0; r; r = r->next, j++)
+		output_horiz_row(s, (const char **) r->data, row_dims[j], col_widths, res->ncols);
 	output_horiz_separator(s, col_widths, res->ncols);
 
 	free(col_widths);
@@ -225,6 +225,7 @@ void output_vert(results *res, FILE *s)
 	int col_width;
 	SQLSMALLINT i;
 	SQLINTEGER j;
+	row *r;
 	int k;
 	char *p;
 	wchar_t *wcs;
@@ -240,7 +241,7 @@ void output_vert(results *res, FILE *s)
 		free(wcs);
 	}
 
-	for(j = 0; j < res->nrows; j++) {
+	for(r = res->rows, j = 0; r; r = r->next, j++) {
 
 		fprintf(s, "******************************** Row %ld ********************************\n", j + 1);
 
@@ -255,8 +256,8 @@ void output_vert(results *res, FILE *s)
 
 			fputs(" | ", s);
 
-			if(res->data[j][i]) {
-				for(p = res->data[j][i]; *p; p++) {
+			if(r->data[i]) {
+				for(p = r->data[i]; *p; p++) {
 					fputc(*p, s);
 
 					if(*p == '\n') {
@@ -304,11 +305,11 @@ void output_csv_row(FILE *s, const char **data, SQLSMALLINT ncols, char separato
 
 void output_csv(results *res, FILE *s, char separator, char delimiter)
 {
-	SQLINTEGER j;
+	row *r;
 
 	output_csv_row(s, (const char **) res->cols, res->ncols, separator, delimiter);
-	for(j = 0; j < res->nrows; j++)
-		output_csv_row(s, (const char **) res->data[j], res->ncols, separator, delimiter);
+	for(r = res->rows; r; r = r->next)
+		output_csv_row(s, (const char **) r->data, res->ncols, separator, delimiter);
 }
 
 void output_results(results *res, char mode, FILE *s)

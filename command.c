@@ -44,8 +44,8 @@ static results *get_help(const char *topic)
 
 	res = results_alloc();
 	results_set_cols(res, 1, topic);
-	results_set_rows(res, 1);
-	res->data[0][0] = strdup(text);
+	results_add_row(res, text);
+
 	return res;
 }
 
@@ -53,8 +53,7 @@ static results *get_copying()
 {
 	results *res = results_alloc();
 	results_set_cols(res, 1, _("COPYING"));
-	results_set_rows(res, 1);
-	res->data[0][0] = strdup(GPL_COPYING);
+	results_add_row(res, GPL_COPYING);
 	return res;
 }
 
@@ -62,8 +61,7 @@ static results *get_warranty()
 {
 	results *res = results_alloc();
 	results_set_cols(res, 1, _("WARRANTY"));
-	results_set_rows(res, 1);
-	res->data[0][0] = strdup(GPL_WARRANTY);
+	results_add_row(res, GPL_COPYING);
 	return res;
 }
 
@@ -86,41 +84,36 @@ static results *set(const char *name, const char *value)
 			}
 		} else {
 			value = getenv(prefixed_name);
-			if(!value) {
-				value = "";
-				results_set_warnings(res, 1, _("Variable not set"));
-			}
+			if(!value) results_set_warnings(res, 1, _("Variable not set"));
 		}
 
-		results_set_rows(res, 1);
-
-		if(!(res->data[0][0] = strdup(name))) err_system();
-		if(!(res->data[0][1] = strdup(value))) err_system();
+		results_add_row(res, name, value);
 
 		free(prefixed_name);
 	} else {
 		char **v, *name_ptr, *value_ptr;
+		row **rp;
 		int i;
 
-		if(!(res->data = calloc(1024, sizeof(char **)))) err_system();
+		rp = &(res->rows);
 
 		for(v = environ; *v; v++) {
 			if(!strncmp(*v, "DBSH_", 5)) {
-
 				name_ptr = *v + 5;
-
 				value_ptr = strchr(name_ptr, '=');
 				if(!value_ptr) continue;
 
-				if(!(res->data[res->nrows] = calloc(2, sizeof(char *)))) err_system();
-				if(!(res->data[res->nrows][0] = calloc((value_ptr - name_ptr) + 1, sizeof(char)))) err_system();
+				*rp = results_row_alloc(res->ncols);
 
-				for(i = 0; name_ptr[i] != '='; i++) {
-					res->data[res->nrows][0][i] = tolower(name_ptr[i]);
-				}
+				if(!((*rp)->data[0] = calloc((value_ptr - name_ptr) + 1, sizeof(char)))) err_system();
 
-				if(!(res->data[res->nrows][1] = strdup(++value_ptr))) err_system();
+				for(i = 0; name_ptr[i] != '='; i++)
+					(*rp)->data[0][i] = tolower(name_ptr[i]);
+
+				if(!((*rp)->data[1] = strdup(++value_ptr))) err_system();
+
 				res->nrows++;
+				rp = &(*rp)->next;
 			}
 		}
 	}

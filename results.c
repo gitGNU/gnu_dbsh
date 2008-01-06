@@ -29,19 +29,32 @@ results *results_alloc()
 {
 	results *res;
 
-	if(!(res = calloc(1, sizeof(struct results)))) err_system();
+	if(!(res = malloc(sizeof(results)))) err_system();
 
 	res->ncols = 0;
 	res->nrows = 0;
 	res->nwarnings = 0;
 	res->cols = 0;
-	res->data = 0;
+	res->rows = 0;
 	res->warnings = 0;
 	res->time_taken.tv_sec = 0;
 	res->time_taken.tv_usec = 0;
 	res->next = 0;
 
 	return res;
+}
+
+row *results_row_alloc(int ncols)
+{
+	row *row;
+
+	if(!(row = malloc(sizeof(row))) ||
+	   !(row->data = calloc(ncols, sizeof(char *))))
+		err_system();
+
+	row->next = 0;
+
+	return row;
 }
 
 void results_set_cols(results *res, int ncols, ...)
@@ -76,21 +89,43 @@ void results_set_warnings(results *res, int nwarnings, ...)
 	va_end(ap);
 }
 
-void results_set_rows(results *res, int nrows)
+row *results_add_row(results *res, ...)
 {
+	row **rp;
+	va_list ap;
 	int i;
+	const char *d;
 
-	res->nrows = nrows;
-	if(!(res->data = calloc(nrows, sizeof(char **)))) err_system();
+	va_start(ap, res);
 
-	for(i = 0; i < nrows; i++)
-		if(!(res->data[i] = calloc(res->ncols, sizeof(char *)))) err_system();
+	/*
+	  This is inefficient but I think it makes the code
+	  clearer than passing a 'latest row' around.
+	*/
+
+	rp = &(res->rows);
+	while(*rp) rp = &(*rp)->next;
+
+	*rp = results_row_alloc(res->ncols);
+
+	for(i = 0; i < res->ncols; i++) {
+		d = va_arg(ap, const char *);
+		if(d && !((*rp)->data[i] = strdup(d))) err_system();
+	}
+
+	res->nrows++;
+
+	va_end(ap);
+
+	return *rp;
 }
 
 void results_free(results *r)
 {
 	SQLSMALLINT i;
 	SQLINTEGER j;
+	row *row, **rowp;
+
 
 	if(r->next) results_free(r->next);
 
@@ -99,16 +134,11 @@ void results_free(results *r)
 		free(r->cols);
 	}
 
-	if(r->data) {
-		for(j = 0; j < r->nrows; j++) {
-			if(r->data[j]) {
-				for(i = 0; i < r->ncols; i++) {
-					if(r->data[j][i]) free(r->data[j][i]);
-				}
-				free(r->data[j]);
-			}
-		}
-		free(r->data);
+	for(rowp = &(r->rows); *rowp;) {
+		row = *rowp;
+		for(i = 0; i < r->ncols; i++) if(row->data[i]) free(row->data[i]);
+		rowp = &row->next;
+		results_row_free(row);
 	}
 
 	if(r->warnings) {
@@ -119,3 +149,8 @@ void results_free(results *r)
 	free(r);
 }
 
+void results_row_free(row *r)
+{
+	free(r->data);
+	free(r);
+}
