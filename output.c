@@ -348,6 +348,6 @@ void output_results(results *res, char mode, FILE *s)
 
 	if((mode == 'G' || mode == 'g') &&
 	   (res->time_taken.tv_sec || res->time_taken.tv_usec))
-		fprintf(s, _("(%ld.%06lds)\n"),
+		fprintf(s, _("(%lu.%06lus)\n"),
 			res->time_taken.tv_sec, res->time_taken.tv_usec);
 }
