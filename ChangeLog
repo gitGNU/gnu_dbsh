@@ -1,3 +1,6 @@
+0.4a	Support for multiple result sets.
+	Various bug fixes.
+
 0.3a
 	Further UI tweaks.
 	Vertical and horizontal output now correctly handle newlines, tabs
