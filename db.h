@@ -30,7 +30,7 @@ int db_reconnect(SQLHDBC *conn, const char *);
 SQLSMALLINT db_info(SQLHDBC, SQLUSMALLINT, char *, int);
 results *db_conn_details(SQLHDBC);
 results *execute_query(SQLHDBC, const char *, int);
-void cancel_query();
+void db_cancel_query();
 results *get_tables(SQLHDBC, const char *, const char *, const char *);
 results *get_columns(SQLHDBC, const char *, const char *, const char *);
 

@@ -160,7 +160,7 @@ int main(int argc, char *argv[])
 
 	if(pass) for(; *pass; pass++) *pass = 'x';
 	rl_history_start();
-	signal_handler_install();
+	signal_handlers_install();
 
 	mainbuf = buffer_alloc(256);
 	prevbuf = buffer_alloc(256);

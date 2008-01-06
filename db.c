@@ -16,6 +16,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -30,6 +31,7 @@
 #define report_error(t, h, f) _report_error(t, h, f, __FILE__, __LINE__)
 
 SQLHSTMT *current_statement;
+pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int list_dsns(SQLHENV, SQLUSMALLINT);
 static void time_taken(struct timeval *);
@@ -219,7 +221,10 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 
 	gettimeofday(&taken, 0);
 
+	pthread_mutex_lock(&cs_lock);
 	current_statement = &st;
+	pthread_mutex_unlock(&cs_lock);
+
 	r = SQLExecDirect(st, (SQLCHAR *) buf, buflen);
 
 	time_taken(&taken);
@@ -273,7 +278,11 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 	} while(SUCCESS(r));
 
 	buffer_free(buf);
+
+	pthread_mutex_lock(&cs_lock);
 	current_statement = 0;
+	pthread_mutex_unlock(&cs_lock);
+
 	SQLFreeHandle(SQL_HANDLE_STMT, st);
 
 	return res;
@@ -378,14 +387,18 @@ static row *fetch_row(SQLHSTMT st, buffer *buf, int ncols)
 	return row;
 }
 
-void cancel_query()
+void db_cancel_query()
 {
 	SQLRETURN r;
+
+	pthread_mutex_lock(&cs_lock);
 
 	if(current_statement) {
 		r = SQLCancel(*current_statement);
 		if(!SUCCESS(r)) report_error(SQL_HANDLE_STMT, *current_statement, "Failed to cancel query");
 	}
+
+	pthread_mutex_unlock(&cs_lock);
 }
 
 results *get_tables(SQLHDBC conn, const char *catalog,

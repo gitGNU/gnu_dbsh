@@ -16,30 +16,44 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <pthread.h>
 #include <signal.h>
-#include <stdio.h>
 
 #include "common.h"
 #include "db.h"
+#include "err.h"
 
 
-static void signal_handler(int signum)
+pthread_t signal_thread;
+sigset_t sig_set;
+
+
+static void *signal_thread_start()
 {
-	cancel_query();
+	int sig;
+
+	// TODO: is this necessary, or is it inherited?
+	if(pthread_sigmask(SIG_BLOCK, &sig_set, 0)) err_system();
+
+	for(;;) {
+		sigwait(&sig_set, &sig);
+		db_cancel_query();
+	}
 }
 
-void signal_handler_install()
+void signal_handlers_install()
 {
 	struct sigaction act;
 
+	// Ignore SIGPIPE
 	act.sa_flags = 0;
 	sigemptyset(&act.sa_mask);
-
-	act.sa_handler = signal_handler;
-	if(sigaction(SIGINT, &act, (struct sigaction *) 0) == -1)
-		perror("Failed to set signal handler");
-
 	act.sa_handler = SIG_IGN;
-	if(sigaction(SIGPIPE, &act, (struct sigaction *) 0) == -1)
-		perror("Failed to set signal handler");
+	if(sigaction(SIGPIPE, &act, (struct sigaction *) 0) == -1) err_system();
+
+	// SIGINT handler thread
+	sigemptyset(&sig_set);
+	sigaddset(&sig_set, SIGINT);
+	if(pthread_sigmask(SIG_BLOCK, &sig_set, 0)) err_system();
+	if(pthread_create(&signal_thread, 0, signal_thread_start, 0)) err_system();
 }

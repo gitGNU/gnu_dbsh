@@ -19,6 +19,6 @@
 #ifndef SIGNAL_H
 #define SIGNAL_H
 
-void signal_handler_install();
+void signal_handlers_install();
 
 #endif
