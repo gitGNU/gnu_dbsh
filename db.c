@@ -27,7 +27,7 @@
 #include "results.h"
 
 #define SUCCESS(r) (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO)
-#define report_error(t, h) _report_error(t, h,  __FILE__, __LINE__)
+#define report_error(t, h, f) _report_error(t, h, f, __FILE__, __LINE__)
 
 SQLHSTMT *current_statement;
 
@@ -37,14 +37,14 @@ static results *fetch_results(SQLHSTMT, struct timeval);
 static results *fetch_resultset(SQLHSTMT, struct timeval, buffer *);
 static row *fetch_row(SQLHSTMT, int, buffer *);
 
-static int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, int line)
+static void _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *fallback, const char *file, int line)
 {
 	SQLRETURN r;
 	SQLCHAR message[256];
 	SQLCHAR state[6];
 	SQLINTEGER code;
 	SQLSMALLINT i;
-	int retval = 0;
+	int success = 0;
 
 	// TODO: only include file and line in debug mode
 	printf(_("Error at %s line %d:\n"), file, line);
@@ -53,12 +53,12 @@ static int _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *file, i
 		r = SQLGetDiagRec(type, handle, i, state, &code, message, 256, 0);
 
 		if(SUCCESS(r)) {
-			retval = 1;
+			success = 1;
 			printf(_("%s (SQLSTATE %s, error %ld)\n"), message, state, code);
 		} else break;
 	}
 
-	return retval;
+	if(!success) puts(fallback);
 }
 
 static SQLHENV alloc_env()
@@ -126,8 +126,7 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 		       (SQLCHAR *) user, SQL_NTS,
 		       (SQLCHAR *) pass, SQL_NTS);
 	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_DBC, conn))
-			printf(_("Failed to connect to %s\n"), dsn);
+		report_error(SQL_HANDLE_DBC, conn, _("Failed to connect"));
 		exit(1);
 	}
 
@@ -164,8 +163,7 @@ int db_reconnect(SQLHDBC *conn, const char *pass)
 		return 0;
 
 	} else {
-		if(!report_error(SQL_HANDLE_DBC, newconn))
-			printf(_("Failed to connect to %s\n"), dsn);
+		report_error(SQL_HANDLE_DBC, newconn, _("Failed to connect"));
 		SQLFreeHandle(SQL_HANDLE_DBC, newconn);
 		return 1;
 	}
@@ -178,7 +176,7 @@ SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 
 	r = SQLGetInfo(conn, type, buf, len, &l);
 	if(!SUCCESS(r)) {
-		report_error(SQL_HANDLE_DBC, conn);
+		report_error(SQL_HANDLE_DBC, conn, _("SQLGetInfo() failed"));
 		strncpy(buf, "(unknown)", len);
 		buf[len - 1] = 0;
 	}
@@ -227,8 +225,7 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 	time_taken(&taken);
 
 	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_STMT, st))
-			puts(_("Failed to execute statement"));
+		report_error(SQL_HANDLE_STMT, st, _("Failed to execute statement"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		return 0;
 	}
@@ -290,8 +287,7 @@ static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken, buffer *
 
 	r = SQLNumResultCols(st, &(res->ncols));
 	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_STMT, st))
-			puts(_("Failed to retrieve number of columns"));
+		report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve number of columns"));
 		results_free(res);
 		return 0;
 	}
@@ -299,8 +295,7 @@ static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken, buffer *
 	if(!res->ncols) {  // non-SELECT
 		r = SQLRowCount(st, &(res->nrows));
 		if(!SUCCESS(r)) {
-			if(!report_error(SQL_HANDLE_STMT, st))
-				puts(_("Failed to retrieve rows affected"));
+			report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve rows affected"));
 			results_free(res);
 			return 0;
 		}
@@ -327,8 +322,7 @@ static results *fetch_resultset(SQLHSTMT st, struct timeval time_taken, buffer *
 		}
 
 		if(!SUCCESS(r)) {
-			if(!report_error(SQL_HANDLE_STMT, st))
-				puts(_("Failed to retrieve column data"));
+			report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve column data"));
 			results_free(res);
 			return 0;
 		}
@@ -368,8 +362,7 @@ static row *fetch_row(SQLHSTMT st, int ncols, buffer *buf)
 		}
 
 		if(!SUCCESS(r)) {
-			if(!report_error(SQL_HANDLE_STMT, st))
-				printf(_("Failed to fetch row"));
+			report_error(SQL_HANDLE_STMT, st, _("Failed to fetch row"));
 			results_row_free(row);
 			return 0;
 		}
@@ -386,7 +379,7 @@ void cancel_query()
 
 	if(current_statement) {
 		r = SQLCancel(*current_statement);
-		if(!SUCCESS(r)) report_error(SQL_HANDLE_STMT, *current_statement);
+		if(!SUCCESS(r)) report_error(SQL_HANDLE_STMT, *current_statement, "Failed to cancel query");
 	}
 }
 
@@ -400,8 +393,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_STMT, st))
-			puts(_("Failed to allocate statement handle"));
+		report_error(SQL_HANDLE_STMT, st, _("Failed to allocate statement handle"));
 		return 0;
 	}
 
@@ -415,8 +407,8 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 	time_taken(&taken);
 
 	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_STMT, st))
-			puts(_("Failed to list tables"));
+		report_error(SQL_HANDLE_STMT, st, _("Failed to list tables"));
+		return 0;
 	}
 
 	return fetch_results(st, taken);
@@ -431,8 +423,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_STMT, st))
-			puts(_("Failed to allocate statement handle"));
+		report_error(SQL_HANDLE_STMT, st, _("Failed to allocate statement handle"));
 		return 0;
 	}
 
@@ -447,8 +438,8 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	time_taken(&taken);
 
 	if(!SUCCESS(r)) {
-		if(!report_error(SQL_HANDLE_STMT, st))
-			puts(_("Failed to list columns"));
+		report_error(SQL_HANDLE_STMT, st, _("Failed to list columns"));
+		return 0;
 	}
 
 	return fetch_results(st, taken);
