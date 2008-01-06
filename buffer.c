@@ -37,13 +37,15 @@ buffer *buffer_alloc(size_t len)
 	return b;
 }
 
+void buffer_realloc(buffer *buf, size_t len)
+{
+	if(!(buf->buf = realloc(buf->buf, len))) err_system();
+	buf->len = len;
+}
+
 void buffer_append(buffer *buf, char c)
 {
-	if(buf->next >= buf->len) {
-		buf->len *= 2;
-		if(!(buf->buf = realloc(buf->buf, buf->len))) err_system();
-	}
-
+	if(buf->next >= buf->len) buffer_realloc(buf, buf->len * 2);
 	buf->buf[buf->next++] = c;
 }
 

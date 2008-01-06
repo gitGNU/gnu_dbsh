@@ -28,6 +28,7 @@ struct buffer {
 };
 
 buffer *buffer_alloc(size_t);
+void buffer_realloc(buffer *, size_t);
 void buffer_append(buffer *, char);
 char *buffer_dup2str(buffer *);
 void buffer_free(buffer *);
