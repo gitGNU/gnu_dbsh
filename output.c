@@ -240,6 +240,17 @@ void output_horiz(resultset *res, FILE *s)
 	output_size(res, s);
 }
 
+void output_vert_separator(FILE *s, int col_width, int row_width)
+{
+	int k;
+
+	fputc('+', s);
+	for(k = 0; k <= col_width + 1; k++) fputc('-', s);
+	fputc('+', s);
+	for(k = 0; k <= row_width + 1; k++) fputc('-', s);
+	fputs("+\n", s);
+}
+
 void output_vert(resultset *res, FILE *s)
 {
 	res_dims *dims;
@@ -265,11 +276,8 @@ void output_vert(resultset *res, FILE *s)
 	}
 
 	for(r = res->rows, j = 0; r; r = r->next, j++) {
-		fputc('+', s);
-		for(k = 0; k <= col_width + 1; k++) fputc('-', s);
-		fputc('+', s);
-		for(k = 0; k <= row_width + 1; k++) fputc('-', s);
-		fputs("+\n", s);
+
+		output_vert_separator(s, col_width, row_width);
 
 		for(i = 0; i < res->ncols; i++) {
 
@@ -308,11 +316,8 @@ void output_vert(resultset *res, FILE *s)
 		}
 	}
 
-	fputc('+', s);
-	for(k = 0; k <= col_width + 1; k++) fputc('-', s);
-	fputc('+', s);
-	for(k = 0; k <= row_width + 1; k++) fputc('-', s);
-	fputs("+\n", s);
+	if(j) output_vert_separator(s, col_width, row_width);
+
 
 	free_resultset_dimensions(res, dims);
 
