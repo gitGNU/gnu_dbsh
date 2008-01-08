@@ -42,7 +42,7 @@ static results *get_help(const char *topic)
 	if(!strcmp(topic, "intro")) text = HELP_INTRO;
 	else text = HELP_NOTFOUND;
 
-	res = results_alloc();
+	res = results_single_alloc();
 	results_set_cols(res, 1, topic);
 	results_add_row(res, text);
 
@@ -51,7 +51,7 @@ static results *get_help(const char *topic)
 
 static results *get_copying()
 {
-	results *res = results_alloc();
+	results *res = results_single_alloc();
 	results_set_cols(res, 1, _("COPYING"));
 	results_add_row(res, GPL_COPYING);
 	return res;
@@ -59,7 +59,7 @@ static results *get_copying()
 
 static results *get_warranty()
 {
-	results *res = results_alloc();
+	results *res = results_single_alloc();
 	results_set_cols(res, 1, _("WARRANTY"));
 	results_add_row(res, GPL_COPYING);
 	return res;
@@ -67,7 +67,7 @@ static results *get_warranty()
 
 static results *set(const char *name, const char *value)
 {
-	results *res = results_alloc();
+	results *res = results_single_alloc();
 
 	results_set_cols(res, 2, _("name"), _("value"));
 
