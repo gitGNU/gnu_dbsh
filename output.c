@@ -33,6 +33,11 @@ typedef struct {
 	int max_width;
 } dim;
 
+typedef struct {
+	dim **col_dims;
+	dim **row_dims;
+} res_dims;
+
 
 #define NULL_DISPLAY "*NULL*"
 
@@ -92,6 +97,50 @@ static void free_dimensions(dim *d)
 	free(d);
 }
 
+static res_dims *get_resultset_dimensions(resultset *res)
+{
+	res_dims *rd;
+	SQLSMALLINT i;
+	SQLINTEGER j;
+	row *r;
+	wchar_t *wcs;
+
+	if(!(rd = malloc(sizeof(res_dims)))) err_system();
+	if(!(rd->col_dims = calloc(res->ncols, sizeof(dim)))) err_system();
+	if(!(rd->row_dims = calloc(res->ncols * res->nrows, sizeof(dim)))) err_system();
+
+	for(i = 0; i < res->ncols; i++) {
+		wcs = strdup2wcs(res->cols[i]);
+		rd->col_dims[i] = get_dimensions(wcs);
+		free(wcs);
+
+		for(r = res->rows, j = 0; r; r = r->next, j++) {
+			wcs = strdup2wcs(r->data[i] ? r->data[i] : NULL_DISPLAY);
+			rd->row_dims[(j * res->ncols) + i] = get_dimensions(wcs);
+			free(wcs);
+		}
+	}
+
+	return rd;
+}
+
+static void free_resultset_dimensions(resultset *res, res_dims *rd)
+{
+	SQLSMALLINT i;
+	SQLINTEGER j;
+
+	for(i = 0; i < res->ncols; i++) {
+		free_dimensions(rd->col_dims[i]);
+		for(j = 0; j < res->nrows; j++) {
+			free_dimensions(rd->row_dims[(j * res->ncols) + i]);
+		}
+	}
+
+	free(rd->col_dims);
+	free(rd->row_dims);
+	free(rd);
+}
+
 static void output_size(resultset *res, FILE *s)
 {
 	fprintf(s, res->nrows == 1 ?
@@ -145,6 +194,8 @@ void output_horiz_row(FILE *s, const char **data,
 				}
 			}
 
+			if(!*p) pos[i] = p;
+
 			for(k = dims[i]->widths[j]; k <= widths[i]; k++) fputc(' ', s);
 		}
 
@@ -158,88 +209,74 @@ void output_horiz_row(FILE *s, const char **data,
 
 void output_horiz(resultset *res, FILE *s)
 {
+	res_dims *dims;
 	SQLSMALLINT i;
 	SQLINTEGER j;
 	row *r;
-	dim **head_dims, ***row_dims;
 	int *col_widths;
-	wchar_t *wcs;
 
 
+	dims = get_resultset_dimensions(res);
 	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
-	if(!(head_dims = calloc(res->ncols, sizeof(dim *)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
-		wcs = strdup2wcs(res->cols[i]);
-		head_dims[i] = get_dimensions(wcs);
-		col_widths[i] = head_dims[i]->max_width;
-		free(wcs);
-	}
+		col_widths[i] = dims->col_dims[i]->max_width;
 
-	if(!(row_dims = calloc(res->nrows, sizeof(dim **)))) err_system();
-
-	for(r = res->rows, j = 0; r; r = r->next, j++) {
-		if(!(row_dims[j] = calloc(res->ncols, sizeof(dim *)))) err_system();
-		for(i = 0; i < res->ncols; i++) {
-			wcs = strdup2wcs(r->data[i] ? r->data[i] : NULL_DISPLAY);
-			row_dims[j][i] = get_dimensions(wcs);
-			if(row_dims[j][i]->max_width > col_widths[i])
-				col_widths[i] = row_dims[j][i]->max_width;
-			free(wcs);
+		for(j = 0; j < res->nrows; j++) {
+			if(dims->row_dims[j * res->ncols + i]->max_width > col_widths[i])
+				col_widths[i] = dims->row_dims[j * res->ncols + i]->max_width;
 		}
 	}
 
 	output_horiz_separator(s, col_widths, res->ncols);
-	output_horiz_row(s, (const char **) res->cols, head_dims, col_widths, res->ncols);
+	output_horiz_row(s, (const char **) res->cols, dims->col_dims, col_widths, res->ncols);
 	output_horiz_separator(s, col_widths, res->ncols);
 	for(r = res->rows, j = 0; r; r = r->next, j++)
-		output_horiz_row(s, (const char **) r->data, row_dims[j], col_widths, res->ncols);
+		output_horiz_row(s, (const char **) r->data, dims->row_dims + (j * res->ncols), col_widths, res->ncols);
 	output_horiz_separator(s, col_widths, res->ncols);
 
-	free(col_widths);
-
-	for(i = 0; i < res->ncols; i++) free_dimensions(head_dims[i]);
-	free(head_dims);
-
-	for(j = 0; j < res->nrows; j++) {
-		for(i = 0; i < res->ncols; i++) {
-			free_dimensions(row_dims[j][i]);
-		}
-		free(row_dims[j]);
-	}
-	free(row_dims);
+	free_resultset_dimensions(res, dims);
 
 	output_size(res, s);
 }
 
 void output_vert(resultset *res, FILE *s)
 {
-	int col_width;
+	res_dims *dims;
+	int col_width, row_width;
 	SQLSMALLINT i;
 	SQLINTEGER j;
 	row *r;
-	int k;
+	int k, l;
 	char *p;
-	wchar_t *wcs;
-	dim **head_dims;
 
-	if(!(head_dims = calloc(res->ncols, sizeof(dim *)))) err_system();
+
+	dims = get_resultset_dimensions(res);
 
 	col_width = 0;
+	row_width = 0;
 	for(i = 0; i < res->ncols; i++) {
-		wcs = strdup2wcs(res->cols[i]);
-		head_dims[i] = get_dimensions(wcs);
-		if(head_dims[i]->max_width > col_width) col_width = head_dims[i]->max_width;
-		free(wcs);
+		if(dims->col_dims[i]->max_width > col_width) col_width = dims->col_dims[i]->max_width;
+
+		for(j = 0; j < res->nrows; j++) {
+			if(dims->row_dims[j * res->ncols + i]->max_width > row_width)
+				row_width = dims->row_dims[j * res->ncols + i]->max_width;
+		}
 	}
 
 	for(r = res->rows, j = 0; r; r = r->next, j++) {
-
-		fprintf(s, "******************************** Row %ld ********************************\n", j + 1);
+		fputc('+', s);
+		for(k = 0; k <= col_width + 1; k++) fputc('-', s);
+		fputc('+', s);
+		for(k = 0; k <= row_width + 1; k++) fputc('-', s);
+		fputs("+\n", s);
 
 		for(i = 0; i < res->ncols; i++) {
 
-			for(k = 0; k <= col_width - head_dims[i]->widths[0]; k++) fputc(' ', s);
+			l = 0;
+
+			fputc('|', s);
+			for(k = 0; k <= col_width - dims->col_dims[i]->widths[0]; k++) fputc(' ', s);
 
 			for(p = res->cols[i]; *p; p++) {
 				if(*p == '\t') fputs("        ", s);
@@ -250,22 +287,32 @@ void output_vert(resultset *res, FILE *s)
 
 			if(r->data[i]) {
 				for(p = r->data[i]; *p; p++) {
-					fputc(*p, s);
-
 					if(*p == '\n') {
-						for(k = 0; k < col_width + 4; k++) fputc(' ', s);
+						for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l]; k++) fputc(' ', s);
+						fputs(" |\n|", s);
+						for(k = 0; k < col_width + 1; k++) fputc(' ', s);
+						fputs(" | ", s);
+						l++;
+					} else {
+						fputc(*p, s);
 					}
 				}
 			} else {
 				fputs(NULL_DISPLAY, s);
 			}
 
-			fputc('\n', s);
+			for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l]; k++) fputc(' ', s);
+			fputs(" |\n", s);
 		}
 	}
 
-	for(i = 0; i < res->ncols; i++) free_dimensions(head_dims[i]);
-	free(head_dims);
+	fputc('+', s);
+	for(k = 0; k <= col_width + 1; k++) fputc('-', s);
+	fputc('+', s);
+	for(k = 0; k <= row_width + 1; k++) fputc('-', s);
+	fputs("+\n", s);
+
+	free_resultset_dimensions(res, dims);
 
 	output_size(res, s);
 }
