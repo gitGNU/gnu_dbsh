@@ -61,7 +61,7 @@ static results *get_warranty()
 {
 	results *res = results_single_alloc();
 	results_set_cols(res, 1, _("WARRANTY"));
-	results_add_row(res, GPL_COPYING);
+	results_add_row(res, GPL_WARRANTY);
 	return res;
 }
 
