@@ -293,6 +293,8 @@ void output_vert(resultset *res, FILE *s)
 						for(k = 0; k < col_width + 1; k++) fputc(' ', s);
 						fputs(" | ", s);
 						l++;
+					} else if(*p == '\t') {
+						fputs("        ", s);
 					} else {
 						fputc(*p, s);
 					}
