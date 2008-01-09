@@ -397,7 +397,8 @@ void output_results(results *res, char mode, FILE *s)
 	}
 
 	for(i = 0; i < res->nwarnings; i++) {
-		fprintf(s, "WARNING: %s\n", res->warnings[i]);
+		fputs(res->warnings[i], s);
+		fputc('\n', s);
 	}
 
 	if((mode == 'G' || mode == 'g') &&
