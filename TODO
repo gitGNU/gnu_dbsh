@@ -13,6 +13,7 @@ more consistency in error handling (less random perrors and printfs)
 tidy up function names
 use unicode box-drawing characters where available?
 improve /help
+hexdump-style output for binary data
 
 aliases/prepared statements
 *alias getrow SELECT * FROM TABLE WHERE id = ?;
