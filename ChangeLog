@@ -3,6 +3,7 @@
 	SELECTs etc (apparently some drivers don't do it).
 	Support for DSN-less connection strings.
 	Various bug fixes.
+	Wrote the beginnings of a DejaGNU test suite.
 
 0.3a
 	Further UI tweaks.

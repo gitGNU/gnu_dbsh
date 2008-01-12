@@ -1,0 +1,8 @@
+set test "Pipes"
+
+send "SELECT * FROM test\\C | grep text\n"
+
+expect {
+    "\"1\",\"This is some text.\"\r\ntext with\r\n"
+    { pass "$test" }
+}

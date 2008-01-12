@@ -1,0 +1,7 @@
+set test "Print action"
+
+send "SELECT * FROM test\\p\n"
+
+expect {
+    "SELECT * FROM test\r\n" { pass "$test" }
+}

@@ -1,0 +1,18 @@
+set timeout 3
+
+expect_after {
+    timeout { fail "$test" }
+}
+
+
+# TODO: set environment variables to override .dbshrc
+
+spawn ./dbsh "DRIVER=SQLite;DATABASE=dbsh.test/test.db"
+
+expect {
+    "Connected" { }
+    timeout { perror "Failed to spawn dbsh" }
+}
+
+expect ">"
+

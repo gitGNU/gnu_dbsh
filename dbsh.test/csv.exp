@@ -1,0 +1,8 @@
+set test "CSV output"
+
+send "SELECT * FROM test\\C\n"
+
+expect {
+    "\"id\",\"desc\"\r\n\"1\",\"This is some text.\"\r\n\"2\",\"\"\r\n\"3\",\"This is some\r\ntext with\r\nnewlines in it.\"\r\n\r\n"
+    { pass "$test" }
+}

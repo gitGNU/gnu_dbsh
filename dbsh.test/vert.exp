@@ -1,0 +1,8 @@
+set test "Vertical output"
+
+send "SELECT * FROM test\\G\n"
+
+expect {
+    "+------+--------------------+\r\n|   id | 1                  |\r\n| desc | This is some text. |\r\n+------+--------------------+\r\n|   id | 2                  |\r\n| desc | *NULL*             |\r\n+------+--------------------+\r\n|   id | 3                  |\r\n| desc | This is some       |\r\n|      | text with          |\r\n|      | newlines in it.    |\r\n+------+--------------------+\r\n3 rows in set\r\n\r\n"
+    { pass "$test" }
+}

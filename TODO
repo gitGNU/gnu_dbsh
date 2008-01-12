@@ -1,7 +1,6 @@
 make signal stuff work
 batch mode?
 tab completion - commands as a minimum, maybe tables etc too?
-regression tests using SQLite
 separate history by DSN?
 multi-line history items get split when history is loaded from file
 specify editor as argument to \e? (or named buffer?)

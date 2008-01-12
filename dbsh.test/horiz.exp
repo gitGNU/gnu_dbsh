@@ -1,0 +1,8 @@
+set test "Horizontal output"
+
+send "SELECT * FROM test\\g\n"
+
+expect {
+    "+----+--------------------+\r\n| id | desc               |\r\n+----+--------------------+\r\n| 1  | This is some text. |\r\n| 2  | *NULL*             |\r\n| 3  | This is some       |\r\n|    | text with          |\r\n|    | newlines in it.    |\r\n+----+--------------------+\r\n3 rows in set\r\n\r\n"
+    { pass "$test" }
+}
