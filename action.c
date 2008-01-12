@@ -150,7 +150,7 @@ void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 		print(sqlbuf, stream);
 		break;
 	case 'r':
-		db_reconnect(connp, nchunks > 0 ? l->chunks[0] : 0);
+		db_reconnect();
 		break;
 	case 's':  // save
 		// TODO: save to named buffer

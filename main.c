@@ -36,6 +36,7 @@
 #include "sig.h"
 
 
+const char *dsn, *user, *pass;
 SQLHDBC conn;
 buffer *mainbuf, *prevbuf;
 
@@ -118,9 +119,8 @@ int process_line(char *line)
 
 int main(int argc, char *argv[])
 {
-	char *dsn = 0, *user = 0, *pass = 0;
 	int opt;
-	char *line;
+	char *line, *p;
 
 	setlocale(LC_ALL, "");
 	read_rc_file();
@@ -154,11 +154,13 @@ int main(int argc, char *argv[])
 
 	dsn = argv[optind++];
 	if(argc - optind > 0) user = argv[optind++];
-	if(argc - optind > 0) pass = argv[optind++];
+	if(argc - optind > 0) {
+		pass = strdup(argv[optind]);
+		for(p = argv[optind]; *p; p++) *p = 'x';
+	}
 
-	conn = db_connect(dsn, user, pass);
+	if(!(conn = db_connect())) exit(1);
 
-	if(pass) for(; *pass; pass++) *pass = 'x';
 	rl_history_start();
 	signal_handlers_install();
 

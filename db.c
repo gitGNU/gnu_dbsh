@@ -29,6 +29,9 @@
 
 #define report_error(t, h, r, f) _report_error(t, h, r, f, __FILE__, __LINE__)
 
+extern const char *dsn, *user, *pass;
+extern SQLHDBC conn;
+
 SQLHSTMT *current_statement;
 pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
 
@@ -134,7 +137,7 @@ static int list_dsns(SQLHENV env, SQLUSMALLINT dir)
 	return n;
 }
 
-SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
+SQLHDBC db_connect()
 {
 	SQLHENV env;
 	SQLHDBC conn;
@@ -145,13 +148,22 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
 	if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate connection handle\n"));
 
-	r = SQLConnect(conn,
-		       (SQLCHAR *) dsn, SQL_NTS,
-		       (SQLCHAR *) user, SQL_NTS,
-		       (SQLCHAR *) pass, SQL_NTS);
+
+	if(!strchr(dsn, '=') || user) {
+		r = SQLConnect(conn,
+			       (SQLCHAR *) dsn, SQL_NTS,
+			       (SQLCHAR *) user, SQL_NTS,
+			       (SQLCHAR *) pass, SQL_NTS);
+	} else {
+		r = SQLDriverConnect(conn, 0, (SQLCHAR *) dsn, SQL_NTS,
+				     0, 0, 0, SQL_DRIVER_NOPROMPT);
+	}
+
+
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_DBC, conn, r, _("Failed to connect"));
-		exit(1);
+		SQLFreeHandle(SQL_HANDLE_DBC, conn);
+		return 0;
 	}
 
 	printf(_("Connected to %s\n"), dsn);
@@ -159,37 +171,14 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 	return conn;
 }
 
-int db_reconnect(SQLHDBC *conn, const char *pass)
+void db_reconnect()
 {
-	char dsn[256], user[256];
-	SQLHENV env;
 	SQLHDBC newconn;
-	SQLRETURN r;
 
-	db_info(*conn, SQL_DATA_SOURCE_NAME, dsn, 256);
-	db_info(*conn, SQL_USER_NAME, user, 256);
-
-	env = alloc_env();
-
-	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &newconn);
-	if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate connection handle\n"));
-
-	r = SQLConnect(newconn,
-		       (SQLCHAR *) dsn, SQL_NTS,
-		       (SQLCHAR *) user, SQL_NTS,
-		       (SQLCHAR *) pass, SQL_NTS);
-
-	if(SQL_SUCCEEDED(r)) {
-		printf(_("Connected to %s\n"), dsn);
-		SQLDisconnect(*conn);
-		SQLFreeHandle(SQL_HANDLE_DBC, *conn);
-		*conn = newconn;
-		return 0;
-
-	} else {
-		report_error(SQL_HANDLE_DBC, newconn, r, _("Failed to connect"));
-		SQLFreeHandle(SQL_HANDLE_DBC, newconn);
-		return 1;
+	if((newconn = db_connect(dsn, user, pass))) {
+		SQLDisconnect(conn);
+		SQLFreeHandle(SQL_HANDLE_DBC, conn);
+		conn = newconn;
 	}
 }
 

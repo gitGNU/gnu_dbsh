@@ -14,6 +14,8 @@ tidy up function names
 use unicode box-drawing characters where available?
 improve /help
 hexdump-style output for binary data
+SQLBrowseConnect?  do any unix drivers support it?
+List drivers in -l using SQLDrivers?
 
 aliases/prepared statements
 *alias getrow SELECT * FROM TABLE WHERE id = ?;
