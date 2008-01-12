@@ -27,7 +27,6 @@
 #include "err.h"
 #include "results.h"
 
-#define SUCCESS(r) (r == SQL_SUCCESS || r == SQL_SUCCESS_WITH_INFO)
 #define report_error(t, h, f) _report_error(t, h, f, __FILE__, __LINE__)
 
 SQLHSTMT *current_statement;
@@ -54,7 +53,7 @@ static void _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *fallba
 	for(i = 1;; i++) {
 		r = SQLGetDiagRec(type, handle, i, state, &code, message, 256, 0);
 
-		if(SUCCESS(r)) {
+		if(SQL_SUCCEEDED(r)) {
 			success = 1;
 			printf(_("%s (SQLSTATE %s, error %ld)\n"), message, state, code);
 		} else break;
@@ -71,10 +70,10 @@ static SQLHENV alloc_env()
 	if(!env) {
 
 		r = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
-		if(!SUCCESS(r)) err_fatal(_("Failed to allocate environment handle\n"));
+		if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate environment handle\n"));
 
 		r = SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (SQLPOINTER) SQL_OV_ODBC3, 0);
-		if(!SUCCESS(r)) {
+		if(!SQL_SUCCEEDED(r)) {
 			SQLFreeHandle(SQL_HANDLE_ENV, env);
 			err_fatal(_("Failed to set ODBC version to 3\n"));
 		}
@@ -121,13 +120,13 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 	env = alloc_env();
 
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
-	if(!SUCCESS(r)) err_fatal(_("Failed to allocate connection handle\n"));
+	if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate connection handle\n"));
 
 	r = SQLConnect(conn,
 		       (SQLCHAR *) dsn, SQL_NTS,
 		       (SQLCHAR *) user, SQL_NTS,
 		       (SQLCHAR *) pass, SQL_NTS);
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_DBC, conn, _("Failed to connect"));
 		exit(1);
 	}
@@ -150,14 +149,14 @@ int db_reconnect(SQLHDBC *conn, const char *pass)
 	env = alloc_env();
 
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &newconn);
-	if(!SUCCESS(r)) err_fatal(_("Failed to allocate connection handle\n"));
+	if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate connection handle\n"));
 
 	r = SQLConnect(newconn,
 		       (SQLCHAR *) dsn, SQL_NTS,
 		       (SQLCHAR *) user, SQL_NTS,
 		       (SQLCHAR *) pass, SQL_NTS);
 
-	if(SUCCESS(r)) {
+	if(SQL_SUCCEEDED(r)) {
 		printf(_("Connected to %s\n"), dsn);
 		SQLDisconnect(*conn);
 		SQLFreeHandle(SQL_HANDLE_DBC, *conn);
@@ -177,7 +176,7 @@ SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 	SQLSMALLINT l;
 
 	r = SQLGetInfo(conn, type, buf, len, &l);
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_DBC, conn, _("SQLGetInfo() failed"));
 		strncpy(buf, "(unknown)", len);
 		buf[len - 1] = 0;
@@ -214,7 +213,7 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 	struct timeval taken;
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		puts(_("Failed to allocate statement handle"));
 		return 0;
 	}
@@ -229,7 +228,7 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 
 	time_taken(&taken);
 
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, _("Failed to execute statement"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		return 0;
@@ -275,7 +274,7 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		*sp = fetch_resultset(st, buf);
 		sp = &(*sp)->next;
 		r = SQLMoreResults(st);
-	} while(SUCCESS(r));
+	} while(SQL_SUCCEEDED(r));
 
 	buffer_free(buf);
 
@@ -299,7 +298,7 @@ static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
 	res = resultset_alloc();
 
 	r = SQLNumResultCols(st, &(res->ncols));
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve number of columns"));
 		resultset_free(res);
 		return 0;
@@ -307,7 +306,7 @@ static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
 
 	if(!res->ncols) {  // non-SELECT
 		r = SQLRowCount(st, &(res->nrows));
-		if(!SUCCESS(r)) {
+		if(!SQL_SUCCEEDED(r)) {
 			report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve rows affected"));
 			resultset_free(res);
 			return 0;
@@ -334,7 +333,7 @@ static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
 					   &type, &size, &digits, &nullable);
 		}
 
-		if(!SUCCESS(r)) {
+		if(!SQL_SUCCEEDED(r)) {
 			report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve column data"));
 			resultset_free(res);
 			return 0;
@@ -361,7 +360,7 @@ static row *fetch_row(SQLHSTMT st, buffer *buf, int ncols)
 	SQLINTEGER reqlen;
 
 	r = SQLFetch(st);
-	if(!SUCCESS(r)) return 0;
+	if(!SQL_SUCCEEDED(r)) return 0;
 
 	row = results_row_alloc(ncols);
 
@@ -374,7 +373,7 @@ static row *fetch_row(SQLHSTMT st, buffer *buf, int ncols)
 			r = SQLGetData(st, i + 1, SQL_C_CHAR, buf->buf, buf->len, 0);
 		}
 
-		if(!SUCCESS(r)) {
+		if(!SQL_SUCCEEDED(r)) {
 			report_error(SQL_HANDLE_STMT, st, _("Failed to fetch row"));
 			results_row_free(row, ncols);
 			return 0;
@@ -395,7 +394,7 @@ void db_cancel_query()
 
 	if(current_statement) {
 		r = SQLCancel(*current_statement);
-		if(!SUCCESS(r)) report_error(SQL_HANDLE_STMT, *current_statement, "Failed to cancel query");
+		if(!SQL_SUCCEEDED(r)) report_error(SQL_HANDLE_STMT, *current_statement, "Failed to cancel query");
 	}
 
 	pthread_mutex_unlock(&cs_lock);
@@ -410,7 +409,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, _("Failed to allocate statement handle"));
 		return 0;
 	}
@@ -424,7 +423,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 		      (SQLCHAR *) 0, 0);
 	time_taken(&taken);
 
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, _("Failed to list tables"));
 		return 0;
 	}
@@ -440,7 +439,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	struct timeval taken;
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, _("Failed to allocate statement handle"));
 		return 0;
 	}
@@ -455,7 +454,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 		      (SQLCHAR *) "%", SQL_NTS);
 	time_taken(&taken);
 
-	if(!SUCCESS(r)) {
+	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, _("Failed to list columns"));
 		return 0;
 	}
