@@ -1,6 +1,7 @@
 0.4a	Support for multiple result sets.
 	No longer rely on SQLRowCount for number of rows returned by
 	SELECTs etc (apparently some drivers don't do it).
+	Support for DSN-less connection strings.
 	Various bug fixes.
 
 0.3a
