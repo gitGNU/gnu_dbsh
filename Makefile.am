@@ -18,6 +18,8 @@ dbsh_SOURCES = main.c common.h \
                results.h results.c \
                sig.h sig.c
 
+EXTRA_DIST = dbsh.test/*.exp dbsh.test/test.db
+
 
 
 
