@@ -64,7 +64,7 @@ stuff instead:
 \e - edit buffer using $EDITOR
 \p - print contents of buffer
 \c - clear (discard) buffer
-\r - reconnect to server (you may need to supply the password)
+\r - reconnect to server
 \q - quit
 
 Any action can then be followed by a pipe ('|') or a file redirect
