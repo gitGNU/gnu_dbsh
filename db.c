@@ -27,7 +27,7 @@
 #include "err.h"
 #include "results.h"
 
-#define report_error(t, h, f) _report_error(t, h, f, __FILE__, __LINE__)
+#define report_error(t, h, r, f) _report_error(t, h, r, f, __FILE__, __LINE__)
 
 SQLHSTMT *current_statement;
 pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -38,9 +38,9 @@ static results *fetch_results(SQLHSTMT, struct timeval);
 static resultset *fetch_resultset(SQLHSTMT, buffer *);
 static row *fetch_row(SQLHSTMT, buffer *, int);
 
-static void _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *fallback, const char *file, int line)
+static void _report_error(SQLSMALLINT type, SQLHANDLE handle, SQLRETURN r,
+			  const char *fallback, const char *file, int line)
 {
-	SQLRETURN r;
 	SQLCHAR message[256];
 	SQLCHAR state[6];
 	SQLINTEGER code;
@@ -51,15 +51,38 @@ static void _report_error(SQLSMALLINT type, SQLHANDLE handle, const char *fallba
 	printf(_("Error at %s line %d:\n"), file, line);
 
 	for(i = 1;; i++) {
-		r = SQLGetDiagRec(type, handle, i, state, &code, message, 256, 0);
-
-		if(SQL_SUCCEEDED(r)) {
+		if(SQL_SUCCEEDED(SQLGetDiagRec(type, handle, i, state, &code, message, 256, 0))) {
 			success = 1;
 			printf(_("%s (SQLSTATE %s, error %ld)\n"), message, state, code);
 		} else break;
 	}
 
-	if(!success) puts(fallback);
+	if(!success) {
+		fputs(fallback, stdout);
+		fputs(_(" (return code was "), stdout);
+
+		switch(r) {
+		case SQL_ERROR:
+			fputs("SQL_ERROR", stdout);
+			break;
+		case SQL_INVALID_HANDLE:
+			fputs("SQL_INVALID_HANDLE", stdout);
+			break;
+		case SQL_STILL_EXECUTING:
+			fputs("SQL_STILL_EXECUTING", stdout);
+			break;
+		case SQL_NEED_DATA:
+			fputs("SQL_NEED_DATA", stdout);
+			break;
+		case SQL_NO_DATA:
+			fputs("SQL_NO_DATA", stdout);
+			break;
+		default:
+			printf("%ld", (long) r);
+		}
+
+		fputs(")\n", stdout);
+	}
 }
 
 static SQLHENV alloc_env()
@@ -127,7 +150,7 @@ SQLHDBC db_connect(const char *dsn, const char *user, const char *pass)
 		       (SQLCHAR *) user, SQL_NTS,
 		       (SQLCHAR *) pass, SQL_NTS);
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_DBC, conn, _("Failed to connect"));
+		report_error(SQL_HANDLE_DBC, conn, r, _("Failed to connect"));
 		exit(1);
 	}
 
@@ -164,7 +187,7 @@ int db_reconnect(SQLHDBC *conn, const char *pass)
 		return 0;
 
 	} else {
-		report_error(SQL_HANDLE_DBC, newconn, _("Failed to connect"));
+		report_error(SQL_HANDLE_DBC, newconn, r, _("Failed to connect"));
 		SQLFreeHandle(SQL_HANDLE_DBC, newconn);
 		return 1;
 	}
@@ -177,7 +200,7 @@ SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 
 	r = SQLGetInfo(conn, type, buf, len, &l);
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_DBC, conn, _("SQLGetInfo() failed"));
+		report_error(SQL_HANDLE_DBC, conn, r, _("SQLGetInfo() failed"));
 		strncpy(buf, "(unknown)", len);
 		buf[len - 1] = 0;
 	}
@@ -229,7 +252,7 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 	time_taken(&taken);
 
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_STMT, st, _("Failed to execute statement"));
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to execute statement"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		return 0;
 	}
@@ -299,7 +322,7 @@ static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
 
 	r = SQLNumResultCols(st, &(res->ncols));
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve number of columns"));
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to retrieve number of columns"));
 		resultset_free(res);
 		return 0;
 	}
@@ -307,7 +330,7 @@ static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
 	if(!res->ncols) {  // non-SELECT
 		r = SQLRowCount(st, &(res->nrows));
 		if(!SQL_SUCCEEDED(r)) {
-			report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve rows affected"));
+			report_error(SQL_HANDLE_STMT, st, r, _("Failed to retrieve rows affected"));
 			resultset_free(res);
 			return 0;
 		}
@@ -334,7 +357,7 @@ static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
 		}
 
 		if(!SQL_SUCCEEDED(r)) {
-			report_error(SQL_HANDLE_STMT, st, _("Failed to retrieve column data"));
+			report_error(SQL_HANDLE_STMT, st, r, _("Failed to retrieve column data"));
 			resultset_free(res);
 			return 0;
 		}
@@ -374,7 +397,7 @@ static row *fetch_row(SQLHSTMT st, buffer *buf, int ncols)
 		}
 
 		if(!SQL_SUCCEEDED(r)) {
-			report_error(SQL_HANDLE_STMT, st, _("Failed to fetch row"));
+			report_error(SQL_HANDLE_STMT, st, r, _("Failed to fetch row"));
 			results_row_free(row, ncols);
 			return 0;
 		}
@@ -394,7 +417,7 @@ void db_cancel_query()
 
 	if(current_statement) {
 		r = SQLCancel(*current_statement);
-		if(!SQL_SUCCEEDED(r)) report_error(SQL_HANDLE_STMT, *current_statement, "Failed to cancel query");
+		if(!SQL_SUCCEEDED(r)) report_error(SQL_HANDLE_STMT, *current_statement, r, "Failed to cancel query");
 	}
 
 	pthread_mutex_unlock(&cs_lock);
@@ -410,7 +433,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_STMT, st, _("Failed to allocate statement handle"));
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to allocate statement handle"));
 		return 0;
 	}
 
@@ -424,7 +447,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 	time_taken(&taken);
 
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_STMT, st, _("Failed to list tables"));
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to list tables"));
 		return 0;
 	}
 
@@ -440,7 +463,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_STMT, st, _("Failed to allocate statement handle"));
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to allocate statement handle"));
 		return 0;
 	}
 
@@ -455,7 +478,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	time_taken(&taken);
 
 	if(!SQL_SUCCEEDED(r)) {
-		report_error(SQL_HANDLE_STMT, st, _("Failed to list columns"));
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to list columns"));
 		return 0;
 	}
 
