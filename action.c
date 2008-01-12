@@ -36,7 +36,7 @@
 #include "results.h"
 
 
-static void go(SQLHDBC *connp, buffer *sqlbuf, char action, FILE *stream)
+static void go(SQLHDBC conn, buffer *sqlbuf, char action, FILE *stream)
 {
 	results *res = NULL;
 
@@ -45,10 +45,10 @@ static void go(SQLHDBC *connp, buffer *sqlbuf, char action, FILE *stream)
 		// do nothing
 		break;
 	case BUFFER_COMMAND:
-		res = run_command(connp, sqlbuf);
+		res = run_command(conn, sqlbuf);
 		break;
 	case BUFFER_SQL:
-		res = execute_query(*connp, sqlbuf->buf, sqlbuf->next);
+		res = execute_query(conn, sqlbuf->buf, sqlbuf->next);
 		break;
 	}
 
@@ -99,7 +99,7 @@ static void print(buffer *sqlbuf, FILE *stream)
 	fputc('\n', stream);
 }
 
-void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
+void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 {
 	parsed_line *l;
 	int nchunks;
@@ -156,7 +156,7 @@ void run_action(SQLHDBC *connp, buffer *sqlbuf, char action, char *paramstring)
 		// TODO: save to named buffer
 		break;
 	default:
-		go(connp, sqlbuf, action, stream);
+		go(conn, sqlbuf, action, stream);
 		break;
 	}
 

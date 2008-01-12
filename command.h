@@ -19,6 +19,6 @@
 #ifndef COMMAND_H
 #define COMMAND_H
 
-results *run_command(SQLHDBC *, buffer *);
+results *run_command(SQLHDBC, buffer *);
 
 #endif

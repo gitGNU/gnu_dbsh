@@ -22,6 +22,6 @@
 #include "buffer.h"
 #include "db.h"
 
-void run_action(SQLHDBC *, buffer *, char, char *);
+void run_action(SQLHDBC, buffer *, char, char *);
 
 #endif

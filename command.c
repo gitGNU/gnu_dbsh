@@ -121,7 +121,7 @@ static results *set(const char *name, const char *value)
 	return res;
 }
 
-results *run_command(SQLHDBC *connp, buffer *buf)
+results *run_command(SQLHDBC conn, buffer *buf)
 {
 	parsed_line *l;
 	results *res = 0;
@@ -136,16 +136,16 @@ results *run_command(SQLHDBC *connp, buffer *buf)
 
 	// Catalog commands
 	else if(!strncmp(l->chunks[0] + 1, "cat", 3)) {
-		res = get_tables(*connp, "%", 0, 0);
+		res = get_tables(conn, "%", 0, 0);
 	} else if(!strncmp(l->chunks[0] + 1, "sch", 3)) {
-		res = get_tables(*connp, "%", "%", 0);
+		res = get_tables(conn, "%", "%", 0);
 	} else if(!strncmp(l->chunks[0] + 1, "tab", 3)) {
-		res = get_tables(*connp,
+		res = get_tables(conn,
 				 l->nchunks > 1 ? l->chunks[1] : 0,
 				 l->nchunks > 2 ? l->chunks[2] : 0,
 				 l->nchunks > 3 ? l->chunks[3] : 0);
 	} else if(!strncmp(l->chunks[0] + 1, "col", 3)) {
-		res = get_columns(*connp,
+		res = get_columns(conn,
 				 l->nchunks > 1 ? l->chunks[1] : 0,
 				 l->nchunks > 2 ? l->chunks[2] : 0,
 				 l->nchunks > 3 ? l->chunks[3] : 0);
@@ -156,7 +156,7 @@ results *run_command(SQLHDBC *connp, buffer *buf)
 		res = set(l->nchunks > 1 ? l->chunks[1] : 0,
 			  l->nchunks > 2 ? l->chunks[2] : 0);
 	} else if(!strncmp(l->chunks[0] + 1, "inf", 3)) {
-		res = db_conn_details(*connp);
+		res = db_conn_details(conn);
 	}
 
 	else printf(_("Unrecognised command: %s\n"), l->chunks[0] + 1);

@@ -78,7 +78,7 @@ int process_line(char *line)
 			}
 
 			if(action != 'c') {
-				run_action(&conn, mainbuf,
+				run_action(conn, mainbuf,
 					   action, paramstring);
 
 				if(action == 'e' || action == 'p') {
@@ -103,7 +103,7 @@ int process_line(char *line)
 		// do nothing
 		break;
 	case BUFFER_COMMAND:
-		run_action(&conn, mainbuf, 1, "");
+		run_action(conn, mainbuf, 1, "");
 		rl_history_add(mainbuf, "");
 		tempbuf = prevbuf;
 		prevbuf = mainbuf;
