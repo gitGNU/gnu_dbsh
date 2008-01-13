@@ -1,78 +1,79 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR Ben Spencer
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# English translations for dbsh package.
+# Copyright (C) 2008 Ben Spencer
+# This file is distributed under the same license as the dbsh package.
+# Ben Spencer <dangerous.ben@gmail.com>, 2008.
 #
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
 "POT-Creation-Date: 2008-01-13 22:06+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"PO-Revision-Date: 2008-01-13 22:06+0000\n"
+"Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
+"Language-Team: English (British)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #: command.c:57
 msgid "COPYING"
-msgstr ""
+msgstr "COPYING"
 
 #: command.c:65
 msgid "WARRANTY"
-msgstr ""
+msgstr "WARRANTY"
 
 #: command.c:74 db.c:207
 msgid "name"
-msgstr ""
+msgstr "name"
 
 #: command.c:74 db.c:207
 msgid "value"
-msgstr ""
+msgstr "value"
 
 #: command.c:89
 msgid "Variable not set"
-msgstr ""
+msgstr "Variable not set"
 
 #: command.c:167
 #, c-format
 msgid "Unrecognised command: %s\n"
-msgstr ""
+msgstr "Unrecognised command: %s\n"
 
 #: db.c:54
 #, c-format
 msgid "Error at %s line %d:\n"
-msgstr ""
+msgstr "Error at %s line %d:\n"
 
 #: db.c:59
 #, c-format
 msgid "%s (SQLSTATE %s, error %ld)\n"
-msgstr ""
+msgstr "%s (SQLSTATE %s, error %ld)\n"
 
 #: db.c:65
 msgid " (return code was "
-msgstr ""
+msgstr " (return code was "
 
 #: db.c:99
 msgid "Failed to allocate environment handle\n"
-msgstr ""
+msgstr "Failed to allocate environment handle\n"
 
 #: db.c:104
 msgid "Failed to set ODBC version to 3\n"
-msgstr ""
+msgstr "Failed to set ODBC version to 3\n"
 
 #: db.c:116
 msgid ""
 "User Data Sources\n"
 "-----------------"
 msgstr ""
+"User Data Sources\n"
+"-----------------"
 
 #: db.c:117 db.c:119
 msgid "(none)"
-msgstr ""
+msgstr "(none)"
 
 #: db.c:118
 msgid ""
@@ -80,67 +81,70 @@ msgid ""
 "System Data Sources\n"
 "-------------------"
 msgstr ""
+"\n"
+"System Data Sources\n"
+"-------------------"
 
 #: db.c:149
 msgid "Failed to allocate connection handle\n"
-msgstr ""
+msgstr "Failed to allocate connection handle\n"
 
 #: db.c:164
 msgid "Failed to connect"
-msgstr ""
+msgstr "Failed to connect"
 
 #: db.c:169
 #, c-format
 msgid "Connected to %s\n"
-msgstr ""
+msgstr "Connected to %s\n"
 
 #: db.c:192
 msgid "SQLGetInfo() failed"
-msgstr ""
+msgstr "SQLGetInfo() failed"
 
 #: db.c:210
 msgid "Server"
-msgstr ""
+msgstr "Server"
 
 #: db.c:213
 msgid "DBMS"
-msgstr ""
+msgstr "DBMS"
 
 #: db.c:216
 msgid "Version"
-msgstr ""
+msgstr "Version"
 
 #: db.c:229 db.c:424 db.c:454
 msgid "Failed to allocate statement handle"
-msgstr ""
+msgstr "Failed to allocate statement handle"
 
 #: db.c:244
 msgid "Failed to execute statement"
-msgstr ""
+msgstr "Failed to execute statement"
 
 #: db.c:314
 msgid "Failed to retrieve number of columns"
-msgstr ""
+msgstr "Failed to retrieve number of columns"
 
 #: db.c:322
 msgid "Failed to retrieve rows affected"
-msgstr ""
+msgstr "Failed to retrieve rows affected"
 
 #: db.c:349
 msgid "Failed to retrieve column data"
-msgstr ""
+msgstr "Failed to retrieve column data"
 
 #: db.c:388
 msgid "Failed to fetch row"
-msgstr ""
+msgstr "Failed to fetch row"
 
 #: db.c:438
 msgid "Failed to list tables"
-msgstr ""
+msgstr "Failed to list tables"
 
 #: db.c:469
 msgid "Failed to list columns"
-msgstr ""
+msgstr "Failed to list columns"
 
 #: help.h:1
 msgid ""
@@ -159,10 +163,24 @@ msgid ""
 "  set [<variable>] [<value>]\n"
 "  info"
 msgstr ""
+"Help commands:\n"
+"  help [<command>]\n"
+"  copying\n"
+"  warranty\n"
+"\n"
+"Schema commands:\n"
+"  catalogs\n"
+"  schemas\n"
+"  tables\n"
+"  columns [<table>]\n"
+"\n"
+"Other commands:\n"
+"  set [<variable>] [<value>]\n"
+"  info"
 
 #: help.h:18
 msgid "Help topic doesn't exist"
-msgstr ""
+msgstr "Help topic doesn't exist"
 
 #: main.c:48
 #, c-format
@@ -170,78 +188,80 @@ msgid ""
 "Usage: %s -l\n"
 "       %s <dsn> [<username>] [<password>]\n"
 msgstr ""
+"Usage: %s -l\n"
+"       %s <dsn> [<username>] [<password>]\n"
 
 #: output.c:143
 msgctxt "topleft"
 msgid "+"
-msgstr ""
+msgstr "┌"
 
 #: output.c:145
 msgctxt "topmid"
 msgid "+"
-msgstr ""
+msgstr "┬"
 
 #: output.c:147
 msgctxt "topright"
 msgid "+"
-msgstr ""
+msgstr "┐"
 
 #: output.c:152
 msgctxt "midleft"
 msgid "+"
-msgstr ""
+msgstr "├"
 
 #: output.c:154
 msgctxt "midmid"
 msgid "+"
-msgstr ""
+msgstr "┼"
 
 #: output.c:156
 msgctxt "midright"
 msgid "+"
-msgstr ""
+msgstr "┤"
 
 #: output.c:162
 msgctxt "botleft"
 msgid "+"
-msgstr ""
+msgstr "└"
 
 #: output.c:164
 msgctxt "botmid"
 msgid "+"
-msgstr ""
+msgstr "┴"
 
 #: output.c:166
 msgctxt "botright"
 msgid "+"
-msgstr ""
+msgstr "┘"
 
 #: output.c:175
 #, c-format
 msgid "1 row in set"
 msgid_plural "%ld rows in set"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "1 row in set"
+msgstr[1] "%ld rows in set"
 
 #: output.c:189 output.c:281 output.c:283
 msgid "-"
-msgstr ""
+msgstr "─"
 
 #: output.c:214 output.c:234 output.c:323 output.c:332 output.c:339
 #: output.c:341 output.c:343 output.c:357
 msgid "|"
-msgstr ""
+msgstr "│"
 
 #: output.c:413
 msgid "Success\n"
-msgstr ""
+msgstr "Success\n"
 
 #: output.c:415
 #, c-format
 msgid "%ld rows affected\n"
-msgstr ""
+msgstr "%ld rows affected\n"
 
 #: output.c:450
 #, c-format
 msgid "(%lu.%06lus)\n"
-msgstr ""
+msgstr "(%lu.%06lus)\n"

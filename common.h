@@ -19,14 +19,9 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#ifdef ENABLE_NLS
-#include <libintl.h>
+#include "gettext.h"
+
 #define _(String) gettext(String)
-#else
-#define bindtextdomain(p, d)
-#define textdomain(p)
-#define _(String) String
-#endif
 
 typedef struct buffer buffer;
 typedef struct results results;

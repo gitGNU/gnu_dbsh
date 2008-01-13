@@ -41,6 +41,17 @@ typedef struct {
 	dim **row_dims;
 } res_dims;
 
+typedef enum {
+	VPOS_TOP,
+	VPOS_MID,
+	VPOS_BOT
+} vpos;
+
+typedef enum {
+	HPOS_LEF,
+	HPOS_MID,
+	HPOS_RIG
+} hpos;
 
 #define NULL_DISPLAY L"*NULL*"
 
@@ -123,28 +134,62 @@ static void free_resultset_dimensions(resultset *res, res_dims *rd)
 	free(rd);
 }
 
+static const char *get_box_char(vpos v, hpos h)
+{
+	switch(v) {
+	case VPOS_TOP:
+		switch(h) {
+		case HPOS_LEF:
+			return pgettext("topleft", "+");
+		case HPOS_MID:
+			return pgettext("topmid", "+");
+		case HPOS_RIG:
+			return pgettext("topright", "+");
+		}
+	case VPOS_MID:
+		switch(h) {
+		case HPOS_LEF:
+			return pgettext("midleft", "+");
+		case HPOS_MID:
+			return pgettext("midmid", "+");
+		case HPOS_RIG:
+			return pgettext("midright", "+");
+		}
+		break;
+	case VPOS_BOT:
+		switch(h) {
+		case HPOS_LEF:
+			return pgettext("botleft", "+");
+		case HPOS_MID:
+			return pgettext("botmid", "+");
+		case HPOS_RIG:
+			return pgettext("botright", "+");
+		}
+		break;
+	}
+}
+
 static void output_size(resultset *res, stream *s)
 {
-#ifdef ENABLE_NLS
 	stream_printf(s,
 		      ngettext("1 row in set", "%ld rows in set", res->nrows),
 		      res->nrows);
-#else
-	stream_printf(s, "%ld row%s in set\n", res->nrows,
-		      res->nrows == 1 ? "" : "s");
-#endif
 }
 
-void output_horiz_separator(stream *s, int col_widths[], SQLSMALLINT ncols)
+void output_horiz_separator(stream *s, int col_widths[], SQLSMALLINT ncols, vpos v)
 {
+	hpos h;
 	SQLSMALLINT i;
 	int j;
 
+	h = HPOS_LEF;
+
 	for(i = 0; i < ncols; i++) {
-		stream_puts(s, _("+"));
+		stream_puts(s, get_box_char(v, h));
 		for(j = 0; j < col_widths[i] + 2; j++) stream_puts(s,  _("-"));
+		h = HPOS_MID;
 	}
-	stream_puts(s, _("+"));
+	stream_puts(s, get_box_char(v, HPOS_RIG));
 	stream_newline(s);
 }
 
@@ -216,27 +261,27 @@ void output_horiz(resultset *res, stream *s)
 		}
 	}
 
-	output_horiz_separator(s, col_widths, res->ncols);
+	output_horiz_separator(s, col_widths, res->ncols, VPOS_TOP);
 	output_horiz_row(s, (const char **) res->cols, dims->col_dims, col_widths, res->ncols);
-	output_horiz_separator(s, col_widths, res->ncols);
+	output_horiz_separator(s, col_widths, res->ncols, VPOS_MID);
 	for(r = res->rows, j = 0; r; r = r->next, j++)
 		output_horiz_row(s, (const char **) r->data, dims->row_dims + (j * res->ncols), col_widths, res->ncols);
-	output_horiz_separator(s, col_widths, res->ncols);
+	output_horiz_separator(s, col_widths, res->ncols, VPOS_BOT);
 
 	free_resultset_dimensions(res, dims);
 
 	output_size(res, s);
 }
 
-void output_vert_separator(stream *s, int col_width, int row_width)
+void output_vert_separator(stream *s, int col_width, int row_width, vpos v)
 {
 	int k;
 
-	stream_puts(s, _("+"));
+	stream_puts(s, get_box_char(v, HPOS_LEF));
 	for(k = 0; k <= col_width + 1; k++) stream_puts(s, _("-"));
-	stream_puts(s, _("+"));
+	stream_puts(s, get_box_char(v, HPOS_MID));
 	for(k = 0; k <= row_width + 1; k++) stream_puts(s, _("-"));
-	stream_puts(s, _("+"));
+	stream_puts(s, get_box_char(v, HPOS_RIG));
 	stream_newline(s);
 }
 
@@ -246,6 +291,7 @@ void output_vert(resultset *res, stream *s)
 	int col_width, row_width;
 	SQLSMALLINT i;
 	SQLINTEGER j;
+	vpos v;
 	row *r;
 	int k, l;
 	wchar_t *p;
@@ -264,9 +310,11 @@ void output_vert(resultset *res, stream *s)
 		}
 	}
 
+	v = VPOS_TOP;
+
 	for(r = res->rows, j = 0; r; r = r->next, j++) {
 
-		output_vert_separator(s, col_width, row_width);
+		output_vert_separator(s, col_width, row_width, v);
 
 		for(i = 0; i < res->ncols; i++) {
 
@@ -309,9 +357,11 @@ void output_vert(resultset *res, stream *s)
 			stream_puts(s, _("|"));
 			stream_newline(s);
 		}
+
+		v = VPOS_MID;
 	}
 
-	if(j) output_vert_separator(s, col_width, row_width);
+	if(j) output_vert_separator(s, col_width, row_width, VPOS_BOT);
 
 	free_resultset_dimensions(res, dims);
 
