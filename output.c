@@ -16,6 +16,8 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <config.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -128,7 +130,7 @@ static void output_size(resultset *res, stream *s)
 		      ngettext("1 row in set", "%ld rows in set", res->nrows),
 		      res->nrows);
 #else
-	stream_printf(s, "%d row%s in set\n", res->nrows,
+	stream_printf(s, "%ld row%s in set\n", res->nrows,
 		      res->nrows == 1 ? "" : "s");
 #endif
 }
