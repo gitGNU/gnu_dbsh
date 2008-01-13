@@ -14,5 +14,8 @@ site.exp
 *.log
 *.sum
 *.bak
+po/POTFILES
+po/*.gmo
+po/stamp-po
 dbsh
 TAGS
