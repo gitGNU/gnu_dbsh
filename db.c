@@ -202,7 +202,7 @@ results *db_conn_details(SQLHDBC conn)
 	results *res;
 	char buf[256];
 
-	res = results_alloc();
+	res = results_single_alloc();
 
 	results_set_cols(res, 2, _("name"), _("value"));
 
