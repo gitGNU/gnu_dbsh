@@ -144,7 +144,8 @@ void output_horiz_separator(stream *s, int col_widths[], SQLSMALLINT ncols)
 		stream_puts(s, _("+"));
 		for(j = 0; j < col_widths[i] + 2; j++) stream_puts(s,  _("-"));
 	}
-	stream_puts(s, _("+\n"));
+	stream_puts(s, _("+"));
+	stream_newline(s);
 }
 
 void output_horiz_row(stream *s, const char **data,
@@ -165,7 +166,8 @@ void output_horiz_row(stream *s, const char **data,
 
 		for(i = 0; i < ncols; i++) {
 
-			stream_puts(s, _("| "));
+			stream_puts(s, _("|"));
+			stream_space(s);
 
 			for(p = pos[i]; *p; p++) {
 				if(*p == L'\n') {

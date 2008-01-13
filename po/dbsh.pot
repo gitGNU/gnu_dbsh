@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-13 18:25+0000\n"
+"POT-Creation-Date: 2008-01-13 21:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,27 +17,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
 
-#: command.c:55
+#: command.c:57
 msgid "COPYING"
 msgstr ""
 
-#: command.c:63
+#: command.c:65
 msgid "WARRANTY"
 msgstr ""
 
-#: command.c:72 db.c:207
+#: command.c:74 db.c:207
 msgid "name"
 msgstr ""
 
-#: command.c:72 db.c:207
+#: command.c:74 db.c:207
 msgid "value"
 msgstr ""
 
-#: command.c:87
+#: command.c:89
 msgid "Variable not set"
 msgstr ""
 
-#: command.c:165
+#: command.c:167
 #, c-format
 msgid "Unrecognised command: %s\n"
 msgstr ""
@@ -142,55 +142,6 @@ msgstr ""
 msgid "Failed to list columns"
 msgstr ""
 
-#: main.c:48
-#, c-format
-msgid ""
-"Usage: %s -l\n"
-"       %s <dsn> [<username>] [<password>]\n"
-msgstr ""
-
-#: output.c:128
-#, c-format
-msgid "1 row in set"
-msgid_plural "%ld rows in set"
-msgstr[0] ""
-msgstr[1] ""
-
-#: output.c:142 output.c:231 output.c:233 output.c:235
-msgid "+"
-msgstr ""
-
-#: output.c:143 output.c:232 output.c:234
-msgid "-"
-msgstr ""
-
-#: output.c:145
-msgid "+\n"
-msgstr ""
-
-#: output.c:166
-msgid "| "
-msgstr ""
-
-#: output.c:185 output.c:271 output.c:280 output.c:287 output.c:289
-#: output.c:291 output.c:305
-msgid "|"
-msgstr ""
-
-#: output.c:359
-msgid "Success\n"
-msgstr ""
-
-#: output.c:361
-#, c-format
-msgid "%ld rows affected\n"
-msgstr ""
-
-#: output.c:396
-#, c-format
-msgid "(%lu.%06lus)\n"
-msgstr ""
-
 #: help.h:1
 msgid ""
 "Help commands:\n"
@@ -211,4 +162,45 @@ msgstr ""
 
 #: help.h:18
 msgid "Help topic doesn't exist"
+msgstr ""
+
+#: main.c:48
+#, c-format
+msgid ""
+"Usage: %s -l\n"
+"       %s <dsn> [<username>] [<password>]\n"
+msgstr ""
+
+#: output.c:130
+#, c-format
+msgid "1 row in set"
+msgid_plural "%ld rows in set"
+msgstr[0] ""
+msgstr[1] ""
+
+#: output.c:144 output.c:147 output.c:235 output.c:237 output.c:239
+msgid "+"
+msgstr ""
+
+#: output.c:145 output.c:236 output.c:238
+msgid "-"
+msgstr ""
+
+#: output.c:169 output.c:189 output.c:275 output.c:284 output.c:291
+#: output.c:293 output.c:295 output.c:309
+msgid "|"
+msgstr ""
+
+#: output.c:363
+msgid "Success\n"
+msgstr ""
+
+#: output.c:365
+#, c-format
+msgid "%ld rows affected\n"
+msgstr ""
+
+#: output.c:400
+#, c-format
+msgid "(%lu.%06lus)\n"
 msgstr ""
