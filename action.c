@@ -34,9 +34,10 @@
 #include "output.h"
 #include "parser.h"
 #include "results.h"
+#include "stream.h"
 
 
-static void go(SQLHDBC conn, buffer *sqlbuf, char action, FILE *stream)
+static void go(SQLHDBC conn, buffer *sqlbuf, char action, stream *stream)
 {
 	results *res = NULL;
 
@@ -93,10 +94,10 @@ static void edit(buffer *sqlbuf)
 	unlink(path);
 }
 
-static void print(buffer *sqlbuf, FILE *stream)
+static void print(buffer *sqlbuf, stream *stream)
 {
-	fwrite(sqlbuf->buf, 1, sqlbuf->next, stream);
-	fputc('\n', stream);
+	stream_write(stream, sqlbuf->buf, sqlbuf->next);
+	stream_putwc(stream, L'\n');
 }
 
 void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
@@ -104,7 +105,8 @@ void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 	parsed_line *l;
 	int nchunks;
 	char *pipeline, *p;
-	FILE *stream;
+	FILE *f;
+	stream *stream;
 	int m;
 
 	pipeline = 0;
@@ -129,19 +131,21 @@ void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 	if(!pipeline) pipeline = getenv("DBSH_DEFAULT_PAGER");
 
 	if(pipeline) {
-		stream = popen(pipeline, "w");
+		f = popen(pipeline, "w");
 		if(m) free(pipeline);
-		if(!stream) {
+		if(!f) {
 			perror("Failed to open pipe");
 			return;
 		}
-	} else stream = stdout;
+	} else f = stdout;
+
+	stream = stream_create(f);
 
 
 	switch(action) {
 	case 'e':  // edit
 		edit(sqlbuf);
-		print(sqlbuf, stdout);
+		print(sqlbuf, stream);
 		break;
 	case 'l':  // load
 		// TODO: load named buffer (or should that be a command?)
@@ -161,7 +165,9 @@ void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 	}
 
 
-	if(pipeline) pclose(stream);
+	stream_reset(stream);
+	if(pipeline) pclose(stream->f);
+	free(stream);
 
 	free_parsed_line(l);
 }

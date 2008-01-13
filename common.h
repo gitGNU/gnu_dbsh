@@ -23,5 +23,6 @@
 
 typedef struct buffer buffer;
 typedef struct results results;
+typedef struct stream stream;
 
 #endif

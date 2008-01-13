@@ -25,6 +25,7 @@
 #include "err.h"
 #include "output.h"
 #include "results.h"
+#include "stream.h"
 
 
 typedef struct {
@@ -39,25 +40,9 @@ typedef struct {
 } res_dims;
 
 
-#define NULL_DISPLAY "*NULL*"
+#define NULL_DISPLAY L"*NULL*"
 
 
-static wchar_t *strdup2wcs(const char *s)
-{
-	mbstate_t ps;
-	size_t len;
-	wchar_t *wcs;
-
-	memset(&ps, 0, sizeof(ps));
-
-	len = mbsrtowcs(0, &s, 0, &ps);
-	if(len == -1) err_system();
-
-	if(!(wcs = calloc(len + 1, sizeof(wchar_t)))) err_system();
-	mbsrtowcs(wcs, &s, len, &ps);
-
-	return wcs;
-}
 
 static dim *get_dimensions(const wchar_t *s)
 {
@@ -103,21 +88,16 @@ static res_dims *get_resultset_dimensions(resultset *res)
 	SQLSMALLINT i;
 	SQLINTEGER j;
 	row *r;
-	wchar_t *wcs;
 
 	if(!(rd = malloc(sizeof(res_dims)))) err_system();
 	if(!(rd->col_dims = calloc(res->ncols, sizeof(dim)))) err_system();
 	if(!(rd->row_dims = calloc(res->ncols * res->nrows, sizeof(dim)))) err_system();
 
 	for(i = 0; i < res->ncols; i++) {
-		wcs = strdup2wcs(res->cols[i]);
-		rd->col_dims[i] = get_dimensions(wcs);
-		free(wcs);
-
+		rd->col_dims[i] = get_dimensions(res->cols[i]);
 		for(r = res->rows, j = 0; r; r = r->next, j++) {
-			wcs = strdup2wcs(r->data[i] ? r->data[i] : NULL_DISPLAY);
-			rd->row_dims[(j * res->ncols) + i] = get_dimensions(wcs);
-			free(wcs);
+			rd->row_dims[(j * res->ncols) + i] =
+				get_dimensions(r->data[i] ? r->data[i] : NULL_DISPLAY);
 		}
 	}
 
@@ -141,36 +121,36 @@ static void free_resultset_dimensions(resultset *res, res_dims *rd)
 	free(rd);
 }
 
-static void output_size(resultset *res, FILE *s)
+static void output_size(resultset *res, stream *s)
 {
-	fprintf(s, res->nrows == 1 ?
+	stream_printf(s, res->nrows == 1 ?
 		_("1 row in set\n") :
 		_("%ld rows in set\n"),
 		res->nrows);
 
 }
 
-void output_horiz_separator(FILE *s, int col_widths[], SQLSMALLINT ncols)
+void output_horiz_separator(stream *s, int col_widths[], SQLSMALLINT ncols)
 {
 	SQLSMALLINT i;
 	int j;
 
 	for(i = 0; i < ncols; i++) {
-		fputc('+', s);
-		for(j = 0; j < col_widths[i] + 2; j++) fputc('-', s);
+		stream_puts(s, _("+"));
+		for(j = 0; j < col_widths[i] + 2; j++) stream_puts(s,  _("-"));
 	}
-	fputs("+\n", s);
+	stream_puts(s, _("+\n"));
 }
 
-void output_horiz_row(FILE *s, const char **data,
+void output_horiz_row(stream *s, const char **data,
 		      dim **dims, int widths[], SQLSMALLINT ncols)
 {
-	const char **pos, *p;
+	const wchar_t **pos, *p;
 	SQLSMALLINT i;
 	int j, k, more_lines;
 
-	pos = calloc(ncols, sizeof(char *));
-	memcpy(pos, data, ncols * sizeof(char *));
+	pos = calloc(ncols, sizeof(wchar_t *));
+	memcpy(pos, data, ncols * sizeof(wchar_t *));
 
 	for(i = 0; i < ncols; i++) if(!pos[i]) pos[i] = NULL_DISPLAY;
 
@@ -180,26 +160,27 @@ void output_horiz_row(FILE *s, const char **data,
 
 		for(i = 0; i < ncols; i++) {
 
-			fputs("| ", s);
+			stream_puts(s, _("| "));
 
 			for(p = pos[i]; *p; p++) {
-				if(*p == '\n') {
+				if(*p == L'\n') {
 					pos[i] = p + 1;
 					more_lines = 1;
 					break;
-				} else if(*p == '\t') {
-					fputs("        ", s);
+				} else if(*p == L'\t') {
+					stream_putws(s, L"        ");
 				} else {
-					fputc(*p, s);
+					stream_putwc(s, *p);
 				}
 			}
 
 			if(!*p) pos[i] = p;
 
-			for(k = dims[i]->widths[j]; k <= widths[i]; k++) fputc(' ', s);
+			for(k = dims[i]->widths[j]; k <= widths[i]; k++) stream_space(s);
 		}
 
-		fputs("|\n", s);
+		stream_puts(s, _("|"));
+		stream_newline(s);
 		j++;
 
 	} while(more_lines);
@@ -207,7 +188,7 @@ void output_horiz_row(FILE *s, const char **data,
 	free(pos);
 }
 
-void output_horiz(resultset *res, FILE *s)
+void output_horiz(resultset *res, stream *s)
 {
 	res_dims *dims;
 	SQLSMALLINT i;
@@ -240,18 +221,19 @@ void output_horiz(resultset *res, FILE *s)
 	output_size(res, s);
 }
 
-void output_vert_separator(FILE *s, int col_width, int row_width)
+void output_vert_separator(stream *s, int col_width, int row_width)
 {
 	int k;
 
-	fputc('+', s);
-	for(k = 0; k <= col_width + 1; k++) fputc('-', s);
-	fputc('+', s);
-	for(k = 0; k <= row_width + 1; k++) fputc('-', s);
-	fputs("+\n", s);
+	stream_puts(s, _("+"));
+	for(k = 0; k <= col_width + 1; k++) stream_puts(s, _("-"));
+	stream_puts(s, _("+"));
+	for(k = 0; k <= row_width + 1; k++) stream_puts(s, _("-"));
+	stream_puts(s, _("+"));
+	stream_newline(s);
 }
 
-void output_vert(resultset *res, FILE *s)
+void output_vert(resultset *res, stream *s)
 {
 	res_dims *dims;
 	int col_width, row_width;
@@ -259,7 +241,7 @@ void output_vert(resultset *res, FILE *s)
 	SQLINTEGER j;
 	row *r;
 	int k, l;
-	char *p;
+	wchar_t *p;
 
 
 	dims = get_resultset_dimensions(res);
@@ -283,81 +265,86 @@ void output_vert(resultset *res, FILE *s)
 
 			l = 0;
 
-			fputc('|', s);
-			for(k = 0; k <= col_width - dims->col_dims[i]->widths[0]; k++) fputc(' ', s);
+			stream_puts(s, _("|"));
+			for(k = 0; k <= col_width - dims->col_dims[i]->widths[0]; k++) stream_space(s);
 
 			for(p = res->cols[i]; *p; p++) {
-				if(*p == '\t') fputs("        ", s);
-				else fputc(*p, s);
+				if(*p == '\t') stream_putws(s, L"        ");
+				else stream_putwc(s, *p);
 			}
 
-			fputs(" | ", s);
+			stream_space(s);
+			stream_puts(s, _("|"));
+			stream_space(s);
 
 			if(r->data[i]) {
 				for(p = r->data[i]; *p; p++) {
-					if(*p == '\n') {
-						for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l]; k++) fputc(' ', s);
-						fputs(" |\n|", s);
-						for(k = 0; k < col_width + 1; k++) fputc(' ', s);
-						fputs(" | ", s);
+					if(*p == L'\n') {
+						for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l] + 1; k++) stream_space(s);
+						stream_puts(s, _("|"));
+						stream_newline(s);
+						stream_puts(s, _("|"));
+						for(k = 0; k < col_width + 2; k++) stream_space(s);
+						stream_puts(s, _("|"));
+						stream_space(s);
 						l++;
-					} else if(*p == '\t') {
-						fputs("        ", s);
+					} else if(*p == L'\t') {
+						stream_putws(s, L"        ");
 					} else {
-						fputc(*p, s);
+						stream_putwc(s, *p);
 					}
 				}
 			} else {
-				fputs(NULL_DISPLAY, s);
+				stream_putws(s, NULL_DISPLAY);
 			}
 
-			for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l]; k++) fputc(' ', s);
-			fputs(" |\n", s);
+			for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l] + 1; k++) stream_space(s);
+			stream_puts(s, _("|"));
+			stream_newline(s);
 		}
 	}
 
 	if(j) output_vert_separator(s, col_width, row_width);
-
 
 	free_resultset_dimensions(res, dims);
 
 	output_size(res, s);
 }
 
-void output_csv_row(FILE *s, const char **data, SQLSMALLINT ncols, char separator, char delimiter)
+void output_csv_row(stream *s, wchar_t **data, SQLSMALLINT ncols, wchar_t sep, wchar_t delim)
 {
 	SQLSMALLINT i;
-	const char *p;
+	const wchar_t *p;
 
 	for(i = 0; i < ncols; i++) {
 
-		if(delimiter) fputc(delimiter, s);
+		if(delim) stream_putwc(s, delim);
 
 		if(data[i]) {
 			for(p = data[i]; *p; p++) {
-				if(*p == delimiter) fputc(delimiter, s);
-				fputc(*p, s);
+				if(*p == delim) stream_putwc(s, delim);
+				stream_putwc(s, *p);
 			}
 		}
 
-		if(delimiter) fputc(delimiter, s);
+		if(delim) stream_putwc(s, delim);
 
-		if(i < ncols - 1) fputc(separator, s);
+		if(i < ncols - 1) stream_putwc(s, sep);
 	}
 
-	fputc('\n', s);
+	stream_newline(s);
 }
 
-void output_csv(resultset *res, FILE *s, char separator, char delimiter)
+void output_csv(resultset *res, stream *s, char separator, char delimiter)
 {
 	row *r;
 
-	output_csv_row(s, (const char **) res->cols, res->ncols, separator, delimiter);
+	output_csv_row(s, res->cols, res->ncols, separator, delimiter);
 	for(r = res->rows; r; r = r->next)
-		output_csv_row(s, (const char **) r->data, res->ncols, separator, delimiter);
+		output_csv_row(s, r->data, res->ncols, separator, delimiter);
 }
 
-void output_results(results *res, char mode, FILE *s)
+void output_results(results *res, char mode, stream *s)
 {
 	SQLINTEGER i;
 	resultset *set;
@@ -366,43 +353,43 @@ void output_results(results *res, char mode, FILE *s)
 
 	for(set = res->sets; set; set = set->next) {
 		if(set->nrows == -1) {
-			fputs(_("Success\n"), s);
+			stream_puts(s, _("Success\n"));
 		} else if(!set->ncols) {
-			fprintf(s, _("%ld rows affected\n"), set->nrows);
+			stream_printf(s, _("%ld rows affected\n"), set->nrows);
 		} else {
 			switch(mode) {
 			case 'C':  // CSV
-				output_csv(set, s, ',', '"');
+				output_csv(set, s, L',', L'"');
 				break;
 			case 'G':  // Vertical
 				output_vert(set, s);
 				break;
 			case 'H':  // HTML
-				fprintf(s, "TODO\n");
+				stream_printf(s, "TODO\n");
 				break;
 			case 'J':  // JSON
-				fprintf(s, "TODO\n");
+				stream_printf(s, "TODO\n");
 				break;
 			case 'T':  // TSV
-				output_csv(set, s, '\t', 0);
+				output_csv(set, s, L'\t', 0);
 				break;
 			case 'X':  // XMLS
-				fprintf(s, "TODO\n");
+				stream_printf(s, "TODO\n");
 				break;
 			default:
 				output_horiz(set, s);
 			}
-			fputc('\n', s);
+			stream_newline(s);
 		}
 	}
 
 	for(i = 0; i < res->nwarnings; i++) {
-		fputs(res->warnings[i], s);
-		fputc('\n', s);
+		stream_putws(s, res->warnings[i]);
+		stream_newline(s);
 	}
 
 	if((mode == 'G' || mode == 'g') &&
 	   (res->time_taken.tv_sec || res->time_taken.tv_usec))
-		fprintf(s, _("(%lu.%06lus)\n"),
+		stream_printf(s, _("(%lu.%06lus)\n"),
 			res->time_taken.tv_sec, res->time_taken.tv_usec);
 }

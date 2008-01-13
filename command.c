@@ -91,29 +91,32 @@ static results *set(const char *name, const char *value)
 
 		free(prefixed_name);
 	} else {
-		char **v, *name_ptr, *value_ptr;
+		char **v, *name, *value;
 		row **rp;
-		int i;
 
 		rp = &(res->sets->rows);
 
 		for(v = environ; *v; v++) {
 			if(!strncmp(*v, "DBSH_", 5)) {
-				name_ptr = *v + 5;
-				value_ptr = strchr(name_ptr, '=');
-				if(!value_ptr) continue;
 
-				*rp = results_row_alloc(2);
+				if(!(name = strdup(*v + 5))) err_system();
 
-				if(!((*rp)->data[0] = calloc((value_ptr - name_ptr) + 1, sizeof(char)))) err_system();
+				for(value = name; *value && *value != '='; value++) {
+					*value = tolower(*value);
+				}
 
-				for(i = 0; name_ptr[i] != '='; i++)
-					(*rp)->data[0][i] = tolower(name_ptr[i]);
+				if(*value) {
+					*value++ = 0;
 
-				if(!((*rp)->data[1] = strdup(++value_ptr))) err_system();
+					*rp = results_row_alloc(2);
+					(*rp)->data[0] = strdup2wcs(name);
+					(*rp)->data[1] = strdup2wcs(value);
 
-				res->sets->nrows++;
-				rp = &(*rp)->next;
+					res->sets->nrows++;
+					rp = &(*rp)->next;
+				}
+
+				free(name);
 			}
 		}
 	}

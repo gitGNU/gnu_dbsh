@@ -16,7 +16,8 @@ dbsh_SOURCES = main.c common.h \
                rc.h rc.c \
                rl.h rl.c \
                results.h results.c \
-               sig.h sig.c
+               sig.h sig.c \
+               stream.h stream.c
 
 EXTRA_DIST = dbsh.test/*.exp dbsh.test/test.db
 

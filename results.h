@@ -21,6 +21,7 @@
 
 #include <sys/time.h>
 #include <sql.h>
+#include <wchar.h>
 
 typedef struct resultset resultset;
 typedef struct row row;
@@ -28,20 +29,20 @@ typedef struct row row;
 struct results {
 	resultset *sets;
 	SQLINTEGER nwarnings;
-	char **warnings;
+	wchar_t **warnings;
 	struct timeval time_taken;
 };
 
 struct resultset {
 	SQLSMALLINT ncols;
 	SQLINTEGER nrows;
-	char **cols;
+	wchar_t **cols;
 	row *rows;
 	resultset *next;
 };
 
 struct row {
-	char **data;
+	wchar_t **data;
 	row *next;
 };
 
@@ -60,5 +61,7 @@ void resultset_free(resultset *);
 
 row *results_row_alloc(int);
 void results_row_free(row *, int);
+
+wchar_t *strdup2wcs(const char *);
 
 #endif

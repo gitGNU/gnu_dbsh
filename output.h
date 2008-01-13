@@ -21,6 +21,6 @@
 
 #include <stdio.h>
 
-void output_results(results *, char, FILE *);
+void output_results(results *, char, stream *);
 
 #endif

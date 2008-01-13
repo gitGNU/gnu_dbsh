@@ -29,6 +29,23 @@ static void v_resultset_set_cols(resultset *, int, va_list);
 static row *v_resultset_add_row(resultset *, va_list);
 
 
+wchar_t *strdup2wcs(const char *s)
+{
+	mbstate_t ps;
+	size_t len;
+	wchar_t *wcs;
+
+	memset(&ps, 0, sizeof(ps));
+
+	len = mbsrtowcs(0, &s, 0, &ps);
+	if(len == -1) err_system();
+
+	if(!(wcs = calloc(len + 1, sizeof(wchar_t)))) err_system();
+	mbsrtowcs(wcs, &s, len, &ps);
+
+	return wcs;
+}
+
 results *results_alloc()
 {
 	results *res;
@@ -72,7 +89,7 @@ row *results_row_alloc(int ncols)
 	row *row;
 
 	if(!(row = malloc(sizeof(row))) ||
-	   !(row->data = calloc(ncols, sizeof(char *))))
+	   !(row->data = calloc(ncols, sizeof(wchar_t *))))
 		err_system();
 
 	row->next = 0;
@@ -101,7 +118,7 @@ void results_set_warnings(results *res, int nwarnings, ...)
 	if(!(res->warnings = calloc(nwarnings, sizeof(char *)))) err_system();
 
 	for(i = 0; i < nwarnings; i++)
-		if(!(res->warnings[i] = strdup(va_arg(ap, const char *)))) err_system();
+		if(!(res->warnings[i] = strdup2wcs(va_arg(ap, const char *)))) err_system();
 
 	va_end(ap);
 }
@@ -132,7 +149,7 @@ static void v_resultset_set_cols(resultset *res, int ncols, va_list ap)
 	if(!(res->cols = calloc(ncols, sizeof(char *)))) err_system();
 
 	for(i = 0; i < ncols; i++)
-		if(!(res->cols[i] = strdup(va_arg(ap, const char *)))) err_system();
+		if(!(res->cols[i] = strdup2wcs(va_arg(ap, const char *)))) err_system();
 }
 
 row *results_add_row(results *res, ...)
@@ -175,7 +192,7 @@ static row *v_resultset_add_row(resultset *res, va_list ap)
 
 	for(i = 0; i < res->ncols; i++) {
 		d = va_arg(ap, const char *);
-		if(d && !((*rp)->data[i] = strdup(d))) err_system();
+		if(d && !((*rp)->data[i] = strdup2wcs(d))) err_system();
 	}
 
 	res->nrows++;

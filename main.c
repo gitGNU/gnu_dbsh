@@ -36,6 +36,8 @@
 #include "sig.h"
 
 
+#include <wchar.h>
+
 const char *dsn, *user, *pass;
 SQLHDBC conn;
 buffer *mainbuf, *prevbuf;

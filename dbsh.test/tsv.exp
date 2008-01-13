@@ -3,6 +3,6 @@ set test "TSV output"
 send "SELECT * FROM test\\T\n"
 
 expect {
-    "id      desc\r\n1       This is some text.\r\n2       \r\n3       This is some\r\ntext with\r\nnewlines in it.\r\n\r\n"
+    "id\tdesc\r\n1\tThis is some text.\r\n2\t\r\n3\tThis is some\r\ntext with\r\nnewlines in it.\r\n\r\n"
     { pass "$test" }
 }
