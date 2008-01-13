@@ -1,0 +1,214 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2008 Ben Spencer
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2008-01-13 18:25+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: command.c:55
+msgid "COPYING"
+msgstr ""
+
+#: command.c:63
+msgid "WARRANTY"
+msgstr ""
+
+#: command.c:72 db.c:207
+msgid "name"
+msgstr ""
+
+#: command.c:72 db.c:207
+msgid "value"
+msgstr ""
+
+#: command.c:87
+msgid "Variable not set"
+msgstr ""
+
+#: command.c:165
+#, c-format
+msgid "Unrecognised command: %s\n"
+msgstr ""
+
+#: db.c:54
+#, c-format
+msgid "Error at %s line %d:\n"
+msgstr ""
+
+#: db.c:59
+#, c-format
+msgid "%s (SQLSTATE %s, error %ld)\n"
+msgstr ""
+
+#: db.c:65
+msgid " (return code was "
+msgstr ""
+
+#: db.c:99
+msgid "Failed to allocate environment handle\n"
+msgstr ""
+
+#: db.c:104
+msgid "Failed to set ODBC version to 3\n"
+msgstr ""
+
+#: db.c:116
+msgid ""
+"User Data Sources\n"
+"-----------------"
+msgstr ""
+
+#: db.c:117 db.c:119
+msgid "(none)"
+msgstr ""
+
+#: db.c:118
+msgid ""
+"\n"
+"System Data Sources\n"
+"-------------------"
+msgstr ""
+
+#: db.c:149
+msgid "Failed to allocate connection handle\n"
+msgstr ""
+
+#: db.c:164
+msgid "Failed to connect"
+msgstr ""
+
+#: db.c:169
+#, c-format
+msgid "Connected to %s\n"
+msgstr ""
+
+#: db.c:192
+msgid "SQLGetInfo() failed"
+msgstr ""
+
+#: db.c:210
+msgid "Server"
+msgstr ""
+
+#: db.c:213
+msgid "DBMS"
+msgstr ""
+
+#: db.c:216
+msgid "Version"
+msgstr ""
+
+#: db.c:229 db.c:424 db.c:454
+msgid "Failed to allocate statement handle"
+msgstr ""
+
+#: db.c:244
+msgid "Failed to execute statement"
+msgstr ""
+
+#: db.c:314
+msgid "Failed to retrieve number of columns"
+msgstr ""
+
+#: db.c:322
+msgid "Failed to retrieve rows affected"
+msgstr ""
+
+#: db.c:349
+msgid "Failed to retrieve column data"
+msgstr ""
+
+#: db.c:388
+msgid "Failed to fetch row"
+msgstr ""
+
+#: db.c:438
+msgid "Failed to list tables"
+msgstr ""
+
+#: db.c:469
+msgid "Failed to list columns"
+msgstr ""
+
+#: main.c:48
+#, c-format
+msgid ""
+"Usage: %s -l\n"
+"       %s <dsn> [<username>] [<password>]\n"
+msgstr ""
+
+#: output.c:128
+#, c-format
+msgid "1 row in set"
+msgid_plural "%ld rows in set"
+msgstr[0] ""
+msgstr[1] ""
+
+#: output.c:142 output.c:231 output.c:233 output.c:235
+msgid "+"
+msgstr ""
+
+#: output.c:143 output.c:232 output.c:234
+msgid "-"
+msgstr ""
+
+#: output.c:145
+msgid "+\n"
+msgstr ""
+
+#: output.c:166
+msgid "| "
+msgstr ""
+
+#: output.c:185 output.c:271 output.c:280 output.c:287 output.c:289
+#: output.c:291 output.c:305
+msgid "|"
+msgstr ""
+
+#: output.c:359
+msgid "Success\n"
+msgstr ""
+
+#: output.c:361
+#, c-format
+msgid "%ld rows affected\n"
+msgstr ""
+
+#: output.c:396
+#, c-format
+msgid "(%lu.%06lus)\n"
+msgstr ""
+
+#: help.h:1
+msgid ""
+"Help commands:\n"
+"  help [<command>]\n"
+"  copying\n"
+"  warranty\n"
+"\n"
+"Schema commands:\n"
+"  catalogs\n"
+"  schemas\n"
+"  tables\n"
+"  columns [<table>]\n"
+"\n"
+"Other commands:\n"
+"  set [<variable>] [<value>]\n"
+"  info"
+msgstr ""
+
+#: help.h:18
+msgid "Help topic doesn't exist"
+msgstr ""

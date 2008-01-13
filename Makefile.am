@@ -1,4 +1,6 @@
-AM_CFLAGS = -Wall -D_XOPEN_SOURCE=600
+ACLOCAL_AMFLAGS = -I m4
+AM_CPPFLAGS = -D_XOPEN_SOURCE=600 -DLOCALEDIR=\"$(localedir)\" @DEFS@
+AM_CFLAGS = -Wall
 
 bin_PROGRAMS = dbsh
 
@@ -19,8 +21,8 @@ dbsh_SOURCES = main.c common.h \
                sig.h sig.c \
                stream.h stream.c
 
-EXTRA_DIST = dbsh.test/*.exp dbsh.test/test.db
+dbsh_LDADD = @LIBINTL@
 
+EXTRA_DIST = config.rpath dbsh.test/*.exp dbsh.test/test.db
 
-
-
+SUBDIRS = po

@@ -26,7 +26,11 @@ AC_CHECK_HEADERS([sql.h sqlext.h], [], [AC_MSG_ERROR([failed to find ODBC header
 AC_C_CONST
 AC_TYPE_SIZE_T
 
+# I18n
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.17])
+
 # Checks for library functions.
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([Makefile po/Makefile.in])
 AC_OUTPUT

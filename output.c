@@ -123,11 +123,14 @@ static void free_resultset_dimensions(resultset *res, res_dims *rd)
 
 static void output_size(resultset *res, stream *s)
 {
-	stream_printf(s, res->nrows == 1 ?
-		_("1 row in set\n") :
-		_("%ld rows in set\n"),
-		res->nrows);
-
+#ifdef ENABLE_NLS
+	stream_printf(s,
+		      ngettext("1 row in set", "%ld rows in set", res->nrows),
+		      res->nrows);
+#else
+	stream_printf(s, "%d row%s in set\n", res->nrows,
+		      res->nrows == 1 ? "" : "s");
+#endif
 }
 
 void output_horiz_separator(stream *s, int col_widths[], SQLSMALLINT ncols)

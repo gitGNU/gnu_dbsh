@@ -1,4 +1,4 @@
-#define HELP_INTRO \
+#define HELP_INTRO _(\
 "Help commands:\n" \
 "  help [<command>]\n" \
 "  copying\n" \
@@ -12,7 +12,8 @@
 "\n" \
 "Other commands:\n" \
 "  set [<variable>] [<value>]\n" \
-"  info"
+"  info" \
+		)
 
-#define HELP_NOTFOUND "Help topic doesn't exist"
+#define HELP_NOTFOUND _("Help topic doesn't exist")
 

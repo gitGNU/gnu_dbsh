@@ -125,6 +125,10 @@ int main(int argc, char *argv[])
 	char *line, *p;
 
 	setlocale(LC_ALL, "");
+
+	bindtextdomain(PACKAGE, LOCALEDIR);
+	textdomain(PACKAGE);
+
 	read_rc_file();
 
 	while((opt = getopt(argc, argv, "lv")) != -1) {
