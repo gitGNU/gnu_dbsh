@@ -13,4 +13,6 @@ Makefile
 site.exp
 *.log
 *.sum
+*.bak
 dbsh
+TAGS
