@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-13 22:06+0000\n"
+"POT-Creation-Date: 2008-01-14 19:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -110,35 +110,35 @@ msgstr ""
 msgid "Version"
 msgstr ""
 
-#: db.c:229 db.c:424 db.c:454
+#: db.c:229 db.c:422 db.c:452
 msgid "Failed to allocate statement handle"
 msgstr ""
 
-#: db.c:244
+#: db.c:240
 msgid "Failed to execute statement"
 msgstr ""
 
-#: db.c:314
+#: db.c:312
 msgid "Failed to retrieve number of columns"
 msgstr ""
 
-#: db.c:322
+#: db.c:320
 msgid "Failed to retrieve rows affected"
 msgstr ""
 
-#: db.c:349
+#: db.c:347
 msgid "Failed to retrieve column data"
 msgstr ""
 
-#: db.c:388
+#: db.c:386
 msgid "Failed to fetch row"
 msgstr ""
 
-#: db.c:438
+#: db.c:436
 msgid "Failed to list tables"
 msgstr ""
 
-#: db.c:469
+#: db.c:467
 msgid "Failed to list columns"
 msgstr ""
 
