@@ -65,6 +65,7 @@ static void edit(buffer *sqlbuf)
 	char path[1024];
 	char cmd[2014];
 	int f;
+	size_t n;
 
 	editor = getenv("EDITOR");
 	if(!editor) editor = getenv("VISUAL");
@@ -86,8 +87,14 @@ static void edit(buffer *sqlbuf)
 
 	f = open(path, O_RDONLY);
 	if(f != -1) {
-		// TODO: resize buffer if necessary
-		sqlbuf->next = read(f, sqlbuf->buf, sqlbuf->len - 1);
+		sqlbuf->next = 0;
+
+		do {
+			n = read(f, sqlbuf->buf + sqlbuf->next, sqlbuf->len - sqlbuf->next);
+			sqlbuf->next += n;
+			if(sqlbuf->next == sqlbuf->len) buffer_realloc(sqlbuf, sqlbuf->len * 2);
+		} while(n);
+
 		close(f);
 	}
 
