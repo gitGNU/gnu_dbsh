@@ -6,6 +6,8 @@
 	Wrote the beginnings of a DejaGNU test suite.
 	gettext support.
 	Use Unicode box-drawing chars in UTF-8 locales.
+	Multiple newline formats.
+	Readable control character rendering.
 
 0.3a
 	Further UI tweaks.

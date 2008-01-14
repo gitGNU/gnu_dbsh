@@ -23,6 +23,7 @@
 #include <string.h>
 #include <wchar.h>
 
+#include "cntrl.h"
 #include "common.h"
 #include "err.h"
 #include "output.h"
@@ -56,6 +57,54 @@ typedef enum {
 #define NULL_DISPLAY L"*NULL*"
 
 
+
+static wchar_t *translate(wchar_t *src)
+{
+	wchar_t *dest, *p, *q, *r;
+	int l;
+
+	if(!src) {
+		l = wcslen(cntrl[0]);
+		if(!(dest = calloc(l + 1, sizeof(wchar_t)))) err_system();
+		for(r = cntrl[0], q = dest; *r; r++) *q++ = *r;
+
+		return dest;
+	}
+
+	l = 0;
+	for(p = src; *p; p++) {
+		if(*p < 32) l += wcslen(cntrl[*p]);
+	        else if(*p == 127) l += wcslen(cntrl[32]);
+		else l++;
+	}
+
+	if(!(dest = calloc(l + 1, sizeof(wchar_t)))) err_system();
+
+	for(p = src, q = dest; *p; p++) {
+		if(*p != L'\r' || p[1] != L'\n') {
+			if(*p < 32 || *p == 127) {
+				for(r = (*p == 127) ? cntrl[32] : cntrl[*p];
+				    *r; r++)
+					*q++ = *r;
+			} else *q++ = *p;
+		}
+	}
+
+	free(src);
+	return dest;
+}
+
+static void translate_resultset(resultset *res)
+{
+	row *r;
+	int i;
+
+	for(r = res->rows; r; r = r->next) {
+		for(i = 0; i < res->ncols; i++) {
+			r->data[i] = translate(r->data[i]);
+		}
+	}
+}
 
 static dim *get_dimensions(const wchar_t *s)
 {
@@ -167,6 +216,8 @@ static const char *get_box_char(vpos v, hpos h)
 		}
 		break;
 	}
+
+	return "+";
 }
 
 static void output_size(resultset *res, stream *s)
@@ -249,9 +300,10 @@ void output_horiz(resultset *res, stream *s)
 	int *col_widths;
 
 
+	translate_resultset(res);
 	dims = get_resultset_dimensions(res);
-	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
 
+	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
 	for(i = 0; i < res->ncols; i++) {
 		col_widths[i] = dims->col_dims[i]->max_width;
 
@@ -297,6 +349,7 @@ void output_vert(resultset *res, stream *s)
 	wchar_t *p;
 
 
+	translate_resultset(res);
 	dims = get_resultset_dimensions(res);
 
 	col_width = 0;
