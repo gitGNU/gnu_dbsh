@@ -230,21 +230,19 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 		return 0;
 	}
 
-	gettimeofday(&taken, 0);
-
 	pthread_mutex_lock(&cs_lock);
 	current_statement = &st;
 	pthread_mutex_unlock(&cs_lock);
 
-	r = SQLExecDirect(st, (SQLCHAR *) buf, buflen);
+	gettimeofday(&taken, 0);
 
-	time_taken(&taken);
-
-	if(!SQL_SUCCEEDED(r)) {
+	if(SQLExecDirect(st, (SQLCHAR *) buf, buflen) == SQL_ERROR) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to execute statement"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
 		return 0;
 	}
+
+	time_taken(&taken);
 
 	return fetch_results(st, taken);
 }
