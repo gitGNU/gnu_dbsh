@@ -223,7 +223,7 @@ static const char *get_box_char(vpos v, hpos h)
 static void output_size(resultset *res, stream *s)
 {
 	stream_printf(s,
-		      ngettext("1 row in set", "%ld rows in set", res->nrows),
+		      ngettext("1 row in set\n", "%ld rows in set\n", res->nrows),
 		      res->nrows);
 }
 
@@ -465,7 +465,11 @@ void output_results(results *res, char mode, stream *s)
 		if(set->nrows == -1) {
 			stream_puts(s, _("Success\n"));
 		} else if(!set->ncols) {
-			stream_printf(s, _("%ld rows affected\n"), set->nrows);
+			stream_printf(s,
+				      ngettext("1 row affected\n",
+					       "%ld rows affected\n",
+					       set->nrows),
+				      set->nrows);
 		} else {
 			switch(mode) {
 			case 'C':  // CSV

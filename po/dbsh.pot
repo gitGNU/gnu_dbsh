@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-14 19:59+0000\n"
+"POT-Creation-Date: 2008-01-15 08:24+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -171,77 +171,79 @@ msgid ""
 "       %s <dsn> [<username>] [<password>]\n"
 msgstr ""
 
-#: output.c:143
+#: output.c:192
 msgctxt "topleft"
 msgid "+"
 msgstr ""
 
-#: output.c:145
+#: output.c:194
 msgctxt "topmid"
 msgid "+"
 msgstr ""
 
-#: output.c:147
+#: output.c:196
 msgctxt "topright"
 msgid "+"
 msgstr ""
 
-#: output.c:152
+#: output.c:201
 msgctxt "midleft"
 msgid "+"
 msgstr ""
 
-#: output.c:154
+#: output.c:203
 msgctxt "midmid"
 msgid "+"
 msgstr ""
 
-#: output.c:156
+#: output.c:205
 msgctxt "midright"
 msgid "+"
 msgstr ""
 
-#: output.c:162
+#: output.c:211
 msgctxt "botleft"
 msgid "+"
 msgstr ""
 
-#: output.c:164
+#: output.c:213
 msgctxt "botmid"
 msgid "+"
 msgstr ""
 
-#: output.c:166
+#: output.c:215
 msgctxt "botright"
 msgid "+"
 msgstr ""
 
-#: output.c:175
+#: output.c:226
 #, c-format
-msgid "1 row in set"
-msgid_plural "%ld rows in set"
+msgid "1 row in set\n"
+msgid_plural "%ld rows in set\n"
 msgstr[0] ""
 msgstr[1] ""
 
-#: output.c:189 output.c:281 output.c:283
+#: output.c:240 output.c:333 output.c:335
 msgid "-"
 msgstr ""
 
-#: output.c:214 output.c:234 output.c:323 output.c:332 output.c:339
-#: output.c:341 output.c:343 output.c:357
+#: output.c:265 output.c:285 output.c:376 output.c:385 output.c:392
+#: output.c:394 output.c:396 output.c:410
 msgid "|"
 msgstr ""
 
-#: output.c:413
+#: output.c:466
 msgid "Success\n"
 msgstr ""
 
-#: output.c:415
+#: output.c:469
 #, c-format
-msgid "%ld rows affected\n"
-msgstr ""
+msgid "1 row affected\n"
+msgid_plural "%ld rows affected\n"
+msgstr[0] ""
+msgstr[1] ""
 
-#: output.c:450
+#: output.c:507
 #, c-format
 msgid "(%lu.%06lus)\n"
 msgstr ""
