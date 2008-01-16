@@ -279,7 +279,7 @@ void output_horiz_row(stream *s, const char **data,
 
 			if(!*p) pos[i] = p;
 
-			for(k = dims[i]->widths[j]; k <= widths[i]; k++) stream_space(s);
+			for(k = j < dims[i]->lines ? dims[i]->widths[j] : 0; k <= widths[i]; k++) stream_space(s);
 		}
 
 		stream_puts(s, _("|"));
