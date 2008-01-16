@@ -7,6 +7,7 @@ bin_PROGRAMS = dbsh
 dbsh_SOURCES = main.c common.h \
                action.h action.c \
                buffer.h buffer.c \
+               cntrl.h \
                command.h command.c \
                db.h db.c \
                err.h err.c \
