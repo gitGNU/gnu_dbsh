@@ -461,6 +461,11 @@ void output_results(results *res, char mode, stream *s)
 
 	if(mode == 1) mode = *getenv("DBSH_DEFAULT_ACTION");
 
+	for(i = 0; i < res->nwarnings; i++) {
+		stream_putws(s, res->warnings[i]);
+		stream_newline(s);
+	}
+
 	for(set = res->sets; set; set = set->next) {
 		if(set->nrows == -1) {
 			stream_puts(s, _("Success\n"));
@@ -495,11 +500,6 @@ void output_results(results *res, char mode, stream *s)
 			}
 			stream_newline(s);
 		}
-	}
-
-	for(i = 0; i < res->nwarnings; i++) {
-		stream_putws(s, res->warnings[i]);
-		stream_newline(s);
 	}
 
 	if((mode == 'G' || mode == 'g') &&
