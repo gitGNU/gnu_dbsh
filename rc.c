@@ -47,7 +47,7 @@ void read_rc_file()
 
 				if(name && value) {
 					name = prefix_var_name(name);
-					setenv(name, value, 1);
+					if(setenv(name, value, 0)) err_system();
 					free(name);
 				}
 			}
