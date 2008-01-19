@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-19 18:49+0000\n"
+"POT-Creation-Date: 2008-01-19 19:13+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -36,12 +36,22 @@ msgstr "value"
 msgid "Variable not set"
 msgstr "Variable not set"
 
-#: command.c:151
+#: command.c:139
+#, c-format
+msgid "Cannot unset variable '%s'\n"
+msgstr ""
+
+#: command.c:167
 #, c-format
 msgid "Syntax: columns <table>\n"
 msgstr ""
 
-#: command.c:162
+#: command.c:176
+#, c-format
+msgid "Syntax: unset <variable>"
+msgstr ""
+
+#: command.c:181
 #, c-format
 msgid "Unrecognised command: %s\n"
 msgstr "Unrecognised command: %s\n"

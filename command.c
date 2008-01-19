@@ -126,6 +126,22 @@ static results *set(const char *name, const char *value)
 	return res;
 }
 
+static void unset(const char *name)
+{
+	char *prefixed_name;
+
+	prefixed_name = prefix_var_name(name);
+
+	if(!strcmp(prefixed_name, "DBSH_ACTION_CHARS") ||
+	   !strcmp(prefixed_name, "DBSH_COMMAND_CHARS") ||
+	   !strcmp(prefixed_name, "DBSH_DEFAULT_ACTION") ||
+	   !strcmp(prefixed_name, "DBSH_PROMPT"))
+		printf(_("Cannot unset variable '%s'\n"), name);
+	else if(unsetenv(prefixed_name)) err_system();
+
+	free(prefixed_name);
+}
+
 results *run_command(SQLHDBC conn, buffer *buf)
 {
 	parsed_line *l;
@@ -155,6 +171,9 @@ results *run_command(SQLHDBC conn, buffer *buf)
 	else if(!strcmp(l->chunks[0] + 1, "set")) {
 		res = set(l->nchunks > 1 ? l->chunks[1] : 0,
 			  l->nchunks > 2 ? l->chunks[2] : 0);
+	} else if(!strcmp(l->chunks[0] + 1, "unset")) {
+		if(l->nchunks > 1) unset(l->chunks[1]);
+		else printf(_("Syntax: unset <variable>"));
 	} else if(!strncmp(l->chunks[0] + 1, "inf", 3)) {
 		res = db_conn_details(conn);
 	}
