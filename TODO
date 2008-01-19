@@ -16,6 +16,7 @@ SQLBrowseConnect?  do any unix drivers support it?
 List drivers in -l using SQLDrivers?
 Support strings with embedded NULL characters in result sets?
 Display option with lines between every row?
+Display mode that truncates/wraps fields to fit screen width?
 
 aliases/prepared statements
 *alias getrow SELECT * FROM TABLE WHERE id = ?;
