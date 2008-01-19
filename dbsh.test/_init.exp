@@ -4,8 +4,12 @@ expect_after {
     timeout { fail "$test" }
 }
 
-
-# TODO: set environment variables to override .dbshrc
+set env(LANG) C
+set env(DBSH_ACTION_CHARS) "\\;"
+set env(DBSH_COMMAND_CHARS) "/"
+set env(DBSH_DEFAULT_ACTION) "g"
+set env(DBSH_PROMPT) ">"
+set env(DBSH_DEFAULT_PAGER) "cat"
 
 spawn ./dbsh "DRIVER=SQLite;DATABASE=dbsh.test/test.db"
 
