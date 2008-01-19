@@ -30,6 +30,7 @@
 typedef struct {
 	char quote;
 	int escape;
+	int space;
 	int pipe;
 
 	buffer *buf;
@@ -59,6 +60,7 @@ static void parse_start(parser_state *st)
 {
 	st->quote = 0;
 	st->escape = 0;
+	st->space = 0;
 	st->pipe = 0;
 
 	st->buf = buffer_alloc(16);
@@ -74,9 +76,10 @@ static void parse_char(char c, parser_state *st)
 			st->escape = 0;
 		} else {
 			if(isspace(c) && !st->quote) {
-				if(st->buf->next) {
+				if(!st->space) {
 					st->chunks[st->nchunks++] = buffer_dup2str(st->buf);
 					st->buf->next = 0;
+					st->space = 1;
 				}
 				return;
 			}
@@ -84,11 +87,13 @@ static void parse_char(char c, parser_state *st)
 			if((c == '"' || c == '\'') &&
 			   (!st->quote || st->quote == c)) {
 				st->quote = (st->quote ? 0 : c);
+				st->space = 0;
 				return;
 			}
 
 			if(c == '\\') {
 				st->escape = 1;
+				st->space = 0;
 				return;
 			}
 
@@ -97,6 +102,8 @@ static void parse_char(char c, parser_state *st)
 	}
 
 	buffer_append(st->buf, c);
+
+	st->space = 0;
 }
 
 static parsed_line *parse_end(parser_state *st)
