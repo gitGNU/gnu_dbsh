@@ -192,6 +192,7 @@ SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 		report_error(SQL_HANDLE_DBC, conn, r, _("SQLGetInfo() failed"));
 		strncpy(buf, _("(unknown)"), len);
 		buf[len - 1] = 0;
+		l = strlen(_("unknown"));
 	}
 
 	return l;
