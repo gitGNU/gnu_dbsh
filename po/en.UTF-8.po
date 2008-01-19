@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-19 15:31+0000\n"
+"POT-Creation-Date: 2008-01-19 16:18+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -24,11 +24,11 @@ msgstr "COPYING"
 msgid "WARRANTY"
 msgstr "WARRANTY"
 
-#: command.c:74 db.c:212
+#: command.c:74 db.c:228
 msgid "name"
 msgstr "name"
 
-#: command.c:74 db.c:212
+#: command.c:74 db.c:228
 msgid "value"
 msgstr "value"
 
@@ -102,109 +102,114 @@ msgstr "Connected to %s\n"
 msgid "SQLGetInfo() failed"
 msgstr "SQLGetInfo() failed"
 
-#: db.c:193 db.c:238 db.c:257
+#: db.c:193 db.c:195 db.c:209 db.c:211 db.c:254 db.c:273
 #, fuzzy
 msgid "(unknown)"
 msgstr "(none)"
 
-#: db.c:215
+#: db.c:208
+#, fuzzy
+msgid "SQLGetConnectAttr() failed"
+msgstr "SQLGetInfo() failed"
+
+#: db.c:231
 msgid "DSN"
 msgstr ""
 
-#: db.c:216
+#: db.c:232
 msgid "Server"
 msgstr "Server"
 
-#: db.c:217
+#: db.c:233
 #, fuzzy
 msgid "DBMS name"
 msgstr "name"
 
-#: db.c:218
+#: db.c:234
 #, fuzzy
 msgid "DBMS version"
 msgstr "Version"
 
-#: db.c:219
+#: db.c:235
 #, fuzzy
 msgid "DBMS user"
 msgstr "DBMS"
 
-#: db.c:222
+#: db.c:238
 #, fuzzy
 msgid "Driver"
 msgstr "Server"
 
-#: db.c:223
+#: db.c:239
 msgid "Driver version"
 msgstr ""
 
-#: db.c:224
+#: db.c:240
 #, fuzzy
 msgid "ODBC version"
 msgstr "Version"
 
-#: db.c:240
+#: db.c:256
 msgid "ODBC compliance"
 msgstr ""
 
-#: db.c:259
+#: db.c:275
 msgid "SQL-92 compliance"
 msgstr ""
 
-#: db.c:262
+#: db.c:278
 msgid "Driver Manager version"
 msgstr ""
 
-#: db.c:263
+#: db.c:279
 msgid "X/Open CLI compliance"
 msgstr ""
 
-#: db.c:266
+#: db.c:282
 msgid "Catalog term"
 msgstr ""
 
-#: db.c:267
+#: db.c:284
 msgid "Schema term"
 msgstr ""
 
-#: db.c:268
+#: db.c:285
 msgid "Table term"
 msgstr ""
 
-#: db.c:269
+#: db.c:286
 msgid "Procedure term"
 msgstr ""
 
-#: db.c:283 db.c:476 db.c:506
+#: db.c:311 db.c:504 db.c:534
 msgid "Failed to allocate statement handle"
 msgstr "Failed to allocate statement handle"
 
-#: db.c:294
+#: db.c:322
 msgid "Failed to execute statement"
 msgstr "Failed to execute statement"
 
-#: db.c:366
+#: db.c:394
 msgid "Failed to retrieve number of columns"
 msgstr "Failed to retrieve number of columns"
 
-#: db.c:374
+#: db.c:402
 msgid "Failed to retrieve rows affected"
 msgstr "Failed to retrieve rows affected"
 
-#: db.c:401
+#: db.c:429
 msgid "Failed to retrieve column data"
 msgstr "Failed to retrieve column data"
 
-#: db.c:440
+#: db.c:468
 msgid "Failed to fetch row"
 msgstr "Failed to fetch row"
 
-#: db.c:490
+#: db.c:518
 msgid "Failed to list tables"
 msgstr "Failed to list tables"
 
-#: db.c:521
+#: db.c:549
 msgid "Failed to list columns"
 msgstr "Failed to list columns"
 

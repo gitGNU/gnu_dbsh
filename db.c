@@ -192,12 +192,27 @@ SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 		report_error(SQL_HANDLE_DBC, conn, r, _("SQLGetInfo() failed"));
 		strncpy(buf, _("(unknown)"), len);
 		buf[len - 1] = 0;
-		l = strlen(_("unknown"));
+		l = strlen(_("(unknown)"));
 	}
 
 	return l;
 }
 
+SQLINTEGER db_conn_attr(SQLHDBC conn, SQLINTEGER attr, char *buf, int len)
+{
+	SQLRETURN r;
+	SQLINTEGER l;
+
+	r = SQLGetConnectAttr(conn, attr, buf, len, &l);
+	if(!SQL_SUCCEEDED(r)) {
+		report_error(SQL_HANDLE_DBC, conn, r, _("SQLGetConnectAttr() failed"));
+		strncpy(buf, _("(unknown)"), len);
+		buf[len - 1] = 0;
+		l = strlen(_("(unknown)"));
+	}
+
+	return l;
+}
 
 #define ADD_INFO(t, n) db_info(conn, t, buf, 256); results_add_row(res, n, buf)
 
@@ -265,12 +280,24 @@ results *db_conn_details(SQLHDBC conn)
 
 	// Useless but potentially interesting info
 	ADD_INFO(SQL_CATALOG_TERM,   _("Catalog term"));
+
 	ADD_INFO(SQL_SCHEMA_TERM,    _("Schema term"));
 	ADD_INFO(SQL_TABLE_TERM,     _("Table term"));
 	ADD_INFO(SQL_PROCEDURE_TERM, _("Procedure term"));
 
 
 	return res;
+}
+
+int db_supports_catalogs(SQLHDBC conn)
+{
+	char buf[2];
+	SQLRETURN r;
+
+	r = SQLGetInfo(conn, SQL_CATALOG_NAME, buf, 2, 0);
+	if(!SQL_SUCCEEDED(r)) return 0;
+
+	return (buf[0] == 'Y');
 }
 
 results *execute_query(SQLHDBC conn, const char *buf, int buflen)
