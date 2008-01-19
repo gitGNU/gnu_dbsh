@@ -18,6 +18,7 @@ Support strings with embedded NULL characters in result sets?
 Display option with lines between every row?
 Display mode that truncates/wraps fields to fit screen width?
 Use INFORMATION_SCHEMA where available?
+/proc command (SQLProcedures)
 
 aliases/prepared statements
 *alias getrow SELECT * FROM TABLE WHERE id = ?;
