@@ -12,6 +12,7 @@
 "\n" \
 "Other commands:\n" \
 "  set [<variable>] [<value>]\n" \
+"  unset <variable>\n" \
 "  info" \
 		)
 

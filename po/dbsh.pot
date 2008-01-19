@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-19 19:13+0000\n"
+"POT-Creation-Date: 2008-01-19 19:36+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -248,10 +248,11 @@ msgid ""
 "\n"
 "Other commands:\n"
 "  set [<variable>] [<value>]\n"
+"  unset <variable>\n"
 "  info"
 msgstr ""
 
-#: help.h:18
+#: help.h:19
 msgid "Help topic doesn't exist"
 msgstr ""
 
