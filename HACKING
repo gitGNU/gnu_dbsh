@@ -1,6 +1,10 @@
 Design notes
 ------------
 
-Use commands when there is a result set returned.
-Use actions when they act on the contents of the buffer.
+Use commands when there is a result set returned, or when providing a
+generic replacement for SQL that might vary between DBMSs.
+
+Use actions when they act on the contents of the buffer, or where a
+command would be to long-winded.
+
 Action parameters are at a premium - conserve where possible.
