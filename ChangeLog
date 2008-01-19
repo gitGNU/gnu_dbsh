@@ -8,6 +8,7 @@
 	Use Unicode box-drawing chars in UTF-8 locales.
 	Multiple newline formats.
 	Readable control character rendering.
+	Lots more information in /info.
 
 0.3a
 	Further UI tweaks.

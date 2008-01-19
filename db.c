@@ -190,30 +190,84 @@ SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 	r = SQLGetInfo(conn, type, buf, len, &l);
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_DBC, conn, r, _("SQLGetInfo() failed"));
-		strncpy(buf, "(unknown)", len);
+		strncpy(buf, _("(unknown)"), len);
 		buf[len - 1] = 0;
 	}
 
 	return l;
 }
 
+
+#define ADD_INFO(t, n) db_info(conn, t, buf, 256); results_add_row(res, n, buf)
+
 results *db_conn_details(SQLHDBC conn)
 {
 	results *res;
 	char buf[256];
+	SQLUINTEGER i;
+	const char *s;
 
 	res = results_single_alloc();
 
 	results_set_cols(res, 2, _("name"), _("value"));
 
-	db_info(conn, SQL_SERVER_NAME, buf, 256);
-	results_add_row(res, _("Server"), buf);
+	// Connection info
+	ADD_INFO(SQL_DATA_SOURCE_NAME, _("DSN"));
+	ADD_INFO(SQL_SERVER_NAME,      _("Server"));
+	ADD_INFO(SQL_DBMS_NAME,        _("DBMS name"));
+	ADD_INFO(SQL_DBMS_VER,         _("DBMS version"));
+	ADD_INFO(SQL_USER_NAME,        _("DBMS user"));
 
-	db_info(conn, SQL_DBMS_NAME, buf, 256);
-	results_add_row(res, _("DBMS"), buf);
+	// Driver info
+	ADD_INFO(SQL_DRIVER_NAME, _("Driver"));
+	ADD_INFO(SQL_DRIVER_VER,  _("Driver version"));
+	ADD_INFO(SQL_ODBC_VER,    _("ODBC version"));
 
-	db_info(conn, SQL_DBMS_VER, buf, 256);
-	results_add_row(res, _("Version"), buf);
+	SQLGetInfo(conn, SQL_ODBC_INTERFACE_CONFORMANCE, &i, 0, 0);
+	switch(i) {
+	case SQL_OIC_CORE:
+		s = "Core";
+		break;
+	case SQL_OIC_LEVEL1:
+		s = "Level 1";
+		break;
+	case SQL_OIC_LEVEL2:
+		s = "Level 2";
+		break;
+	default:
+		s = _("(unknown)");
+	}
+	results_add_row(res, _("ODBC compliance"), s);
+
+	SQLGetInfo(conn, SQL_SQL_CONFORMANCE, &i, 0, 0);
+	switch(i) {
+	case SQL_SC_SQL92_ENTRY:
+		s = "Entry level";
+		break;
+	case SQL_SC_FIPS127_2_TRANSITIONAL:
+		s = "FIPS 127-2 transitional level";
+		break;
+	case SQL_SC_SQL92_INTERMEDIATE:
+		s = "Intermediate level";
+		break;
+	case SQL_SC_SQL92_FULL:
+		s = "Full level";
+		break;
+	default:
+		s = _("(unknown)");
+	}
+	results_add_row(res, _("SQL-92 compliance"), s);
+
+	// Driver Manager info
+	ADD_INFO(SQL_DM_VER,         _("Driver Manager version"));
+	ADD_INFO(SQL_XOPEN_CLI_YEAR, _("X/Open CLI compliance"));
+
+	// Useless but potentially interesting info
+	ADD_INFO(SQL_CATALOG_TERM,   _("Catalog term"));
+	ADD_INFO(SQL_SCHEMA_TERM,    _("Schema term"));
+	ADD_INFO(SQL_TABLE_TERM,     _("Table term"));
+	ADD_INFO(SQL_PROCEDURE_TERM, _("Procedure term"));
+
 
 	return res;
 }

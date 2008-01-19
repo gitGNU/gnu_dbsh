@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-17 09:20+0000\n"
+"POT-Creation-Date: 2008-01-19 15:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,11 +25,11 @@ msgstr ""
 msgid "WARRANTY"
 msgstr ""
 
-#: command.c:74 db.c:207
+#: command.c:74 db.c:212
 msgid "name"
 msgstr ""
 
-#: command.c:74 db.c:207
+#: command.c:74 db.c:212
 msgid "value"
 msgstr ""
 
@@ -98,47 +98,103 @@ msgstr ""
 msgid "SQLGetInfo() failed"
 msgstr ""
 
-#: db.c:210
-msgid "Server"
+#: db.c:193 db.c:238 db.c:257
+msgid "(unknown)"
 msgstr ""
 
-#: db.c:213
-msgid "DBMS"
+#: db.c:215
+msgid "DSN"
 msgstr ""
 
 #: db.c:216
-msgid "Version"
+msgid "Server"
 msgstr ""
 
-#: db.c:229 db.c:422 db.c:452
-msgid "Failed to allocate statement handle"
+#: db.c:217
+msgid "DBMS name"
+msgstr ""
+
+#: db.c:218
+msgid "DBMS version"
+msgstr ""
+
+#: db.c:219
+msgid "DBMS user"
+msgstr ""
+
+#: db.c:222
+msgid "Driver"
+msgstr ""
+
+#: db.c:223
+msgid "Driver version"
+msgstr ""
+
+#: db.c:224
+msgid "ODBC version"
 msgstr ""
 
 #: db.c:240
+msgid "ODBC compliance"
+msgstr ""
+
+#: db.c:259
+msgid "SQL-92 compliance"
+msgstr ""
+
+#: db.c:262
+msgid "Driver Manager version"
+msgstr ""
+
+#: db.c:263
+msgid "X/Open CLI compliance"
+msgstr ""
+
+#: db.c:266
+msgid "Catalog term"
+msgstr ""
+
+#: db.c:267
+msgid "Schema term"
+msgstr ""
+
+#: db.c:268
+msgid "Table term"
+msgstr ""
+
+#: db.c:269
+msgid "Procedure term"
+msgstr ""
+
+#: db.c:283 db.c:476 db.c:506
+msgid "Failed to allocate statement handle"
+msgstr ""
+
+#: db.c:294
 msgid "Failed to execute statement"
 msgstr ""
 
-#: db.c:312
+#: db.c:366
 msgid "Failed to retrieve number of columns"
 msgstr ""
 
-#: db.c:320
+#: db.c:374
 msgid "Failed to retrieve rows affected"
 msgstr ""
 
-#: db.c:347
+#: db.c:401
 msgid "Failed to retrieve column data"
 msgstr ""
 
-#: db.c:386
+#: db.c:440
 msgid "Failed to fetch row"
 msgstr ""
 
-#: db.c:436
+#: db.c:490
 msgid "Failed to list tables"
 msgstr ""
 
-#: db.c:467
+#: db.c:521
 msgid "Failed to list columns"
 msgstr ""
 
