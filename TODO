@@ -28,5 +28,8 @@ etc
 
 commands:
 /autocommit on|off
+/commit + /rollback
+/isolation ?
 /procedures (SQLProcedures)
 /exec command to run procedures?  or just interpret command names as procedures?
+/trace
