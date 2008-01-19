@@ -35,5 +35,8 @@ results *execute_query(SQLHDBC, const char *, int);
 void db_cancel_query();
 results *get_tables(SQLHDBC, const char *, const char *, const char *);
 results *get_columns(SQLHDBC, const char *, const char *, const char *);
+results *db_list_schemas(SQLHDBC, const char *);
+results *db_list_tables(SQLHDBC, const char *);
+results *db_list_columns(SQLHDBC, const char *);
 
 #endif

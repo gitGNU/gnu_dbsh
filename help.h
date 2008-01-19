@@ -6,9 +6,9 @@
 "\n" \
 "Schema commands:\n" \
 "  catalogs\n" \
-"  schemas\n" \
-"  tables\n" \
-"  columns [<table>]\n" \
+"  schemas [<catalog>]\n" \
+"  tables [<catalog>]\n" \
+"  columns <table>\n" \
 "\n" \
 "Other commands:\n" \
 "  set [<variable>] [<value>]\n" \

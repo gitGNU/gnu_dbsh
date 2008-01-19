@@ -40,6 +40,9 @@ static void time_taken(struct timeval *);
 static results *fetch_results(SQLHSTMT, struct timeval);
 static resultset *fetch_resultset(SQLHSTMT, buffer *);
 static row *fetch_row(SQLHSTMT, buffer *, int);
+static char *get_current_catalog(SQLHDBC);
+static void parse_catalog_spec(SQLHDBC, char *, char **, char **);
+static void parse_qualified_table(char *, char **, char **);
 
 static void _report_error(SQLSMALLINT type, SQLHANDLE handle, SQLRETURN r,
 			  const char *fallback, const char *file, int line)
@@ -291,10 +294,10 @@ results *db_conn_details(SQLHDBC conn)
 
 int db_supports_catalogs(SQLHDBC conn)
 {
-	char buf[2];
+	char buf[4];
 	SQLRETURN r;
 
-	r = SQLGetInfo(conn, SQL_CATALOG_NAME, buf, 2, 0);
+	r = SQLGetInfo(conn, SQL_CATALOG_NAME, buf, 4, 0);
 	if(!SQL_SUCCEEDED(r)) return 0;
 
 	return (buf[0] == 'Y');
@@ -551,6 +554,154 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	}
 
 	return fetch_results(st, taken);
+}
+
+results *db_list_schemas(SQLHDBC conn, const char *catalog)
+{
+	char *c;
+	results *res;
+
+	c = catalog ? catalog : get_current_catalog(conn);
+	res = get_tables(conn, c, SQL_ALL_SCHEMAS, 0);
+	if(!catalog) free(c);
+	return res;
+}
+
+results *db_list_tables(SQLHDBC conn, const char *spec)
+{
+	char *catalog, *schema;
+	char *buf;
+	results *res;
+
+	catalog = 0;
+	schema = 0;
+	buf = 0;
+
+	if(db_supports_catalogs(conn)) {
+		if(spec) {
+			if(!(buf = strdup(spec))) err_system();
+			parse_catalog_spec(conn, buf, &catalog, &schema);
+		} else {
+			buf = get_current_catalog(conn);
+			catalog = buf;
+		}
+	} else schema = (char *) spec;
+
+	res = get_tables(conn, catalog, schema, 0);
+	if(buf) free(buf);
+	return res;
+}
+
+results *db_list_columns(SQLHDBC conn, const char *spec)
+{
+	char *catalog, *schema, *table;
+	char *dspec, *buf;
+	results *res;
+
+	if(!(dspec = strdup(spec))) err_system();
+	buf = 0;
+
+	if(db_supports_catalogs(conn)) {
+
+		parse_catalog_spec(conn, dspec, &catalog, &table);
+
+		if(table) parse_qualified_table(table, &schema, &table);
+		else {
+			parse_qualified_table(catalog, &schema, &table);
+			buf = get_current_catalog(conn);
+			catalog = buf;
+		}
+	} else {
+		catalog = 0;
+		parse_qualified_table(dspec, &schema, &table);
+	}
+
+	res = get_columns(conn, catalog, schema, table);
+	free(dspec);
+	if(buf) free(buf);
+	return res;
+}
+
+static char *get_current_catalog(SQLHDBC conn)
+{
+	SQLSMALLINT buflen;
+	char *buf;
+	SQLRETURN r;
+
+	r = SQLGetInfo(conn, SQL_MAX_CATALOG_NAME_LEN, &buflen, 0, 0);
+	if(!SQL_SUCCEEDED(r)) {
+		report_error(SQL_HANDLE_DBC, conn, r,
+			     _("Failed to get max catalog name len"));
+		buflen = 128;
+	}
+	if(!buflen) buflen = 128;
+
+	if(!(buf = malloc(buflen))) err_system();
+
+	r = SQLGetConnectAttr(conn, SQL_ATTR_CURRENT_CATALOG, buf, buflen, 0);
+	if(!SQL_SUCCEEDED(r)) {
+		report_error(SQL_HANDLE_DBC, conn, r,
+			     _("Failed to get current catalog"));
+		*buf = 0;
+	}
+
+	return buf;
+}
+
+static void parse_catalog_spec(SQLHDBC conn, char *spec,
+			     char **catalog, char **schema)
+{
+	SQLUSMALLINT catloc;
+	char sep[8], *p, *q;
+	SQLSMALLINT seplen;
+	SQLRETURN r;
+
+	*catalog = spec;
+	*schema = 0;
+
+
+	r = SQLGetInfo(conn, SQL_CATALOG_LOCATION, &catloc, 0, 0);
+	if(!SQL_SUCCEEDED(r)) {
+		report_error(SQL_HANDLE_DBC, conn, r, _("Failed to get catalog location"));
+		catloc = SQL_CL_START;
+	}
+
+	r = SQLGetInfo(conn, SQL_CATALOG_NAME_SEPARATOR, sep, 8, &seplen);
+	if(!SQL_SUCCEEDED(r)) {
+		report_error(SQL_HANDLE_DBC, conn, r, _("Failed to get catalog name separator"));
+		strcpy(sep, ".");
+	}
+
+	if(catloc == SQL_CL_START) {
+		p = strstr(spec, sep);
+		if(p) {
+			*schema = p + seplen;
+			*p = 0;
+		}
+	} else {
+		q = 0;
+		while((p = strstr(spec, sep))) q = p;
+
+		if(q) {
+			*catalog = q + seplen;
+			*schema = spec;
+			*q = 0;
+		}
+	}
+}
+
+static void parse_qualified_table(char *s, char **schema, char **table)
+{
+	char *p;
+
+	if((p = strchr(s, '.'))) {
+		*schema = s;
+		*table = p + 1;
+		*p = 0;
+	} else {
+		*schema = 0;
+		*table = s;
+	}
 }
 
 static void time_taken(struct timeval *time_taken)
