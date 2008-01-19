@@ -18,16 +18,15 @@ Support strings with embedded NULL characters in result sets?
 Display option with lines between every row?
 Display mode that truncates/wraps fields to fit screen width?
 Use INFORMATION_SCHEMA where available?
-/procedures command (SQLProcedures)
-/exec command to run procedures?
 
 aliases/prepared statements
-*alias getrow SELECT * FROM TABLE WHERE id = ?;
-*getrow 1;
-*getrow 2;
+/alias getrow SELECT * FROM TABLE WHERE id = ?;
+/getrow 1;
+/getrow 2;
 etc
 + some way to save them for future use
 
 commands:
-*autocommit on|off
-*help
+/autocommit on|off
+/procedures (SQLProcedures)
+/exec command to run procedures?  or just interpret command names as procedures?
