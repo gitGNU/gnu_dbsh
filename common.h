@@ -19,6 +19,8 @@
 #ifndef COMMON_H
 #define COMMON_H
 
+#include <locale.h>
+
 #include "gettext.h"
 
 #define _(String) gettext(String)

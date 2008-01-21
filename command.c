@@ -137,7 +137,7 @@ static void unset(const char *name)
 	   !strcmp(prefixed_name, "DBSH_DEFAULT_ACTION") ||
 	   !strcmp(prefixed_name, "DBSH_PROMPT"))
 		printf(_("Cannot unset variable '%s'\n"), name);
-	else if(unsetenv(prefixed_name)) err_system();
+	else unsetenv(prefixed_name);
 
 	free(prefixed_name);
 }
