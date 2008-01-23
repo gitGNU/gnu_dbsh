@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ(2.61)
-AC_INIT(dbsh, 0.4a, dangerous.ben@gmail.com)
+AC_INIT(dbsh, 0.5a, dangerous.ben@gmail.com)
 AM_INIT_AUTOMAKE([foreign dejagnu])
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADER([config.h])
