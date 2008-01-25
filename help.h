@@ -6,7 +6,7 @@
 "\n" \
 "Schema commands:\n" \
 "  catalogs\n" \
-"  schemas [<catalog>]\n" \
+"  schemas\n" \
 "  tables [<catalog>]\n" \
 "  columns <table>\n" \
 "\n" \

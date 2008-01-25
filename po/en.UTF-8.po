@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-19 19:36+0000\n"
+"POT-Creation-Date: 2008-01-23 10:37+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -228,22 +228,22 @@ msgstr "Failed to list tables"
 msgid "Failed to list columns"
 msgstr "Failed to list columns"
 
-#: db.c:634
+#: db.c:623
 #, fuzzy
 msgid "Failed to get max catalog name len"
 msgstr "Failed to execute statement"
 
-#: db.c:644
+#: db.c:633
 #, fuzzy
 msgid "Failed to get current catalog"
 msgstr "Failed to retrieve column data"
 
-#: db.c:665
+#: db.c:654
 #, fuzzy
 msgid "Failed to get catalog location"
 msgstr "Failed to list columns"
 
-#: db.c:671
+#: db.c:660
 msgid "Failed to get catalog name separator"
 msgstr ""
 
@@ -257,7 +257,7 @@ msgid ""
 "\n"
 "Schema commands:\n"
 "  catalogs\n"
-"  schemas [<catalog>]\n"
+"  schemas\n"
 "  tables [<catalog>]\n"
 "  columns <table>\n"
 "\n"

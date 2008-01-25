@@ -556,17 +556,6 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	return fetch_results(st, taken);
 }
 
-results *db_list_schemas(SQLHDBC conn, const char *catalog)
-{
-	char *c;
-	results *res;
-
-	c = catalog ? (char *) catalog : get_current_catalog(conn);
-	res = get_tables(conn, c, SQL_ALL_SCHEMAS, 0);
-	if(!catalog) free(c);
-	return res;
-}
-
 results *db_list_tables(SQLHDBC conn, const char *spec)
 {
 	char *catalog, *schema;

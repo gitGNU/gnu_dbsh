@@ -159,7 +159,7 @@ results *run_command(SQLHDBC conn, buffer *buf)
 	else if(!strncmp(l->chunks[0] + 1, "cat", 3)) {
 		res = get_tables(conn, SQL_ALL_CATALOGS, "", "");
 	} else if(!strncmp(l->chunks[0] + 1, "sch", 3)) {
-		res = db_list_schemas(conn, l->nchunks > 1 ? l->chunks[1] : 0);
+		res = get_tables(conn, "", SQL_ALL_SCHEMAS, "");
 	} else if(!strncmp(l->chunks[0] + 1, "tab", 3)) {
 		res = db_list_tables(conn, l->nchunks > 1 ? l->chunks[1] : 0);
 	} else if(!strncmp(l->chunks[0] + 1, "col", 3)) {
