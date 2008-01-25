@@ -19,13 +19,25 @@ Display option with lines between every row?
 Display mode that truncates/wraps fields to fit screen width?
 Use INFORMATION_SCHEMA where available?
 Standard syntax checking in run_command()
+'Flat' output mode for copy-pasting stuff
+Single column output as comma-separated list for pasting into IN() etc
+Make output of dbsh -l nicer (use horiz output?)
+'n' in prompt - DSN if available, otherwise server name (maybe with other info such as username)?
 
-aliases/prepared statements
-/alias getrow SELECT * FROM TABLE WHERE id = ?;
+prepared statements/named buffers/aliases
+SELECT * FROM TABLE WHERE id = ?
+\g 1
+\g 2
+\s getrow
+\l getrow
+\e getrow
 /getrow 1;
 /getrow 2;
 etc
-+ some way to save them for future use
+automatically saved somewhere (~/.dbsh/aliases/getrow.sql?)
+
+'tabular pipes':
+SELECT table2_id FROM table1 \T SELECT * FROM table2 WHERE id = ?;
 
 commands:
 /autocommit on|off
