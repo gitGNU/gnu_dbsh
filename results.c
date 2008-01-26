@@ -86,15 +86,15 @@ resultset *resultset_alloc()
 
 row *results_row_alloc(int ncols)
 {
-	row *row;
+	row *r;
 
-	if(!(row = malloc(sizeof(row))) ||
-	   !(row->data = calloc(ncols, sizeof(wchar_t *))))
+	if(!(r = malloc(sizeof(row))) ||
+	   !(r->data = calloc(ncols, sizeof(wchar_t *))))
 		err_system();
 
-	row->next = 0;
+	r->next = 0;
 
-	return row;
+	return r;
 }
 
 resultset *results_add_set(results *res)
