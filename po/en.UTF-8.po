@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-26 11:31+0000\n"
+"POT-Creation-Date: 2008-01-26 11:41+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -350,18 +350,18 @@ msgstr "─"
 msgid "|"
 msgstr "│"
 
-#: output.c:471
+#: output.c:487
 msgid "Success\n"
 msgstr "Success\n"
 
-#: output.c:474
+#: output.c:490
 #, fuzzy, c-format
 msgid "1 row affected\n"
 msgid_plural "%ld rows affected\n"
 msgstr[0] "1 row affected\n"
 msgstr[1] "%ld rows affected\n"
 
-#: output.c:507
+#: output.c:526
 #, c-format
 msgid "(%lu.%06lus)\n"
 msgstr "(%lu.%06lus)\n"

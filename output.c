@@ -454,6 +454,22 @@ void output_csv(resultset *res, stream *s, char separator, char delimiter)
 		output_csv_row(s, r->data, res->ncols, separator, delimiter);
 }
 
+void output_flat(resultset *res, stream *s)
+{
+	row *r;
+	SQLSMALLINT i;
+
+	for(r= res->rows; r; r = r->next) {
+		for(i = 0; i < res->ncols; i++) {
+			stream_putws(s, res->cols[i]);
+			stream_newline(s);
+			stream_putws(s, r->data[i]);
+			stream_newline(s);
+			stream_newline(s);
+		}
+	}
+}
+
 void output_results(results *res, char mode, stream *s)
 {
 	SQLINTEGER i;
@@ -479,6 +495,9 @@ void output_results(results *res, char mode, stream *s)
 			switch(mode) {
 			case 'C':  // CSV
 				output_csv(set, s, L',', L'"');
+				break;
+			case 'F':  // Flat
+				output_flat(set, s);
 				break;
 			case 'G':  // Vertical
 				output_vert(set, s);
