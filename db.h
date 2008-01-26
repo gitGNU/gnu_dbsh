@@ -27,6 +27,7 @@
 results *db_drivers_and_dsns();
 SQLHDBC db_connect();
 void db_reconnect();
+void db_close();
 SQLSMALLINT db_info(SQLHDBC, SQLUSMALLINT, char *, int);
 SQLINTEGER db_conn_attr(SQLHDBC, SQLINTEGER, char *, int);
 results *db_conn_details(SQLHDBC);

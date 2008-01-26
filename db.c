@@ -195,6 +195,13 @@ void db_reconnect()
 	}
 }
 
+void db_close(SQLHDBC conn)
+{
+	SQLDisconnect(conn);
+	SQLFreeHandle(SQL_HANDLE_DBC, conn);
+	SQLFreeHandle(SQL_HANDLE_ENV, alloc_env());
+}
+
 SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 {
 	SQLRETURN r;

@@ -171,10 +171,14 @@ int main(int argc, char *argv[])
 		free(line);
 	}
 
+	buffer_free(mainbuf);
+	buffer_free(prevbuf);
+
 	rl_history_end();
 
-	SQLDisconnect(conn);
-	SQLFreeHandle(SQL_HANDLE_DBC, conn);
+	db_close(conn);
+
+	if(pass) free(pass);
 
 	return 0;
 }
