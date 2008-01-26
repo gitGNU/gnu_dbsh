@@ -461,11 +461,13 @@ void output_flat(resultset *res, stream *s)
 
 	for(r= res->rows; r; r = r->next) {
 		for(i = 0; i < res->ncols; i++) {
-			stream_putws(s, res->cols[i]);
-			stream_newline(s);
-			stream_putws(s, r->data[i]);
-			stream_newline(s);
-			stream_newline(s);
+			if(r->data[i]) {
+				stream_putws(s, res->cols[i]);
+				stream_newline(s);
+				stream_putws(s, r->data[i]);
+				stream_newline(s);
+				stream_newline(s);
+			}
 		}
 	}
 }
