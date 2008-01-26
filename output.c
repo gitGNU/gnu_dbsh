@@ -482,8 +482,10 @@ void output_list(resultset *res, stream *s)
 		stream_putws(s, L": ");
 
 		for(r = res->rows; r; r = r->next) {
-			stream_putws(s, r->data[i]);
-			if(r->next) stream_putwc(s, L',');
+			if(r->data[i]) {
+				stream_putws(s, r->data[i]);
+				if(r->next) stream_putwc(s, L',');
+			}
 		}
 
 		stream_newline(s);
