@@ -1,3 +1,7 @@
+0.5a	Improved output from -l (including driver list).
+	Added \F and \L output modes.
+	Fixed various memory bugs.
+
 0.4a	Support for multiple result sets.
 	No longer rely on SQLRowCount for number of rows returned by
 	SELECTs etc (apparently some drivers don't do it).
