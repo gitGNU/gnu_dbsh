@@ -38,8 +38,6 @@
 #include "stream.h"
 
 
-#include <wchar.h>
-
 const char *dsn, *user, *pass;
 SQLHDBC conn;
 buffer *mainbuf, *prevbuf;
@@ -50,6 +48,9 @@ void usage(const char *cmd)
 	printf(_("Usage: %s -l\n       %s <dsn> [<username>] [<password>]\n"),
 	       cmd, cmd);
 }
+
+
+#define SWAP_BUFFERS do { tempbuf = mainbuf; mainbuf = prevbuf; prevbuf = tempbuf; } while(0)
 
 int process_line(char *line)
 {
@@ -74,11 +75,7 @@ int process_line(char *line)
 			if(action == 'q') return -1;
 
 			if(!mainbuf->next && action != 'r') {
-				if(prevbuf->next) {
-					tempbuf = mainbuf;
-					mainbuf = prevbuf;
-					prevbuf = tempbuf;
-				}
+				if(prevbuf->next) SWAP_BUFFERS;
 			}
 
 			if(action != 'c') {
@@ -91,9 +88,7 @@ int process_line(char *line)
 					rl_history_add(mainbuf, line - 1);
 				}
 
-				tempbuf = prevbuf;
-				prevbuf = mainbuf;
-				mainbuf = tempbuf;
+				SWAP_BUFFERS;
 			}
 
 			mainbuf->next = 0;
@@ -109,9 +104,7 @@ int process_line(char *line)
 	case BUFFER_COMMAND:
 		run_action(conn, mainbuf, 1, "");
 		rl_history_add(mainbuf, "");
-		tempbuf = prevbuf;
-		prevbuf = mainbuf;
-		mainbuf = tempbuf;
+		SWAP_BUFFERS;
 		mainbuf->next = 0;
 		break;
 	default:
