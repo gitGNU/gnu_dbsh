@@ -74,20 +74,11 @@ int process_line(char *line)
 		if(action) {
 			if(action == 'q') return -1;
 
-			if(!mainbuf->next && action != 'r') {
-				if(prevbuf->next) SWAP_BUFFERS;
-			}
+			if(!mainbuf->next && prevbuf->next && action != 'r') SWAP_BUFFERS;
 
 			if(action != 'c') {
-				run_action(conn, mainbuf,
-					   action, paramstring);
-
-				if(action == 'e' || action == 'p') {
-					rl_history_add(mainbuf, "");
-				} else {
-					rl_history_add(mainbuf, line - 1);
-				}
-
+				run_action(conn, mainbuf, action, paramstring);
+				rl_history_add(mainbuf, (action == 'e' || action == 'p') ? "" : line -1);
 				SWAP_BUFFERS;
 			}
 

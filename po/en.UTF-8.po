@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-26 11:47+0000\n"
+"POT-Creation-Date: 2008-01-26 12:06+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -280,7 +280,7 @@ msgstr ""
 msgid "Help topic doesn't exist"
 msgstr "Help topic doesn't exist"
 
-#: main.c:50
+#: main.c:48
 #, c-format
 msgid ""
 "Usage: %s -l\n"
