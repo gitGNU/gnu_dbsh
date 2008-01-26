@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-23 10:37+0000\n"
+"POT-Creation-Date: 2008-01-26 11:31+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -24,11 +24,11 @@ msgstr "COPYING"
 msgid "WARRANTY"
 msgstr "WARRANTY"
 
-#: command.c:74 db.c:231
+#: command.c:74 db.c:241
 msgid "name"
 msgstr "name"
 
-#: command.c:74 db.c:231
+#: command.c:74 db.c:241
 msgid "value"
 msgstr "value"
 
@@ -56,194 +56,189 @@ msgstr ""
 msgid "Unrecognised command: %s\n"
 msgstr "Unrecognised command: %s\n"
 
-#: db.c:57
+#: db.c:56
 #, c-format
 msgid "Error at %s line %d:\n"
 msgstr "Error at %s line %d:\n"
 
-#: db.c:62
+#: db.c:61
 #, c-format
 msgid "%s (SQLSTATE %s, error %ld)\n"
 msgstr "%s (SQLSTATE %s, error %ld)\n"
 
-#: db.c:68
+#: db.c:67
 msgid " (return code was "
 msgstr " (return code was "
 
-#: db.c:102
+#: db.c:101
 msgid "Failed to allocate environment handle\n"
 msgstr "Failed to allocate environment handle\n"
 
-#: db.c:107
+#: db.c:106
 msgid "Failed to set ODBC version to 3\n"
 msgstr "Failed to set ODBC version to 3\n"
 
-#: db.c:119
-msgid ""
-"User Data Sources\n"
-"-----------------"
-msgstr ""
-"User Data Sources\n"
-"-----------------"
-
-#: db.c:120 db.c:122
-msgid "(none)"
-msgstr "(none)"
-
-#: db.c:121
-msgid ""
-"\n"
-"System Data Sources\n"
-"-------------------"
-msgstr ""
-"\n"
-"System Data Sources\n"
-"-------------------"
-
-#: db.c:152
-msgid "Failed to allocate connection handle\n"
-msgstr "Failed to allocate connection handle\n"
-
-#: db.c:167
-msgid "Failed to connect"
-msgstr "Failed to connect"
-
-#: db.c:172
-#, c-format
-msgid "Connected to %s\n"
-msgstr "Connected to %s\n"
-
-#: db.c:195
-msgid "SQLGetInfo() failed"
-msgstr "SQLGetInfo() failed"
-
-#: db.c:196 db.c:198 db.c:212 db.c:214 db.c:257 db.c:276
-#, fuzzy
-msgid "(unknown)"
-msgstr "(none)"
-
-#: db.c:211
-#, fuzzy
-msgid "SQLGetConnectAttr() failed"
-msgstr "SQLGetInfo() failed"
-
-#: db.c:234
-msgid "DSN"
-msgstr ""
-
-#: db.c:235
-msgid "Server"
-msgstr "Server"
-
-#: db.c:236
-#, fuzzy
-msgid "DBMS name"
-msgstr "name"
-
-#: db.c:237
-#, fuzzy
-msgid "DBMS version"
-msgstr "Version"
-
-#: db.c:238
-#, fuzzy
-msgid "DBMS user"
-msgstr "DBMS"
-
-#: db.c:241
+#: db.c:126 db.c:251
 #, fuzzy
 msgid "Driver"
 msgstr "Server"
 
-#: db.c:242
+#: db.c:132 db.c:244
+msgid "DSN"
+msgstr ""
+
+#: db.c:132
+msgid "Type"
+msgstr ""
+
+#: db.c:132
+msgid "Description"
+msgstr ""
+
+#: db.c:138
+#, fuzzy
+msgid "user"
+msgstr "DBMS"
+
+#: db.c:146
+msgid "system"
+msgstr ""
+
+#: db.c:162
+msgid "Failed to allocate connection handle\n"
+msgstr "Failed to allocate connection handle\n"
+
+#: db.c:177
+msgid "Failed to connect"
+msgstr "Failed to connect"
+
+#: db.c:182
+#, c-format
+msgid "Connected to %s\n"
+msgstr "Connected to %s\n"
+
+#: db.c:205
+msgid "SQLGetInfo() failed"
+msgstr "SQLGetInfo() failed"
+
+#: db.c:206 db.c:208 db.c:222 db.c:224 db.c:267 db.c:286
+#, fuzzy
+msgid "(unknown)"
+msgstr "(none)"
+
+#: db.c:221
+#, fuzzy
+msgid "SQLGetConnectAttr() failed"
+msgstr "SQLGetInfo() failed"
+
+#: db.c:245
+msgid "Server"
+msgstr "Server"
+
+#: db.c:246
+#, fuzzy
+msgid "DBMS name"
+msgstr "name"
+
+#: db.c:247
+#, fuzzy
+msgid "DBMS version"
+msgstr "Version"
+
+#: db.c:248
+#, fuzzy
+msgid "DBMS user"
+msgstr "DBMS"
+
+#: db.c:252
 msgid "Driver version"
 msgstr ""
 
-#: db.c:243
+#: db.c:253
 #, fuzzy
 msgid "ODBC version"
 msgstr "Version"
 
-#: db.c:259
+#: db.c:269
 msgid "ODBC compliance"
 msgstr ""
 
-#: db.c:278
+#: db.c:288
 msgid "SQL-92 compliance"
 msgstr ""
 
-#: db.c:281
+#: db.c:291
 msgid "Driver Manager version"
 msgstr ""
 
-#: db.c:282
+#: db.c:292
 msgid "X/Open CLI compliance"
 msgstr ""
 
-#: db.c:285
+#: db.c:295
 msgid "Catalog term"
 msgstr ""
 
-#: db.c:287
+#: db.c:297
 msgid "Schema term"
 msgstr ""
 
-#: db.c:288
+#: db.c:298
 msgid "Table term"
 msgstr ""
 
-#: db.c:289
+#: db.c:299
 msgid "Procedure term"
 msgstr ""
 
-#: db.c:314 db.c:507 db.c:537
+#: db.c:324 db.c:517 db.c:547
 msgid "Failed to allocate statement handle"
 msgstr "Failed to allocate statement handle"
 
-#: db.c:325
+#: db.c:335
 msgid "Failed to execute statement"
 msgstr "Failed to execute statement"
 
-#: db.c:397
+#: db.c:407
 msgid "Failed to retrieve number of columns"
 msgstr "Failed to retrieve number of columns"
 
-#: db.c:405
+#: db.c:415
 msgid "Failed to retrieve rows affected"
 msgstr "Failed to retrieve rows affected"
 
-#: db.c:432
+#: db.c:442
 msgid "Failed to retrieve column data"
 msgstr "Failed to retrieve column data"
 
-#: db.c:471
+#: db.c:481
 msgid "Failed to fetch row"
 msgstr "Failed to fetch row"
 
-#: db.c:521
+#: db.c:531
 msgid "Failed to list tables"
 msgstr "Failed to list tables"
 
-#: db.c:552
+#: db.c:562
 msgid "Failed to list columns"
 msgstr "Failed to list columns"
 
-#: db.c:623
+#: db.c:633
 #, fuzzy
 msgid "Failed to get max catalog name len"
 msgstr "Failed to execute statement"
 
-#: db.c:633
+#: db.c:643
 #, fuzzy
 msgid "Failed to get current catalog"
 msgstr "Failed to retrieve column data"
 
-#: db.c:654
+#: db.c:664
 #, fuzzy
 msgid "Failed to get catalog location"
 msgstr "Failed to list columns"
 
-#: db.c:660
+#: db.c:670
 msgid "Failed to get catalog name separator"
 msgstr ""
 
@@ -285,7 +280,7 @@ msgstr ""
 msgid "Help topic doesn't exist"
 msgstr "Help topic doesn't exist"
 
-#: main.c:48
+#: main.c:50
 #, c-format
 msgid ""
 "Usage: %s -l\n"
@@ -370,3 +365,22 @@ msgstr[1] "%ld rows affected\n"
 #, c-format
 msgid "(%lu.%06lus)\n"
 msgstr "(%lu.%06lus)\n"
+
+#~ msgid ""
+#~ "User Data Sources\n"
+#~ "-----------------"
+#~ msgstr ""
+#~ "User Data Sources\n"
+#~ "-----------------"
+
+#~ msgid "(none)"
+#~ msgstr "(none)"
+
+#~ msgid ""
+#~ "\n"
+#~ "System Data Sources\n"
+#~ "-------------------"
+#~ msgstr ""
+#~ "\n"
+#~ "System Data Sources\n"
+#~ "-------------------"

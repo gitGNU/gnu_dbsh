@@ -35,7 +35,6 @@ extern SQLHDBC conn;
 SQLHSTMT *current_statement;
 pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static int list_dsns(SQLHENV, SQLUSMALLINT);
 static void time_taken(struct timeval *);
 static results *fetch_results(SQLHSTMT, struct timeval);
 static resultset *fetch_resultset(SQLHSTMT, buffer *);
@@ -112,32 +111,43 @@ static SQLHENV alloc_env()
 	return env;
 }
 
-void list_all_dsns()
+results *db_drivers_and_dsns()
 {
-	SQLHENV env = alloc_env();
+	SQLHENV env;
+	results *res;
+	resultset *s;
+	SQLUSMALLINT dir;
+	SQLCHAR buf1[256], buf2[256];
 
-	puts(_("User Data Sources\n-----------------"));
-	if(!list_dsns(env, SQL_FETCH_FIRST_USER)) puts(_("(none)"));
-	puts(_("\nSystem Data Sources\n-------------------"));
-	if(!list_dsns(env, SQL_FETCH_FIRST_SYSTEM)) puts(_("(none)"));
-}
+	env = alloc_env();
+	res = results_alloc();
 
-static int list_dsns(SQLHENV env, SQLUSMALLINT dir)
-{
-	SQLCHAR dsn_buf[256], des_buf[256];
-	SQLSMALLINT dsn_len, des_len;
-	int n = 0;
+	s = results_add_set(res);
+	resultset_set_cols(s, 1, _("Driver"));
+	while(SQL_SUCCEEDED(SQLDrivers(env, SQL_FETCH_NEXT,
+				       buf1, sizeof(buf1), 0, 0, 0, 0)))
+		resultset_add_row(s, buf1);
 
-	while(SQLDataSources(env, dir,
-			     dsn_buf, sizeof(dsn_buf), &dsn_len,
-			     des_buf, sizeof(des_buf), &des_len) == SQL_SUCCESS) {
+	s = results_add_set(res);
+	resultset_set_cols(s, 3, _("DSN"), _("Type"), _("Description"));
 
-		n++;
-		printf("%s (%s)\n", dsn_buf, des_buf);
+	dir = SQL_FETCH_FIRST_USER;
+	while(SQL_SUCCEEDED(SQLDataSources(env, dir,
+					   buf1, sizeof(buf1), 0,
+					   buf2, sizeof(buf2), 0))) {
+		resultset_add_row(s, buf1, _("user"), buf1);
 		dir = SQL_FETCH_NEXT;
 	}
 
-	return n;
+	dir = SQL_FETCH_FIRST_SYSTEM;
+	while(SQL_SUCCEEDED(SQLDataSources(env, dir,
+					   buf1, sizeof(buf1), 0,
+					   buf2, sizeof(buf2), 0))) {
+		resultset_add_row(s, buf1, _("system"), buf1);
+		dir = SQL_FETCH_NEXT;
+	}
+
+	return res;
 }
 
 SQLHDBC db_connect()

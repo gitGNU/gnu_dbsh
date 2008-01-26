@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.5a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-23 10:37+0000\n"
+"POT-Creation-Date: 2008-01-26 11:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,11 +25,11 @@ msgstr ""
 msgid "WARRANTY"
 msgstr ""
 
-#: command.c:74 db.c:231
+#: command.c:74 db.c:241
 msgid "name"
 msgstr ""
 
-#: command.c:74 db.c:231
+#: command.c:74 db.c:241
 msgid "value"
 msgstr ""
 
@@ -57,179 +57,178 @@ msgstr ""
 msgid "Unrecognised command: %s\n"
 msgstr ""
 
-#: db.c:57
+#: db.c:56
 #, c-format
 msgid "Error at %s line %d:\n"
 msgstr ""
 
-#: db.c:62
+#: db.c:61
 #, c-format
 msgid "%s (SQLSTATE %s, error %ld)\n"
 msgstr ""
 
-#: db.c:68
+#: db.c:67
 msgid " (return code was "
 msgstr ""
 
-#: db.c:102
+#: db.c:101
 msgid "Failed to allocate environment handle\n"
 msgstr ""
 
-#: db.c:107
+#: db.c:106
 msgid "Failed to set ODBC version to 3\n"
 msgstr ""
 
-#: db.c:119
-msgid ""
-"User Data Sources\n"
-"-----------------"
+#: db.c:126 db.c:251
+msgid "Driver"
 msgstr ""
 
-#: db.c:120 db.c:122
-msgid "(none)"
+#: db.c:132 db.c:244
+msgid "DSN"
 msgstr ""
 
-#: db.c:121
-msgid ""
-"\n"
-"System Data Sources\n"
-"-------------------"
+#: db.c:132
+msgid "Type"
 msgstr ""
 
-#: db.c:152
+#: db.c:132
+msgid "Description"
+msgstr ""
+
+#: db.c:138
+msgid "user"
+msgstr ""
+
+#: db.c:146
+msgid "system"
+msgstr ""
+
+#: db.c:162
 msgid "Failed to allocate connection handle\n"
 msgstr ""
 
-#: db.c:167
+#: db.c:177
 msgid "Failed to connect"
 msgstr ""
 
-#: db.c:172
+#: db.c:182
 #, c-format
 msgid "Connected to %s\n"
 msgstr ""
 
-#: db.c:195
+#: db.c:205
 msgid "SQLGetInfo() failed"
 msgstr ""
 
-#: db.c:196 db.c:198 db.c:212 db.c:214 db.c:257 db.c:276
+#: db.c:206 db.c:208 db.c:222 db.c:224 db.c:267 db.c:286
 msgid "(unknown)"
 msgstr ""
 
-#: db.c:211
+#: db.c:221
 msgid "SQLGetConnectAttr() failed"
 msgstr ""
 
-#: db.c:234
-msgid "DSN"
-msgstr ""
-
-#: db.c:235
+#: db.c:245
 msgid "Server"
 msgstr ""
 
-#: db.c:236
+#: db.c:246
 msgid "DBMS name"
 msgstr ""
 
-#: db.c:237
+#: db.c:247
 msgid "DBMS version"
 msgstr ""
 
-#: db.c:238
+#: db.c:248
 msgid "DBMS user"
 msgstr ""
 
-#: db.c:241
-msgid "Driver"
-msgstr ""
-
-#: db.c:242
+#: db.c:252
 msgid "Driver version"
 msgstr ""
 
-#: db.c:243
+#: db.c:253
 msgid "ODBC version"
 msgstr ""
 
-#: db.c:259
+#: db.c:269
 msgid "ODBC compliance"
 msgstr ""
 
-#: db.c:278
+#: db.c:288
 msgid "SQL-92 compliance"
 msgstr ""
 
-#: db.c:281
+#: db.c:291
 msgid "Driver Manager version"
 msgstr ""
 
-#: db.c:282
+#: db.c:292
 msgid "X/Open CLI compliance"
 msgstr ""
 
-#: db.c:285
+#: db.c:295
 msgid "Catalog term"
 msgstr ""
 
-#: db.c:287
+#: db.c:297
 msgid "Schema term"
 msgstr ""
 
-#: db.c:288
+#: db.c:298
 msgid "Table term"
 msgstr ""
 
-#: db.c:289
+#: db.c:299
 msgid "Procedure term"
 msgstr ""
 
-#: db.c:314 db.c:507 db.c:537
+#: db.c:324 db.c:517 db.c:547
 msgid "Failed to allocate statement handle"
 msgstr ""
 
-#: db.c:325
+#: db.c:335
 msgid "Failed to execute statement"
 msgstr ""
 
-#: db.c:397
+#: db.c:407
 msgid "Failed to retrieve number of columns"
 msgstr ""
 
-#: db.c:405
+#: db.c:415
 msgid "Failed to retrieve rows affected"
 msgstr ""
 
-#: db.c:432
+#: db.c:442
 msgid "Failed to retrieve column data"
 msgstr ""
 
-#: db.c:471
+#: db.c:481
 msgid "Failed to fetch row"
 msgstr ""
 
-#: db.c:521
+#: db.c:531
 msgid "Failed to list tables"
 msgstr ""
 
-#: db.c:552
+#: db.c:562
 msgid "Failed to list columns"
 msgstr ""
 
-#: db.c:623
+#: db.c:633
 msgid "Failed to get max catalog name len"
 msgstr ""
 
-#: db.c:633
+#: db.c:643
 msgid "Failed to get current catalog"
 msgstr ""
 
-#: db.c:654
+#: db.c:664
 msgid "Failed to get catalog location"
 msgstr ""
 
-#: db.c:660
+#: db.c:670
 msgid "Failed to get catalog name separator"
 msgstr ""
 
@@ -256,7 +255,7 @@ msgstr ""
 msgid "Help topic doesn't exist"
 msgstr ""
 
-#: main.c:48
+#: main.c:50
 #, c-format
 msgid ""
 "Usage: %s -l\n"

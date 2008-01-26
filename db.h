@@ -24,7 +24,7 @@
 #include <sql.h>
 #include <sqlext.h>
 
-void list_all_dsns();
+results *db_drivers_and_dsns();
 SQLHDBC db_connect();
 void db_reconnect();
 SQLSMALLINT db_info(SQLHDBC, SQLUSMALLINT, char *, int);

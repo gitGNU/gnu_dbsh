@@ -13,7 +13,6 @@ tidy up function names
 improve /help
 hexdump-style output for binary data
 SQLBrowseConnect?  do any unix drivers support it?
-List drivers in -l using SQLDrivers?
 Support strings with embedded NULL characters in result sets?
 Display option with lines between every row?
 Display mode that truncates/wraps fields to fit screen width?
@@ -21,7 +20,6 @@ Use INFORMATION_SCHEMA where available?
 Standard syntax checking in run_command()
 'Flat' output mode for copy-pasting stuff
 Single column output as comma-separated list for pasting into IN() etc
-Make output of dbsh -l nicer (use horiz output?)
 'n' in prompt - DSN if available, otherwise server name (maybe with other info such as username)?
 
 prepared statements/named buffers/aliases

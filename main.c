@@ -29,11 +29,13 @@
 #include "action.h"
 #include "buffer.h"
 #include "db.h"
+#include "output.h"
 #include "parser.h"
 #include "prompt.h"
 #include "rc.h"
 #include "rl.h"
 #include "sig.h"
+#include "stream.h"
 
 
 #include <wchar.h>
@@ -123,6 +125,7 @@ int main(int argc, char *argv[])
 {
 	int opt;
 	char *line, *p;
+	results *r;
 
 	setlocale(LC_ALL, "");
 
@@ -134,7 +137,8 @@ int main(int argc, char *argv[])
 	while((opt = getopt(argc, argv, "lv")) != -1) {
 		switch(opt) {
 		case 'l':
-			list_all_dsns();
+			r = db_drivers_and_dsns();
+			output_results(r, 1, stream_create(stdout));
 			return 0;
 			break;
 		case 'v':
