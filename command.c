@@ -142,43 +142,49 @@ static void unset(const char *name)
 	free(prefixed_name);
 }
 
+#define SYNTAX(p) printf(_("Syntax: %s %s\n"), c, p)
+
 results *run_command(SQLHDBC conn, buffer *buf)
 {
 	parsed_line *l;
 	results *res = 0;
+	char *c, *p1, *p2;
 
 	l = parse_buffer(buf);
 	if(l->nchunks < 1) return 0;
 
+	c  = l->chunks[0] + 1;
+	p1 = l->nchunks > 1 ? l->chunks[1] : 0;
+	p2 = l->nchunks > 2 ? l->chunks[2] : 0;
+
 	// Help commands
-	if(l->chunks[0][1] == 'h') res = get_help(l->nchunks > 1 ? l->chunks[1] : "intro");
-	else if(!strncmp(l->chunks[0] + 1, "cop", 3)) res = get_copying();
-	else if(!strncmp(l->chunks[0] + 1, "war", 3)) res = get_warranty();
+	if(*c == 'h') res = get_help(p1 ? p1 : "intro");
+	else if(!strncmp(c, "cop", 3)) res = get_copying();
+	else if(!strncmp(c, "war", 3)) res = get_warranty();
 
 	// Catalog commands
-	else if(!strncmp(l->chunks[0] + 1, "cat", 3)) {
+	else if(!strncmp(c, "cat", 3)) {
 		res = get_tables(conn, SQL_ALL_CATALOGS, "", "");
-	} else if(!strncmp(l->chunks[0] + 1, "sch", 3)) {
+	} else if(!strncmp(c, "sch", 3)) {
 		res = get_tables(conn, "", SQL_ALL_SCHEMAS, "");
-	} else if(!strncmp(l->chunks[0] + 1, "tab", 3)) {
-		res = db_list_tables(conn, l->nchunks > 1 ? l->chunks[1] : 0);
-	} else if(!strncmp(l->chunks[0] + 1, "col", 3)) {
-		if(l->nchunks > 1) res = db_list_columns(conn, l->chunks[1]);
-		else printf(_("Syntax: columns <table>\n"));
+	} else if(!strncmp(c, "tab", 3)) {
+		res = db_list_tables(conn, p1);
+	} else if(!strncmp(c, "col", 3)) {
+		if(p1) res = db_list_columns(conn, p1);
+		else SYNTAX(_("<table>"));
 	}
 
 	// Other commands
-	else if(!strcmp(l->chunks[0] + 1, "set")) {
-		res = set(l->nchunks > 1 ? l->chunks[1] : 0,
-			  l->nchunks > 2 ? l->chunks[2] : 0);
-	} else if(!strcmp(l->chunks[0] + 1, "unset")) {
-		if(l->nchunks > 1) unset(l->chunks[1]);
-		else printf(_("Syntax: unset <variable>"));
-	} else if(!strncmp(l->chunks[0] + 1, "inf", 3)) {
+	else if(!strcmp(c, "set")) {
+		res = set(p1, p2);
+	} else if(!strcmp(c, "unset")) {
+		if(p1) unset(p1);
+		else SYNTAX(_("<variable>"));
+	} else if(!strncmp(c, "inf", 3)) {
 		res = db_conn_details(conn);
 	}
 
-	else printf(_("Unrecognised command: %s\n"), l->chunks[0] + 1);
+	else printf(_("Unrecognised command: %s\n"), c);
 
 	free_parsed_line(l);
 
