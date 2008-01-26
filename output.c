@@ -470,6 +470,24 @@ void output_flat(resultset *res, stream *s)
 	}
 }
 
+void output_list(resultset *res, stream *s)
+{
+	row *r;
+	SQLSMALLINT i;
+
+	for(i = 0; i < res->ncols; i++) {
+		stream_putws(s, res->cols[i]);
+		stream_putws(s, L": ");
+
+		for(r = res->rows; r; r = r->next) {
+			stream_putws(s, r->data[i]);
+			if(r->next) stream_putwc(s, L',');
+		}
+
+		stream_newline(s);
+	}
+}
+
 void output_results(results *res, char mode, stream *s)
 {
 	SQLINTEGER i;
@@ -507,6 +525,9 @@ void output_results(results *res, char mode, stream *s)
 				break;
 			case 'J':  // JSON
 				stream_printf(s, "TODO\n");
+				break;
+			case 'L':  // List
+				output_list(set, s);
 				break;
 			case 'T':  // TSV
 				output_csv(set, s, L'\t', 0);
