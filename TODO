@@ -19,6 +19,7 @@ Display mode that truncates/wraps fields to fit screen width?
 Use INFORMATION_SCHEMA where available?
 Standard syntax checking in run_command()
 'n' in prompt - DSN if available, otherwise server name (maybe with other info such as username)?
+SQL output mode that outputs INSERTs or UPDATEs?
 
 prepared statements/named buffers/aliases
 SELECT * FROM TABLE WHERE id = ?
