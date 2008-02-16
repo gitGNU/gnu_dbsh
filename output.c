@@ -320,6 +320,8 @@ void output_horiz(resultset *res, stream *s)
 		output_horiz_row(s, (const char **) r->data, dims->row_dims + (j * res->ncols), col_widths, res->ncols);
 	output_horiz_separator(s, col_widths, res->ncols, VPOS_BOT);
 
+	free(col_widths);
+
 	free_resultset_dimensions(res, dims);
 
 	output_size(res, s);
