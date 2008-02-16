@@ -35,8 +35,11 @@ extern SQLHDBC conn;
 SQLHSTMT *current_statement;
 pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void time_taken(struct timeval *);
-static results *fetch_results(SQLHSTMT, struct timeval);
+
+static void set_current_statement(SQLHSTMT *);
+static void fetch_warnings(results *, SQLSMALLINT, SQLHANDLE);
+static void fetch_results(results *, SQLHSTMT);
+static void time_taken(results *);
 static resultset *fetch_resultset(SQLHSTMT, buffer *);
 static row *fetch_row(SQLHSTMT, buffer *, int);
 static char *get_current_catalog(SQLHDBC);
@@ -323,8 +326,8 @@ int db_supports_catalogs(SQLHDBC conn)
 results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 {
 	SQLHSTMT st;
+	results *res;
 	SQLRETURN r;
-	struct timeval taken;
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SQL_SUCCEEDED(r)) {
@@ -332,53 +335,85 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 		return 0;
 	}
 
-	pthread_mutex_lock(&cs_lock);
-	current_statement = &st;
-	pthread_mutex_unlock(&cs_lock);
-
-	gettimeofday(&taken, 0);
-
-	if(SQLExecDirect(st, (SQLCHAR *) buf, buflen) == SQL_ERROR) {
-		report_error(SQL_HANDLE_STMT, st, r, _("Failed to execute statement"));
-		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		return 0;
-	}
-
-	time_taken(&taken);
-
-	return fetch_results(st, taken);
-}
-
-static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
-{
-	results *res;
-	resultset **sp;
-	buffer *buf;
-	SQLINTEGER i;
-	SQLSMALLINT reqlen;
-	SQLRETURN r;
+	set_current_statement(&st);
 
 	res = results_alloc();
-	res->time_taken = time_taken;
+	gettimeofday(&res->time_taken, 0);
+
+	r = SQLPrepare(st, (SQLCHAR *) buf, buflen);
+	if(!SQL_SUCCEEDED(r)) {
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to prepare statement"));
+		SQLFreeHandle(SQL_HANDLE_STMT, st);
+		results_free(res);
+		return 0;
+	} else if(r == SQL_SUCCESS_WITH_INFO) {
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
+	}
+
+	r = SQLExecute(st);
+	if(!SQL_SUCCEEDED(r) && r != SQL_NO_DATA) {
+		report_error(SQL_HANDLE_STMT, st, r, _("Failed to execute statement"));
+		SQLFreeHandle(SQL_HANDLE_STMT, st);
+		results_free(res);
+		return 0;
+	} else if(r == SQL_SUCCESS_WITH_INFO) {
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
+	}
+
+	fetch_results(res, st);
+	time_taken(res);
+
+	return res;
+}
+
+static void set_current_statement(SQLHSTMT *stp)
+{
+	pthread_mutex_lock(&cs_lock);
+	current_statement = stp;
+	pthread_mutex_unlock(&cs_lock);
+}
+
+static void fetch_warnings(results *res, SQLSMALLINT type, SQLHANDLE h)
+{
+	SQLINTEGER n, i;
+	buffer *buf;
+	SQLSMALLINT reqlen;
+
+	SQLGetDiagField(type, h, 0, SQL_DIAG_NUMBER, &n, 0, 0);
+	if(!n) return;
 
 	buf = buffer_alloc(1024);
 
-	SQLGetDiagField(SQL_HANDLE_STMT, st, 0, SQL_DIAG_NUMBER, &(res->nwarnings), 0, 0);
-	if(res->nwarnings) {
-		if(!(res->warnings = calloc(res->nwarnings, sizeof(char *)))) err_system();
-		for(i = 0; i < res->nwarnings; i++) {
-			SQLGetDiagField(SQL_HANDLE_STMT, st, i + 1,
-					SQL_DIAG_MESSAGE_TEXT, buf->buf, buf->len, &reqlen);
+	if(!(res->warnings = realloc(res->warnings,
+				     res->nwarnings + n * sizeof(char *))))
+		err_system();
 
-			if(reqlen + 1 > buf->len) {
-				buffer_realloc(buf, reqlen + 1);
-				SQLGetDiagField(SQL_HANDLE_STMT, st, i + 1,
-						SQL_DIAG_MESSAGE_TEXT, buf->buf, buf->len, 0);
-			}
+	for(i = 0; i < n; i++) {
+		SQLGetDiagField(type, h, i + 1, SQL_DIAG_MESSAGE_TEXT,
+				buf->buf, buf->len, &reqlen);
 
-			if(!(res->warnings[i] = strdup2wcs(buf->buf))) err_system();
+		if(reqlen + 1 > buf->len) {
+			buffer_realloc(buf, reqlen + 1);
+			SQLGetDiagField(type, h, i + 1, SQL_DIAG_MESSAGE_TEXT,
+					buf->buf, buf->len, 0);
+
 		}
+
+		res->warnings[res->nwarnings + i] = strdup2wcs(buf->buf);
 	}
+
+	res->nwarnings += n;
+
+	buffer_free(buf);
+}
+
+void fetch_results(results *res, SQLHSTMT st)
+{
+	resultset **sp;
+	buffer *buf;
+	SQLRETURN r;
+
+	buf = buffer_alloc(1024);
 
 	sp = &res->sets;
 
@@ -388,15 +423,9 @@ static results *fetch_results(SQLHSTMT st, struct timeval time_taken)
 		r = SQLMoreResults(st);
 	} while(SQL_SUCCEEDED(r));
 
-	buffer_free(buf);
-
-	pthread_mutex_lock(&cs_lock);
-	current_statement = 0;
-	pthread_mutex_unlock(&cs_lock);
+	set_current_statement(0);
 
 	SQLFreeHandle(SQL_HANDLE_STMT, st);
-
-	return res;
 }
 
 static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
@@ -516,8 +545,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 {
 	SQLHSTMT st;
 	SQLRETURN r;
-	struct timeval taken;
-
+	results *res;
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SQL_SUCCEEDED(r)) {
@@ -525,29 +553,39 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 		return 0;
 	}
 
-	gettimeofday(&taken, 0);
+	set_current_statement(&st);
+
+	res = results_alloc();
+	gettimeofday(&res->time_taken, 0);
+
 	current_statement = st;
 	r = SQLTables(st,
 		      (SQLCHAR *) catalog, SQL_NTS,
 		      (SQLCHAR *) schema, SQL_NTS,
 		      (SQLCHAR *) table, SQL_NTS,
 		      (SQLCHAR *) 0, 0);
-	time_taken(&taken);
 
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to list tables"));
+		SQLFreeHandle(SQL_HANDLE_STMT, st);
+		results_free(res);
 		return 0;
+	} else if(r == SQL_SUCCESS_WITH_INFO) {
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
 	}
 
-	return fetch_results(st, taken);
+	fetch_results(res, st);
+	time_taken(res);
+
+	return res;
 }
 
 results *get_columns(SQLHDBC conn, const char *catalog,
 			const char *schema, const char *table)
 {
 	SQLHSTMT st;
+	results *res;
 	SQLRETURN r;
-	struct timeval taken;
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
 	if(!SQL_SUCCEEDED(r)) {
@@ -555,22 +593,30 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 		return 0;
 	}
 
-	gettimeofday(&taken, 0);
-	current_statement = st;
+	set_current_statement(&st);
+
+	res = results_alloc();
+	gettimeofday(&res->time_taken, 0);
 
 	r = SQLColumns(st,
 		      (SQLCHAR *) catalog, SQL_NTS,
 		      (SQLCHAR *) schema, SQL_NTS,
 		      (SQLCHAR *) table, SQL_NTS,
 		      (SQLCHAR *) "%", SQL_NTS);
-	time_taken(&taken);
 
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to list columns"));
+		SQLFreeHandle(SQL_HANDLE_STMT, st);
+		results_free(res);
 		return 0;
+	} else if(r == SQL_SUCCESS_WITH_INFO) {
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
 	}
 
-	return fetch_results(st, taken);
+	fetch_results(res, st);
+	time_taken(res);
+
+	return res;
 }
 
 results *db_list_tables(SQLHDBC conn, const char *spec)
@@ -710,12 +756,12 @@ static void parse_qualified_table(char *s, char **schema, char **table)
 	}
 }
 
-static void time_taken(struct timeval *time_taken)
+static void time_taken(results *res)
 {
 	struct timeval end_time;
 
 	gettimeofday(&end_time, 0);
 
-	time_taken->tv_sec  = end_time.tv_sec  - time_taken->tv_sec;
-	time_taken->tv_usec = end_time.tv_usec - time_taken->tv_usec;
+	res->time_taken.tv_sec  = end_time.tv_sec  - res->time_taken.tv_sec;
+	res->time_taken.tv_usec = end_time.tv_usec - res->time_taken.tv_usec;
 }

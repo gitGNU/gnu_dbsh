@@ -21,6 +21,7 @@ Standard syntax checking in run_command()
 'n' in prompt - DSN if available, otherwise server name (maybe with other info such as username)?
 SQL output mode that outputs INSERTs or UPDATEs?
 Mode that gets metadata about a query by preparing without executing
+Seperate timings for prepare/execute/fetch?
 
 prepared statements/named buffers/aliases
 SELECT * FROM TABLE WHERE id = ?
