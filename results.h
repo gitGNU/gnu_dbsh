@@ -50,7 +50,6 @@ void res_set_value(results *, unsigned int, const char *);
 void res_set_value_w(results *, unsigned int, const wchar_t *);
 void res_add_row(results *, ...);
 int res_get_nrows(results *);
-void res_first_row(results *);
 int res_next_row(results *);
 int res_more_rows(results *);
 wchar_t *res_get_value(results *, unsigned int);

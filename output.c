@@ -98,14 +98,13 @@ static void translate_resultset(results *res)
 	int i;
 	wchar_t *t;
 
-	res_first_row(res);
-	do {
+	while(res_next_row(res)) {
 		for(i = 0; i < res_get_ncols(res); i++) {
 			t = translate(res_get_value(res, i));
 			res_set_value_w(res, i, t);
 			free(t);
 		}
-	} while(res_next_row(res));
+	};
 }
 
 static dim *get_dimensions(const wchar_t *s)
@@ -160,13 +159,12 @@ static res_dims *get_resultset_dimensions(results *res)
 	for(i = 0; i < res_get_ncols(res); i++) {
 		rd->col_dims[i] = get_dimensions(res_get_col(res, i));
 
-		res_first_row(res);
 		j = 0;
-		do {
+		while(res_next_row(res)) {
 			rd->row_dims[(j * ncols) + i] =
 				get_dimensions(res_get_value(res, i));
 			j++;
-		} while(res_next_row(res));
+		};
 	}
 
 	return rd;
@@ -325,14 +323,13 @@ void output_horiz(results *res, stream *s)
 	output_horiz_row(s, res_get_cols(res), dims->col_dims, col_widths, ncols);
 	output_horiz_separator(s, col_widths, ncols, VPOS_MID);
 
-	res_first_row(res);
 	j = 0;
-	do {
+	while(res_next_row(res)) {
 		output_horiz_row(s, res_get_row(res),
 				 dims->row_dims + (j * ncols),
 				 col_widths, ncols);
 		j++;
-	} while(res_next_row(res));
+	};
 
 	output_horiz_separator(s, col_widths, ncols, VPOS_BOT);
 
@@ -380,9 +377,8 @@ void output_vert(results *res, stream *s)
 
 	v = VPOS_TOP;
 
-	res_first_row(res);
 	j = 0;
-	do {
+	while(res_next_row(res)) {
 		output_vert_separator(s, col_width, row_width, v);
 
 		for(i = 0; i < ncols; i++) {
@@ -426,7 +422,7 @@ void output_vert(results *res, stream *s)
 		v = VPOS_MID;
 
 		j++;
-	} while(res_next_row(res));
+	};
 
 	if(j) output_vert_separator(s, col_width, row_width, VPOS_BOT);
 
@@ -462,18 +458,16 @@ void output_csv_row(stream *s, wchar_t **data, int ncols, wchar_t sep, wchar_t d
 void output_csv(results *res, stream *s, char separator, char delimiter)
 {
 	output_csv_row(s, res_get_cols(res), res_get_ncols(res), separator, delimiter);
-	res_first_row(res);
-	do {
+	while(res_next_row(res)) {
 		output_csv_row(s, res_get_row(res), res_get_ncols(res), separator, delimiter);
-	} while(res_next_row(res));
+	};
 }
 
 void output_flat(results *res, stream *s)
 {
 	int i;
 
-	res_first_row(res);
-	do {
+	while(res_next_row(res)) {
 		for(i = 0; i < res_get_ncols(res); i++) {
 			if(res_get_value(res, i)) {
 				stream_putws(s, res_get_col(res, i));
@@ -483,7 +477,7 @@ void output_flat(results *res, stream *s)
 				stream_newline(s);
 			}
 		}
-	} while(res_next_row(res));
+	};
 }
 
 void output_list(results *res, stream *s)
@@ -494,13 +488,12 @@ void output_list(results *res, stream *s)
 		stream_putws(s, res_get_col(res, i));
 		stream_putws(s, L": ");
 
-		res_first_row(res);
-		do {
+		while(res_next_row(res)) {
 			if(res_get_value(res, i)) {
 				stream_putws(s, res_get_value(res, i));
 				if(res_more_rows(res)) stream_putwc(s, L',');
 			}
-		} while(res_next_row(res));
+		};
 
 		stream_newline(s);
 	}

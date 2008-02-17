@@ -158,6 +158,7 @@ void res_add_set(results *r)
 void res_first_set(results *r)
 {
 	r->scursor = r->sets;
+	r->rcursor = r->sets->rows;
 }
 
 int res_next_set(results *r)
@@ -295,17 +296,17 @@ int res_get_nrows(results *res)
 	return s->nrows;
 }
 
-void res_first_row(results *res)
+int res_next_row(results *res)
 {
 	set *s;
 
-	s = current_set(res);
-	res->rcursor = s->rows;
-}
+	if(res->rcursor) {
+		res->rcursor = res->rcursor->next;
+	} else {
+		s = current_set(res);
+		res->rcursor = s->rows;
+	}
 
-int res_next_row(results *res)
-{
-	if(res->rcursor) res->rcursor = res->rcursor->next;
 	return res->rcursor ? 1 : 0;
 }
 
