@@ -26,6 +26,7 @@
 #define _(String) gettext(String)
 
 typedef struct buffer buffer;
+typedef struct parsed_line parsed_line;
 typedef struct results results;
 typedef struct stream stream;
 
