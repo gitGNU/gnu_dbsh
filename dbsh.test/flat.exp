@@ -1,0 +1,8 @@
+set test "Flat output"
+
+send "SELECT * FROM test\\F\n"
+
+expect {
+    "id\r\n1\r\n\r\ndesc\r\nThis is some text.\r\n\r\nid\r\n2\r\n\r\nid\r\n3\r\n\r\ndesc\r\nThis is some\r\ntext with\r\nnewlines in it.\r\n\r\n"
+    { pass "$test" }
+}
