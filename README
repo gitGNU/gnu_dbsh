@@ -89,10 +89,10 @@ will display the current values of all dbsh config variables, and with
 parameters will set them.
 
 
-.dbshrc
--------
+dbshrc
+------
 
-You can put config variables in ~/.dbshrc.  For example:
+You can put config variables in ~/.dbsh/dbshrc.  For example:
 
 prompt=[d] 
 action_chars=;

@@ -19,6 +19,7 @@
 #ifndef RC_H
 #define RC_H
 
+const char *get_rc_dir();
 void read_rc_file();
 char *prefix_var_name(const char *);
 

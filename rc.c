@@ -18,27 +18,68 @@
 
 #include <config.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
 #include <ctype.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "common.h"
 #include "err.h"
 #include "rc.h"
 
 
+const char *get_rc_dir()
+{
+	static char *rc_dir = 0;
+
+	char *home;
+	size_t len;
+	struct stat st;
+
+	if(!rc_dir) {
+
+		if((home = getenv("HOME"))) {
+			len = strlen(home) + strlen(PACKAGE) + 3;
+			if(!(rc_dir = malloc(len))) err_system();
+			snprintf(rc_dir, len, "%s/.%s", home, PACKAGE);
+
+			if(stat(rc_dir, &st)) {
+				if(errno == ENOENT) {
+					if(mkdir(rc_dir, 0755)) {
+						perror("Failed to create rc dir");
+						exit(1);
+					}
+				} else err_system();
+			} else {
+				if(!S_ISDIR(st.st_mode))
+					err_fatal("%s is not a directory", rc_dir);
+			}
+		}
+	}
+
+	return rc_dir;
+}
+
 void read_rc_file()
 {
 	char buffer[1024];
-	char *home, *name, *value;
+	const char *rc_dir;
+	char *rc_file, *name, *value;
+	int len;
 	FILE *rc;
 
-	if((home = getenv("HOME"))) {
+	if((rc_dir = get_rc_dir())) {
 
-		snprintf(buffer, 1024, "%s/.%src", home, PACKAGE);
+		len = strlen(rc_dir) + strlen(PACKAGE) + 4;
+		if(!(rc_file = malloc(len))) err_system();
 
-		if((rc = fopen(buffer, "r"))) {
+		snprintf(rc_file, len, "%s/%src", rc_dir, PACKAGE);
+
+		if((rc = fopen(rc_file, "r"))) {
 
 			while(fgets(buffer, 1024, rc)) {
 
@@ -54,6 +95,8 @@ void read_rc_file()
 
 			fclose(rc);
 		}
+
+		free(rc_file);
 	}
 
 	// Default settings
