@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-02-17 18:13+0000\n"
+"POT-Creation-Date: 2008-02-17 23:56+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -74,11 +74,13 @@ msgid " (return code was "
 msgstr " (return code was "
 
 #: db.c:104
-msgid "Failed to allocate environment handle\n"
+#, fuzzy
+msgid "Failed to allocate environment handle"
 msgstr "Failed to allocate environment handle\n"
 
 #: db.c:109
-msgid "Failed to set ODBC version to 3\n"
+#, fuzzy
+msgid "Failed to set ODBC version to 3"
 msgstr "Failed to set ODBC version to 3\n"
 
 #: db.c:127 db.c:259
@@ -108,7 +110,8 @@ msgid "system"
 msgstr ""
 
 #: db.c:163
-msgid "Failed to allocate connection handle\n"
+#, fuzzy
+msgid "Failed to allocate connection handle"
 msgstr "Failed to allocate connection handle\n"
 
 #: db.c:178

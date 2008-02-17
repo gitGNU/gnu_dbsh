@@ -35,21 +35,26 @@
 
 #include "common.h"
 #include "buffer.h"
+#include "err.h"
+#include "rc.h"
 
 #ifndef HAVE_LIBEDITLINE
 static const char *get_history_filename()
 {
-	static char filename[1024];
-	char *home;
+	static char *filename = 0;
 
-	home = getenv("HOME");
+	const char *rc_dir;
+	int l;
 
-	if(home) {
-		snprintf(filename, 1024, "%s/.%s_history", home, PACKAGE);
-		return filename;
+	if(!filename) {
+		if((rc_dir = get_rc_dir())) {
+			l = strlen(rc_dir) + 9;
+			if(!(filename = malloc(l))) err_system();
+			snprintf(filename, l, "%s/history", rc_dir);
+		}
 	}
 
-	return 0;
+	return filename;
 }
 #endif
 
