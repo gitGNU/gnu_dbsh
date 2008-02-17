@@ -1,6 +1,7 @@
 0.5a	Improved output from -l (including driver list).
 	Added \F and \L output modes.
 	Added support for parameter binding.
+	Gave some of the code a much-needed overhaul.
 	Fixed various memory bugs.
 
 0.4a	Support for multiple result sets.
