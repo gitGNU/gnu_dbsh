@@ -183,7 +183,7 @@ void res_set_col(results *r, unsigned int i, const char *text)
 	set *s;
 
 	s = current_set(r);
-	if(i >= s->ncols) err_fatal("res_set_col: %u, '%s' (%u columns)\n",
+	if(i >= s->ncols) err_fatal("res_set_col: %u, '%s' (%u columns)",
 				    i, text, s->ncols);
 	s->cols[i] = strdup2wcs(text);
 }
@@ -212,7 +212,7 @@ wchar_t *res_get_col(results *r, unsigned int i)
 	set *s;
 
 	s = current_set(r);
-	if(i >= s->ncols) err_fatal("res_get_col: %u (%u columns)\n",
+	if(i >= s->ncols) err_fatal("res_get_col: %u (%u columns)",
 				    i, s->ncols);
 	return s->cols[i];
 }
@@ -253,7 +253,7 @@ void res_set_value(results *res, unsigned int i, const char *value)
 	row *r;
 
 	s = current_set(res);
-	if(i >= s->ncols) err_fatal("res_set_value: %u, '%s' (%u columns)\n",
+	if(i >= s->ncols) err_fatal("res_set_value: %u, '%s' (%u columns)",
 				    i, value, s->ncols);
 
 	r = current_row(res);
@@ -267,7 +267,7 @@ void res_set_value_w(results *res, unsigned int i, const wchar_t *value)
 	row *r;
 
 	s = current_set(res);
-	if(i >= s->ncols) err_fatal("res_set_value_w: %u, '%ls' (%u columns)\n",
+	if(i >= s->ncols) err_fatal("res_set_value_w: %u, '%ls' (%u columns)",
 				    i, value, s->ncols);
 
 	r = current_row(res);

@@ -101,12 +101,12 @@ static SQLHENV alloc_env()
 	if(!env) {
 
 		r = SQLAllocHandle(SQL_HANDLE_ENV, SQL_NULL_HANDLE, &env);
-		if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate environment handle\n"));
+		if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate environment handle"));
 
 		r = SQLSetEnvAttr(env, SQL_ATTR_ODBC_VERSION, (SQLPOINTER) SQL_OV_ODBC3, 0);
 		if(!SQL_SUCCEEDED(r)) {
 			SQLFreeHandle(SQL_HANDLE_ENV, env);
-			err_fatal(_("Failed to set ODBC version to 3\n"));
+			err_fatal(_("Failed to set ODBC version to 3"));
 		}
 
 	}
@@ -160,7 +160,7 @@ SQLHDBC db_connect()
 	env = alloc_env();
 
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
-	if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate connection handle\n"));
+	if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate connection handle"));
 
 
 	if(!strchr(dsn, '=') || user) {

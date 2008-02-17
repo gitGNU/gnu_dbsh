@@ -27,14 +27,13 @@ void err_fatal(const char *fmt, ...)
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	va_end(ap);
-
+	fputc('\n', stderr);
 	exit(1);
 }
 
-void err_system(const char *s)
+void err_system()
 {
 	perror("");
-
 	exit(1);
 }
 
