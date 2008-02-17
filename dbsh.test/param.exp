@@ -1,0 +1,15 @@
+set test "Parameter binding"
+
+send "SELECT desc FROM test WHERE id = ?\\T 1\n"
+
+expect {
+    "desc\r\nThis is some text.\r\n\r\n"
+    { pass "$test" }
+}
+
+send "\\T 3\n"
+
+expect {
+    "desc\r\nThis is some\r\ntext with\r\nnewlines in it.\r\n\r\n"
+    { pass "$test" }
+}
