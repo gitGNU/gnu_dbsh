@@ -60,7 +60,7 @@ static void parse_start(parser_state *st)
 {
 	st->quote = 0;
 	st->escape = 0;
-	st->space = 0;
+	st->space = 1;
 	st->pipe = 0;
 
 	st->buf = buffer_alloc(16);
