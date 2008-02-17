@@ -32,7 +32,7 @@ SQLSMALLINT db_info(SQLHDBC, SQLUSMALLINT, char *, int);
 SQLINTEGER db_conn_attr(SQLHDBC, SQLINTEGER, char *, int);
 results *db_conn_details(SQLHDBC);
 int db_supports_catalogs(SQLHDBC);
-results *execute_query(SQLHDBC, const char *, int);
+results *execute_query(SQLHDBC, const char *, int, parsed_line *);
 void db_cancel_query();
 results *get_tables(SQLHDBC, const char *, const char *, const char *);
 results *get_columns(SQLHDBC, const char *, const char *, const char *);

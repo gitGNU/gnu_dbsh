@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.5a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-02-17 15:09+0000\n"
+"POT-Creation-Date: 2008-02-17 18:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,11 +25,11 @@ msgstr ""
 msgid "WARRANTY"
 msgstr ""
 
-#: command.c:74 db.c:248
+#: command.c:74 db.c:249
 msgid "name"
 msgstr ""
 
-#: command.c:74 db.c:248
+#: command.c:74 db.c:249
 msgid "value"
 msgstr ""
 
@@ -60,182 +60,186 @@ msgstr ""
 msgid "Unrecognised command: %s\n"
 msgstr ""
 
-#: db.c:58
+#: db.c:59
 #, c-format
 msgid "Error at %s line %d:\n"
 msgstr ""
 
-#: db.c:63
+#: db.c:64
 #, c-format
 msgid "%s (SQLSTATE %s, error %ld)\n"
 msgstr ""
 
-#: db.c:69
+#: db.c:70
 msgid " (return code was "
 msgstr ""
 
-#: db.c:103
+#: db.c:104
 msgid "Failed to allocate environment handle\n"
 msgstr ""
 
-#: db.c:108
+#: db.c:109
 msgid "Failed to set ODBC version to 3\n"
 msgstr ""
 
-#: db.c:126 db.c:258
+#: db.c:127 db.c:259
 msgid "Driver"
 msgstr ""
 
-#: db.c:132 db.c:251
+#: db.c:133 db.c:252
 msgid "DSN"
 msgstr ""
 
-#: db.c:132
+#: db.c:133
 msgid "Type"
 msgstr ""
 
-#: db.c:132
+#: db.c:133
 msgid "Description"
 msgstr ""
 
-#: db.c:138
+#: db.c:139
 msgid "user"
 msgstr ""
 
-#: db.c:146
+#: db.c:147
 msgid "system"
 msgstr ""
 
-#: db.c:162
+#: db.c:163
 msgid "Failed to allocate connection handle\n"
 msgstr ""
 
-#: db.c:177
+#: db.c:178
 msgid "Failed to connect"
 msgstr ""
 
-#: db.c:182
+#: db.c:183
 #, c-format
 msgid "Connected to %s\n"
 msgstr ""
 
-#: db.c:212
+#: db.c:213
 msgid "SQLGetInfo() failed"
 msgstr ""
 
-#: db.c:213 db.c:215 db.c:229 db.c:231 db.c:274 db.c:293
+#: db.c:214 db.c:216 db.c:230 db.c:232 db.c:275 db.c:294
 msgid "(unknown)"
 msgstr ""
 
-#: db.c:228
+#: db.c:229
 msgid "SQLGetConnectAttr() failed"
 msgstr ""
 
-#: db.c:252
+#: db.c:253
 msgid "Server"
 msgstr ""
 
-#: db.c:253
+#: db.c:254
 msgid "DBMS name"
 msgstr ""
 
-#: db.c:254
+#: db.c:255
 msgid "DBMS version"
 msgstr ""
 
-#: db.c:255
+#: db.c:256
 msgid "DBMS user"
 msgstr ""
 
-#: db.c:259
+#: db.c:260
 msgid "Driver version"
 msgstr ""
 
-#: db.c:260
+#: db.c:261
 msgid "ODBC version"
 msgstr ""
 
-#: db.c:276
+#: db.c:277
 msgid "ODBC compliance"
 msgstr ""
 
-#: db.c:295
+#: db.c:296
 msgid "SQL-92 compliance"
 msgstr ""
 
-#: db.c:298
+#: db.c:299
 msgid "Driver Manager version"
 msgstr ""
 
-#: db.c:299
+#: db.c:300
 msgid "X/Open CLI compliance"
 msgstr ""
 
-#: db.c:302
+#: db.c:303
 msgid "Catalog term"
 msgstr ""
 
-#: db.c:304
+#: db.c:305
 msgid "Schema term"
 msgstr ""
 
-#: db.c:305
+#: db.c:306
 msgid "Table term"
 msgstr ""
 
-#: db.c:306
+#: db.c:307
 msgid "Procedure term"
 msgstr ""
 
-#: db.c:330 db.c:534 db.c:574
+#: db.c:332 db.c:552 db.c:592
 msgid "Failed to allocate statement handle"
 msgstr ""
 
-#: db.c:341
+#: db.c:343
 msgid "Failed to prepare statement"
 msgstr ""
 
-#: db.c:351
+#: db.c:357
+msgid "Failed to bind parameter"
+msgstr ""
+
+#: db.c:368
 msgid "Failed to execute statement"
 msgstr ""
 
-#: db.c:437
+#: db.c:455
 msgid "Failed to retrieve number of columns"
 msgstr ""
 
-#: db.c:445
+#: db.c:463
 msgid "Failed to retrieve rows affected"
 msgstr ""
 
-#: db.c:469
+#: db.c:487
 msgid "Failed to retrieve column data"
 msgstr ""
 
-#: db.c:501
+#: db.c:519
 msgid "Failed to fetch row"
 msgstr ""
 
-#: db.c:551
+#: db.c:569
 msgid "Failed to list tables"
 msgstr ""
 
-#: db.c:590
+#: db.c:608
 msgid "Failed to list columns"
 msgstr ""
 
-#: db.c:668
+#: db.c:686
 msgid "Failed to get max catalog name len"
 msgstr ""
 
-#: db.c:678
+#: db.c:696
 msgid "Failed to get current catalog"
 msgstr ""
 
-#: db.c:699
+#: db.c:717
 msgid "Failed to get catalog location"
 msgstr ""
 
-#: db.c:705
+#: db.c:723
 msgid "Failed to get catalog name separator"
 msgstr ""
 
@@ -262,86 +266,86 @@ msgstr ""
 msgid "Help topic doesn't exist"
 msgstr ""
 
-#: main.c:48
+#: main.c:49
 #, c-format
 msgid ""
 "Usage: %s -l\n"
 "       %s <dsn> [<username>] [<password>]\n"
 msgstr ""
 
-#: output.c:199
+#: output.c:197
 msgctxt "topleft"
 msgid "+"
 msgstr ""
 
-#: output.c:201
+#: output.c:199
 msgctxt "topmid"
 msgid "+"
 msgstr ""
 
-#: output.c:203
+#: output.c:201
 msgctxt "topright"
 msgid "+"
 msgstr ""
 
-#: output.c:208
+#: output.c:206
 msgctxt "midleft"
 msgid "+"
 msgstr ""
 
-#: output.c:210
+#: output.c:208
 msgctxt "midmid"
 msgid "+"
 msgstr ""
 
-#: output.c:212
+#: output.c:210
 msgctxt "midright"
 msgid "+"
 msgstr ""
 
-#: output.c:218
+#: output.c:216
 msgctxt "botleft"
 msgid "+"
 msgstr ""
 
-#: output.c:220
+#: output.c:218
 msgctxt "botmid"
 msgid "+"
 msgstr ""
 
-#: output.c:222
+#: output.c:220
 msgctxt "botright"
 msgid "+"
 msgstr ""
 
-#: output.c:236
+#: output.c:234
 #, c-format
 msgid "1 row in set\n"
 msgid_plural "%d rows in set\n"
 msgstr[0] ""
 msgstr[1] ""
 
-#: output.c:249 output.c:350 output.c:352
+#: output.c:247 output.c:347 output.c:349
 msgid "-"
 msgstr ""
 
-#: output.c:273 output.c:293 output.c:392 output.c:401 output.c:407
-#: output.c:409 output.c:411 output.c:422
+#: output.c:271 output.c:291 output.c:388 output.c:397 output.c:403
+#: output.c:405 output.c:407 output.c:418
 msgid "|"
 msgstr ""
 
-#: output.c:528
+#: output.c:521
 msgid "Success\n"
 msgstr ""
 
-#: output.c:531
+#: output.c:524
 #, c-format
 msgid "1 row affected\n"
 msgid_plural "%d rows affected\n"
 msgstr[0] ""
 msgstr[1] ""
 
-#: output.c:572
+#: output.c:565
 #, c-format
 msgid "(%lu.%06lus)\n"
 msgstr ""

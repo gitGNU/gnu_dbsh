@@ -25,6 +25,7 @@
 #include "buffer.h"
 #include "db.h"
 #include "err.h"
+#include "parser.h"
 #include "results.h"
 
 #define report_error(t, h, r, f) _report_error(t, h, r, f, __FILE__, __LINE__)
@@ -319,10 +320,11 @@ int db_supports_catalogs(SQLHDBC conn)
 	return (buf[0] == 'Y');
 }
 
-results *execute_query(SQLHDBC conn, const char *buf, int buflen)
+results *execute_query(SQLHDBC conn, const char *buf, int buflen, parsed_line *params)
 {
 	SQLHSTMT st;
 	results *res;
+	int i, l;
 	SQLRETURN r;
 
 	r = SQLAllocHandle(SQL_HANDLE_STMT, conn, &st);
@@ -344,6 +346,21 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
 		fetch_warnings(res, st);
+	}
+
+	for(i = 0; i < params->nchunks; i++) {
+		l = strlen(params->chunks[i]);
+
+		r = SQLBindParameter(st, i + 1, SQL_PARAM_INPUT, SQL_C_CHAR,
+				     SQL_CHAR, l, 0, params->chunks[i], l, 0);
+		if(!SQL_SUCCEEDED(r)) {
+			report_error(SQL_HANDLE_STMT, st, r, _("Failed to bind parameter"));
+			SQLFreeHandle(SQL_HANDLE_STMT, st);
+			res_free(res);
+			return 0;
+		} else if(r == SQL_SUCCESS_WITH_INFO) {
+			fetch_warnings(res, st);
+		}
 	}
 
 	r = SQLExecute(st);

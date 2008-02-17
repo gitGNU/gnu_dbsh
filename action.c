@@ -29,8 +29,8 @@
 #include "common.h"
 #include "action.h"
 #include "buffer.h"
-#include "db.h"
 #include "command.h"
+#include "db.h"
 #include "err.h"
 #include "output.h"
 #include "parser.h"
@@ -38,7 +38,7 @@
 #include "stream.h"
 
 
-static void go(SQLHDBC conn, buffer *sqlbuf, char action, stream *stream)
+static void go(SQLHDBC conn, buffer *sqlbuf, char action, parsed_line *params, stream *stream)
 {
 	results *res = NULL;
 
@@ -50,7 +50,7 @@ static void go(SQLHDBC conn, buffer *sqlbuf, char action, stream *stream)
 		res = run_command(conn, sqlbuf);
 		break;
 	case BUFFER_SQL:
-		res = execute_query(conn, sqlbuf->buf, sqlbuf->next);
+		res = execute_query(conn, sqlbuf->buf, sqlbuf->next, params);
 		break;
 	}
 
@@ -163,7 +163,7 @@ void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 		// TODO: save to named buffer
 		break;
 	default:
-		go(conn, sqlbuf, action, stream);
+		go(conn, sqlbuf, action, l, stream);
 		break;
 	}
 
