@@ -38,7 +38,8 @@
 #include "stream.h"
 
 
-const char *dsn, *user, *pass;
+const char *dsn, *user;
+char *pass;
 SQLHDBC conn;
 buffer *mainbuf, *prevbuf;
 
