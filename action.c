@@ -29,6 +29,7 @@
 #include "common.h"
 #include "action.h"
 #include "buffer.h"
+#include "db.h"
 #include "command.h"
 #include "err.h"
 #include "output.h"
