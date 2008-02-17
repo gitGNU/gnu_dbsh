@@ -173,7 +173,7 @@ void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 
 
 	stream_reset(stream);
-	if(pipeline) pclose(stream->f);
+	if(pipeline) pclose(f);
 	free(stream);
 
 	free_parsed_line(l);

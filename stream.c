@@ -27,6 +27,12 @@
 #include "stream.h"
 
 
+struct stream {
+	FILE *f;
+	mbstate_t ps;
+};
+
+
 stream *stream_create(FILE *f)
 {
 	stream *s;

@@ -22,11 +22,6 @@
 #include <stdio.h>
 #include <wchar.h>
 
-struct stream {
-	FILE *f;
-	mbstate_t ps;
-};
-
 stream *stream_create(FILE *);
 void stream_reset(stream *);
 void stream_puts(stream *, const char *);
