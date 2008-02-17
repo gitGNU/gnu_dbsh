@@ -158,12 +158,13 @@ void res_add_set(results *r)
 void res_first_set(results *r)
 {
 	r->scursor = r->sets;
-	r->rcursor = r->sets->rows;
+	r->rcursor = 0;
 }
 
 int res_next_set(results *r)
 {
 	if(r->scursor) r->scursor = r->scursor->next;
+	r->rcursor = 0;
 	return r->scursor ? 1 : 0;
 }
 
