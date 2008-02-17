@@ -1,0 +1,8 @@
+set test "List output"
+
+send "SELECT * FROM test\\L\n"
+
+expect {
+    "id: 1,2,3\r\ndesc: This is some text.,This is some\r\ntext with\r\nnewlines in it.\r\n\r\n"
+    { pass "$test" }
+}
