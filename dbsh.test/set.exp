@@ -1,0 +1,19 @@
+set test "/set command"
+
+send "/set default_action\\T\n"
+expect {
+    "name\tvalue\r\ndefault_action\tg\r\n\r\n"
+    { pass "$test" }
+}
+
+send "/set default_action G\\T\n"
+expect {
+    "name\tvalue\r\ndefault_action\tG\r\n\r\n"
+    { pass "$test" }
+}
+
+send "/set default_action g\\T\n"
+expect {
+    "name\tvalue\r\ndefault_action\tg\r\n\r\n"
+    { pass "$test" }
+}
