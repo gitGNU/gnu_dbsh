@@ -30,6 +30,7 @@ typedef enum {
 typedef struct {
 	int nchunks;
 	char **chunks;
+	char *pipeline;
 } parsed_line;
 
 buffer_type get_buffer_type(buffer *);

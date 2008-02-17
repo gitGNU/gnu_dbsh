@@ -109,9 +109,15 @@ static void parse_char(char c, parser_state *st)
 static parsed_line *parse_end(parser_state *st)
 {
 	parsed_line *l;
+	char *pipeline;
 	int i;
 
-	if(st->buf->next) st->chunks[st->nchunks++] = buffer_dup2str(st->buf);
+	pipeline = 0;
+
+	if(st->buf->next) {
+		if(st->pipe) pipeline = buffer_dup2str(st->buf);
+		else st->chunks[st->nchunks++] = buffer_dup2str(st->buf);
+	}
 	buffer_free(st->buf);
 
 	if(!(l = calloc(1, sizeof(parsed_line)))) err_system();
@@ -119,6 +125,7 @@ static parsed_line *parse_end(parser_state *st)
 
 	l->nchunks = st->nchunks;
 	for(i = 0; i < st->nchunks; i++) l->chunks[i] = st->chunks[i];
+	l->pipeline = pipeline;
 
 	return l;
 }

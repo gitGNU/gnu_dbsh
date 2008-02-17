@@ -110,8 +110,7 @@ static void print(buffer *sqlbuf, stream *stream)
 void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 {
 	parsed_line *l;
-	int nchunks;
-	char *pipeline, *p;
+	char *pipeline;
 	FILE *f;
 	stream *stream;
 	int m;
@@ -120,18 +119,14 @@ void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 	m = 0;
 
 	l = parse_string(paramstring);
-	nchunks = l->nchunks;
 
-	if(nchunks) {
-		p = l->chunks[nchunks - 1];
-		if(*p == '>') {
-			if(!(pipeline = malloc(strlen(p) + 5))) err_system();
+	if(l->pipeline) {
+		if(*l->pipeline == '>') {
+			if(!(pipeline = malloc(strlen(l->pipeline) + 5))) err_system();
 			m = 1;
-			sprintf(pipeline, "cat %s", p);
-			nchunks--;
-		} else if(*p == '|') {
-			pipeline = p + 1;
-			nchunks--;
+			sprintf(pipeline, "cat %s", l->pipeline);
+		} else if(*l->pipeline == '|') {
+			pipeline = l->pipeline + 1;
 		}
 	}
 
