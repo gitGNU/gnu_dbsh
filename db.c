@@ -37,11 +37,10 @@ pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 static void set_current_statement(SQLHSTMT *);
-static void fetch_warnings(results *, SQLSMALLINT, SQLHANDLE);
+static void fetch_warnings(results *, SQLHSTMT);
 static void fetch_results(results *, SQLHSTMT);
-static void time_taken(results *);
-static resultset *fetch_resultset(SQLHSTMT, buffer *);
-static row *fetch_row(SQLHSTMT, buffer *, int);
+static void fetch_resultset(results *, SQLHSTMT, buffer *);
+static int fetch_row(results *, SQLHSTMT, buffer *);
 static char *get_current_catalog(SQLHDBC);
 static void parse_catalog_spec(SQLHDBC, char *, char **, char **);
 static void parse_qualified_table(char *, char **, char **);
@@ -118,27 +117,25 @@ results *db_drivers_and_dsns()
 {
 	SQLHENV env;
 	results *res;
-	resultset *s;
 	SQLUSMALLINT dir;
 	SQLCHAR buf1[256], buf2[256];
 
 	env = alloc_env();
-	res = results_alloc();
 
-	s = results_add_set(res);
-	resultset_set_cols(s, 1, _("Driver"));
+	res = res_alloc();
+	res_set_cols(res, 1, _("Driver"));
 	while(SQL_SUCCEEDED(SQLDrivers(env, SQL_FETCH_NEXT,
 				       buf1, sizeof(buf1), 0, 0, 0, 0)))
-		resultset_add_row(s, buf1);
+		res_add_row(res, buf1);
 
-	s = results_add_set(res);
-	resultset_set_cols(s, 3, _("DSN"), _("Type"), _("Description"));
+	res_add_set(res);
+	res_set_cols(res, 3, _("DSN"), _("Type"), _("Description"));
 
 	dir = SQL_FETCH_FIRST_USER;
 	while(SQL_SUCCEEDED(SQLDataSources(env, dir,
 					   buf1, sizeof(buf1), 0,
 					   buf2, sizeof(buf2), 0))) {
-		resultset_add_row(s, buf1, _("user"), buf1);
+		res_add_row(res, buf1, _("user"), buf1);
 		dir = SQL_FETCH_NEXT;
 	}
 
@@ -146,7 +143,7 @@ results *db_drivers_and_dsns()
 	while(SQL_SUCCEEDED(SQLDataSources(env, dir,
 					   buf1, sizeof(buf1), 0,
 					   buf2, sizeof(buf2), 0))) {
-		resultset_add_row(s, buf1, _("system"), buf1);
+		res_add_row(res, buf1, _("system"), buf1);
 		dir = SQL_FETCH_NEXT;
 	}
 
@@ -237,7 +234,7 @@ SQLINTEGER db_conn_attr(SQLHDBC conn, SQLINTEGER attr, char *buf, int len)
 	return l;
 }
 
-#define ADD_INFO(t, n) db_info(conn, t, buf, 256); results_add_row(res, n, buf)
+#define ADD_INFO(t, n) db_info(conn, t, buf, 256); res_add_row(res, n, buf)
 
 results *db_conn_details(SQLHDBC conn)
 {
@@ -246,9 +243,9 @@ results *db_conn_details(SQLHDBC conn)
 	SQLUINTEGER i;
 	const char *s;
 
-	res = results_single_alloc();
+	res = res_alloc();
 
-	results_set_cols(res, 2, _("name"), _("value"));
+	res_set_cols(res, 2, _("name"), _("value"));
 
 	// Connection info
 	ADD_INFO(SQL_DATA_SOURCE_NAME, _("DSN"));
@@ -276,7 +273,7 @@ results *db_conn_details(SQLHDBC conn)
 	default:
 		s = _("(unknown)");
 	}
-	results_add_row(res, _("ODBC compliance"), s);
+	res_add_row(res, _("ODBC compliance"), s);
 
 	SQLGetInfo(conn, SQL_SQL_CONFORMANCE, &i, 0, 0);
 	switch(i) {
@@ -295,7 +292,7 @@ results *db_conn_details(SQLHDBC conn)
 	default:
 		s = _("(unknown)");
 	}
-	results_add_row(res, _("SQL-92 compliance"), s);
+	res_add_row(res, _("SQL-92 compliance"), s);
 
 	// Driver Manager info
 	ADD_INFO(SQL_DM_VER,         _("Driver Manager version"));
@@ -307,7 +304,6 @@ results *db_conn_details(SQLHDBC conn)
 	ADD_INFO(SQL_SCHEMA_TERM,    _("Schema term"));
 	ADD_INFO(SQL_TABLE_TERM,     _("Table term"));
 	ADD_INFO(SQL_PROCEDURE_TERM, _("Procedure term"));
-
 
 	return res;
 }
@@ -337,31 +333,31 @@ results *execute_query(SQLHDBC conn, const char *buf, int buflen)
 
 	set_current_statement(&st);
 
-	res = results_alloc();
-	gettimeofday(&res->time_taken, 0);
+	res = res_alloc();
+	res_start_timer(res);
 
 	r = SQLPrepare(st, (SQLCHAR *) buf, buflen);
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to prepare statement"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		results_free(res);
+		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, SQL_HANDLE_STMT, st);
+		fetch_warnings(res, st);
 	}
 
 	r = SQLExecute(st);
 	if(!SQL_SUCCEEDED(r) && r != SQL_NO_DATA) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to execute statement"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		results_free(res);
+		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, SQL_HANDLE_STMT, st);
+		fetch_warnings(res, st);
 	}
 
 	fetch_results(res, st);
-	time_taken(res);
+	res_stop_timer(res);
 
 	return res;
 }
@@ -373,98 +369,93 @@ static void set_current_statement(SQLHSTMT *stp)
 	pthread_mutex_unlock(&cs_lock);
 }
 
-static void fetch_warnings(results *res, SQLSMALLINT type, SQLHANDLE h)
+static void fetch_warnings(results *res, SQLHSTMT st)
 {
 	SQLINTEGER n, i;
 	buffer *buf;
 	SQLSMALLINT reqlen;
 
-	SQLGetDiagField(type, h, 0, SQL_DIAG_NUMBER, &n, 0, 0);
+	SQLGetDiagField(SQL_HANDLE_STMT, st, 0, SQL_DIAG_NUMBER, &n, 0, 0);
 	if(!n) return;
 
 	buf = buffer_alloc(1024);
 
-	if(!(res->warnings = realloc(res->warnings,
-				     res->nwarnings + n * sizeof(char *))))
-		err_system();
-
 	for(i = 0; i < n; i++) {
-		SQLGetDiagField(type, h, i + 1, SQL_DIAG_MESSAGE_TEXT,
+		SQLGetDiagField(SQL_HANDLE_STMT, st, i + 1, SQL_DIAG_MESSAGE_TEXT,
 				buf->buf, buf->len, &reqlen);
 
 		if(reqlen + 1 > buf->len) {
 			buffer_realloc(buf, reqlen + 1);
-			SQLGetDiagField(type, h, i + 1, SQL_DIAG_MESSAGE_TEXT,
+			SQLGetDiagField(SQL_HANDLE_STMT, st, i + 1, SQL_DIAG_MESSAGE_TEXT,
 					buf->buf, buf->len, 0);
 
 		}
 
-		res->warnings[res->nwarnings + i] = strdup2wcs(buf->buf);
+		res_add_warning(res, buf->buf);
 	}
-
-	res->nwarnings += n;
 
 	buffer_free(buf);
 }
 
 void fetch_results(results *res, SQLHSTMT st)
 {
-	resultset **sp;
 	buffer *buf;
 	SQLRETURN r;
 
 	buf = buffer_alloc(1024);
 
-	sp = &res->sets;
+	for(;;) {
+		fetch_resultset(res, st, buf);
 
-	do {
-		*sp = fetch_resultset(st, buf);
-		sp = &(*sp)->next;
 		r = SQLMoreResults(st);
-	} while(SQL_SUCCEEDED(r));
+
+		if(r == SQL_NO_DATA) {
+			break;
+		} else if(!SQL_SUCCEEDED(r)) {
+			fetch_warnings(res, st);
+			break;
+		} else if(r == SQL_SUCCESS_WITH_INFO) {
+			fetch_warnings(res, st);
+		}
+
+		res_add_set(res);
+	}
 
 	set_current_statement(0);
 
 	SQLFreeHandle(SQL_HANDLE_STMT, st);
 }
 
-static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
+void fetch_resultset(results *res, SQLHSTMT st, buffer *buf)
 {
-	resultset *res;
+	SQLSMALLINT ncols, i, reqlen;
+	SQLLEN nrows;
 	SQLRETURN r;
-	SQLSMALLINT i;
-	SQLSMALLINT reqlen;
-	row **rowp;
 
-	res = resultset_alloc();
-
-	r = SQLNumResultCols(st, &(res->ncols));
+	r = SQLNumResultCols(st, &ncols);
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to retrieve number of columns"));
-		resultset_free(res);
-		return 0;
+		return;
 	}
+	res_set_ncols(res, ncols);
 
-	if(!res->ncols) {  // non-SELECT
-		r = SQLRowCount(st, &(res->nrows));
+	if(!ncols) {  // non-SELECT
+		r = SQLRowCount(st, &nrows);
 		if(!SQL_SUCCEEDED(r)) {
 			report_error(SQL_HANDLE_STMT, st, r, _("Failed to retrieve rows affected"));
-			resultset_free(res);
-			return 0;
+			return;
 		}
 
-		return res;
+		res_set_nrows(res, nrows);
+		return;
 	}
 
-	if(!(res->cols = calloc(res->ncols, sizeof(char *)))) err_system();
-
-	for(i = 0; i < res->ncols; i++) {
+	for(i = 0; i < ncols; i++) {
 		SQLSMALLINT type;
 		SQLUINTEGER size;
 		SQLSMALLINT digits;
 		SQLSMALLINT nullable;
 
-		// TODO: is there a way to just get the name?
 		r = SQLDescribeCol(st, i + 1, (SQLCHAR *) buf->buf, buf->len, &reqlen,
 				   &type, &size, &digits, &nullable);
 
@@ -476,36 +467,29 @@ static resultset *fetch_resultset(SQLHSTMT st, buffer *buf)
 
 		if(!SQL_SUCCEEDED(r)) {
 			report_error(SQL_HANDLE_STMT, st, r, _("Failed to retrieve column data"));
-			resultset_free(res);
-			return 0;
+			return;
 		}
 
-		if(!(res->cols[i] = strdup2wcs(buf->buf))) err_system();
+		res_set_col(res, i, buf->buf);
 	}
 
-	for(rowp = &(res->rows);;) {
-		*rowp = fetch_row(st, buf, res->ncols);
-		if(!*rowp) break;
-		rowp = &(*rowp)->next;
-		res->nrows++;
-	}
 
-	return res;
+	while(fetch_row(res, st, buf));
 }
 
-static row *fetch_row(SQLHSTMT st, buffer *buf, int ncols)
+static int fetch_row(results *res, SQLHSTMT st, buffer *buf)
 {
-	row *row;
 	SQLRETURN r;
 	SQLSMALLINT i;
 	SQLINTEGER reqlen;
 
+
 	r = SQLFetch(st);
 	if(!SQL_SUCCEEDED(r)) return 0;
 
-	row = results_row_alloc(ncols);
+	res_new_row(res);
 
-	for(i = 0; i < ncols; i++) {
+	for(i = 0; i < res_get_ncols(res); i++) {
 		r = SQLGetData(st, i + 1, SQL_C_CHAR, buf->buf, buf->len, &reqlen);
 
 		if(reqlen + 1 > buf->len) {
@@ -515,15 +499,13 @@ static row *fetch_row(SQLHSTMT st, buffer *buf, int ncols)
 
 		if(!SQL_SUCCEEDED(r)) {
 			report_error(SQL_HANDLE_STMT, st, r, _("Failed to fetch row"));
-			results_row_free(row, ncols);
 			return 0;
 		}
 
-		if(reqlen != SQL_NULL_DATA &&
-		   !(row->data[i] = strdup2wcs(buf->buf))) err_system();
+		if(reqlen != SQL_NULL_DATA) res_set_value(res, i, buf->buf);
 	}
 
-	return row;
+	return 1;
 }
 
 void db_cancel_query()
@@ -555,8 +537,8 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 
 	set_current_statement(&st);
 
-	res = results_alloc();
-	gettimeofday(&res->time_taken, 0);
+	res = res_alloc();
+	res_start_timer(res);
 
 	current_statement = st;
 	r = SQLTables(st,
@@ -568,14 +550,14 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to list tables"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		results_free(res);
+		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, SQL_HANDLE_STMT, st);
+		fetch_warnings(res, st);
 	}
 
 	fetch_results(res, st);
-	time_taken(res);
+	res_stop_timer(res);
 
 	return res;
 }
@@ -595,8 +577,8 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 
 	set_current_statement(&st);
 
-	res = results_alloc();
-	gettimeofday(&res->time_taken, 0);
+	res = res_alloc();
+	res_start_timer(res);
 
 	r = SQLColumns(st,
 		      (SQLCHAR *) catalog, SQL_NTS,
@@ -607,14 +589,14 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	if(!SQL_SUCCEEDED(r)) {
 		report_error(SQL_HANDLE_STMT, st, r, _("Failed to list columns"));
 		SQLFreeHandle(SQL_HANDLE_STMT, st);
-		results_free(res);
+		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, SQL_HANDLE_STMT, st);
+		fetch_warnings(res, st);
 	}
 
 	fetch_results(res, st);
-	time_taken(res);
+	res_stop_timer(res);
 
 	return res;
 }
@@ -754,14 +736,4 @@ static void parse_qualified_table(char *s, char **schema, char **table)
 		*schema = 0;
 		*table = s;
 	}
-}
-
-static void time_taken(results *res)
-{
-	struct timeval end_time;
-
-	gettimeofday(&end_time, 0);
-
-	res->time_taken.tv_sec  = end_time.tv_sec  - res->time_taken.tv_sec;
-	res->time_taken.tv_usec = end_time.tv_usec - res->time_taken.tv_usec;
 }

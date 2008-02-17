@@ -90,20 +90,22 @@ static wchar_t *translate(wchar_t *src)
 		}
 	}
 
-	free(src);
 	return dest;
 }
 
-static void translate_resultset(resultset *res)
+static void translate_resultset(results *res)
 {
-	row *r;
 	int i;
+	wchar_t *t;
 
-	for(r = res->rows; r; r = r->next) {
-		for(i = 0; i < res->ncols; i++) {
-			r->data[i] = translate(r->data[i]);
+	res_first_row(res);
+	do {
+		for(i = 0; i < res_get_ncols(res); i++) {
+			t = translate(res_get_value(res, i));
+			res_set_value_w(res, i, t);
+			free(t);
 		}
-	}
+	} while(res_next_row(res));
 }
 
 static dim *get_dimensions(const wchar_t *s)
@@ -144,37 +146,42 @@ static void free_dimensions(dim *d)
 	free(d);
 }
 
-static res_dims *get_resultset_dimensions(resultset *res)
+static res_dims *get_resultset_dimensions(results *res)
 {
 	res_dims *rd;
-	SQLSMALLINT i;
-	SQLINTEGER j;
-	row *r;
+	int ncols, i, j;
+
+	ncols = res_get_ncols(res);
 
 	if(!(rd = malloc(sizeof(res_dims)))) err_system();
-	if(!(rd->col_dims = calloc(res->ncols, sizeof(dim)))) err_system();
-	if(!(rd->row_dims = calloc(res->ncols * res->nrows, sizeof(dim)))) err_system();
+	if(!(rd->col_dims = calloc(ncols, sizeof(dim)))) err_system();
+	if(!(rd->row_dims = calloc(ncols * res_get_nrows(res), sizeof(dim)))) err_system();
 
-	for(i = 0; i < res->ncols; i++) {
-		rd->col_dims[i] = get_dimensions(res->cols[i]);
-		for(r = res->rows, j = 0; r; r = r->next, j++) {
-			rd->row_dims[(j * res->ncols) + i] =
-				get_dimensions(r->data[i] ? r->data[i] : NULL_DISPLAY);
-		}
+	for(i = 0; i < res_get_ncols(res); i++) {
+		rd->col_dims[i] = get_dimensions(res_get_col(res, i));
+
+		res_first_row(res);
+		j = 0;
+		do {
+			rd->row_dims[(j * ncols) + i] =
+				get_dimensions(res_get_value(res, i));
+			j++;
+		} while(res_next_row(res));
 	}
 
 	return rd;
 }
 
-static void free_resultset_dimensions(resultset *res, res_dims *rd)
+static void free_resultset_dimensions(results *res, res_dims *rd)
 {
-	SQLSMALLINT i;
-	SQLINTEGER j;
+	int ncols, i, j;
 
-	for(i = 0; i < res->ncols; i++) {
+	ncols = res_get_ncols(res);
+
+	for(i = 0; i < ncols; i++) {
 		free_dimensions(rd->col_dims[i]);
-		for(j = 0; j < res->nrows; j++) {
-			free_dimensions(rd->row_dims[(j * res->ncols) + i]);
+		for(j = 0; j < res_get_nrows(res); j++) {
+			free_dimensions(rd->row_dims[(j * ncols) + i]);
 		}
 	}
 
@@ -220,18 +227,20 @@ static const char *get_box_char(vpos v, hpos h)
 	return "+";
 }
 
-static void output_size(resultset *res, stream *s)
+static void output_size(results *res, stream *s)
 {
+	int nrows;
+
+	nrows = res_get_nrows(res);
 	stream_printf(s,
-		      ngettext("1 row in set\n", "%ld rows in set\n", res->nrows),
-		      res->nrows);
+		      ngettext("1 row in set\n", "%d rows in set\n", nrows),
+		      nrows);
 }
 
-void output_horiz_separator(stream *s, int col_widths[], SQLSMALLINT ncols, vpos v)
+void output_horiz_separator(stream *s, int col_widths[], int ncols, vpos v)
 {
 	hpos h;
-	SQLSMALLINT i;
-	int j;
+	int i, j;
 
 	h = HPOS_LEF;
 
@@ -244,12 +253,11 @@ void output_horiz_separator(stream *s, int col_widths[], SQLSMALLINT ncols, vpos
 	stream_newline(s);
 }
 
-void output_horiz_row(stream *s, const char **data,
-		      dim **dims, int widths[], SQLSMALLINT ncols)
+void output_horiz_row(stream *s, wchar_t **data,
+		      dim **dims, int widths[], int ncols)
 {
 	const wchar_t **pos, *p;
-	SQLSMALLINT i;
-	int j, k, more_lines;
+	int i, j, k, more_lines;
 
 	pos = calloc(ncols, sizeof(wchar_t *));
 	memcpy(pos, data, ncols * sizeof(wchar_t *));
@@ -291,37 +299,44 @@ void output_horiz_row(stream *s, const char **data,
 	free(pos);
 }
 
-void output_horiz(resultset *res, stream *s)
+void output_horiz(results *res, stream *s)
 {
 	res_dims *dims;
-	SQLSMALLINT i;
-	SQLINTEGER j;
-	row *r;
+	int ncols, i, j;
 	int *col_widths;
 
+	ncols = res_get_ncols(res);
 
 	translate_resultset(res);
 	dims = get_resultset_dimensions(res);
 
-	if(!(col_widths = calloc(res->ncols, sizeof(int)))) err_system();
-	for(i = 0; i < res->ncols; i++) {
+	if(!(col_widths = calloc(ncols, sizeof(int)))) err_system();
+	for(i = 0; i < ncols; i++) {
+
 		col_widths[i] = dims->col_dims[i]->max_width;
 
-		for(j = 0; j < res->nrows; j++) {
-			if(dims->row_dims[j * res->ncols + i]->max_width > col_widths[i])
-				col_widths[i] = dims->row_dims[j * res->ncols + i]->max_width;
+		for(j = 0; j < res_get_nrows(res); j++) {
+			if(dims->row_dims[j * ncols + i]->max_width > col_widths[i])
+				col_widths[i] = dims->row_dims[j * ncols + i]->max_width;
 		}
 	}
 
-	output_horiz_separator(s, col_widths, res->ncols, VPOS_TOP);
-	output_horiz_row(s, (const char **) res->cols, dims->col_dims, col_widths, res->ncols);
-	output_horiz_separator(s, col_widths, res->ncols, VPOS_MID);
-	for(r = res->rows, j = 0; r; r = r->next, j++)
-		output_horiz_row(s, (const char **) r->data, dims->row_dims + (j * res->ncols), col_widths, res->ncols);
-	output_horiz_separator(s, col_widths, res->ncols, VPOS_BOT);
+	output_horiz_separator(s, col_widths, ncols, VPOS_TOP);
+	output_horiz_row(s, res_get_cols(res), dims->col_dims, col_widths, ncols);
+	output_horiz_separator(s, col_widths, ncols, VPOS_MID);
+
+	res_first_row(res);
+	j = 0;
+	do {
+		output_horiz_row(s, res_get_row(res),
+				 dims->row_dims + (j * ncols),
+				 col_widths, ncols);
+		j++;
+	} while(res_next_row(res));
+
+	output_horiz_separator(s, col_widths, ncols, VPOS_BOT);
 
 	free(col_widths);
-
 	free_resultset_dimensions(res, dims);
 
 	output_size(res, s);
@@ -339,46 +354,45 @@ void output_vert_separator(stream *s, int col_width, int row_width, vpos v)
 	stream_newline(s);
 }
 
-void output_vert(resultset *res, stream *s)
+void output_vert(results *res, stream *s)
 {
 	res_dims *dims;
-	int col_width, row_width;
-	SQLSMALLINT i;
-	SQLINTEGER j;
+	int col_width, row_width, ncols, i, j, k, l;
 	vpos v;
-	row *r;
-	int k, l;
 	wchar_t *p;
 
+
+	ncols = res_get_ncols(res);
 
 	translate_resultset(res);
 	dims = get_resultset_dimensions(res);
 
 	col_width = 0;
 	row_width = 0;
-	for(i = 0; i < res->ncols; i++) {
+	for(i = 0; i < ncols; i++) {
 		if(dims->col_dims[i]->max_width > col_width) col_width = dims->col_dims[i]->max_width;
 
-		for(j = 0; j < res->nrows; j++) {
-			if(dims->row_dims[j * res->ncols + i]->max_width > row_width)
-				row_width = dims->row_dims[j * res->ncols + i]->max_width;
+		for(j = 0; j < res_get_nrows(res); j++) {
+			if(dims->row_dims[j * ncols + i]->max_width > row_width)
+				row_width = dims->row_dims[j * ncols + i]->max_width;
 		}
 	}
 
 	v = VPOS_TOP;
 
-	for(r = res->rows, j = 0; r; r = r->next, j++) {
-
+	res_first_row(res);
+	j = 0;
+	do {
 		output_vert_separator(s, col_width, row_width, v);
 
-		for(i = 0; i < res->ncols; i++) {
+		for(i = 0; i < ncols; i++) {
 
 			l = 0;
 
 			stream_puts(s, _("|"));
 			for(k = 0; k <= col_width - dims->col_dims[i]->widths[0]; k++) stream_space(s);
 
-			for(p = res->cols[i]; *p; p++) {
+			for(p = res_get_col(res, i); *p; p++) {
 				if(*p == '\t') stream_putws(s, L"        ");
 				else stream_putwc(s, *p);
 			}
@@ -387,34 +401,32 @@ void output_vert(resultset *res, stream *s)
 			stream_puts(s, _("|"));
 			stream_space(s);
 
-			if(r->data[i]) {
-				for(p = r->data[i]; *p; p++) {
-					if(*p == L'\n') {
-						for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l] + 1; k++) stream_space(s);
-						stream_puts(s, _("|"));
-						stream_newline(s);
-						stream_puts(s, _("|"));
-						for(k = 0; k < col_width + 2; k++) stream_space(s);
-						stream_puts(s, _("|"));
-						stream_space(s);
-						l++;
-					} else if(*p == L'\t') {
-						stream_putws(s, L"        ");
-					} else {
-						stream_putwc(s, *p);
-					}
+			for(p = res_get_value(res, i); *p; p++) {
+				if(*p == L'\n') {
+					for(k = 0; k < row_width - dims->row_dims[j * ncols + i]->widths[l] + 1; k++) stream_space(s);
+					stream_puts(s, _("|"));
+					stream_newline(s);
+					stream_puts(s, _("|"));
+					for(k = 0; k < col_width + 2; k++) stream_space(s);
+					stream_puts(s, _("|"));
+					stream_space(s);
+					l++;
+				} else if(*p == L'\t') {
+					stream_putws(s, L"        ");
+				} else {
+					stream_putwc(s, *p);
 				}
-			} else {
-				stream_putws(s, NULL_DISPLAY);
 			}
 
-			for(k = 0; k < row_width - dims->row_dims[j * res->ncols + i]->widths[l] + 1; k++) stream_space(s);
+			for(k = 0; k < row_width - dims->row_dims[j * ncols + i]->widths[l] + 1; k++) stream_space(s);
 			stream_puts(s, _("|"));
 			stream_newline(s);
 		}
 
 		v = VPOS_MID;
-	}
+
+		j++;
+	} while(res_next_row(res));
 
 	if(j) output_vert_separator(s, col_width, row_width, VPOS_BOT);
 
@@ -423,9 +435,9 @@ void output_vert(resultset *res, stream *s)
 	output_size(res, s);
 }
 
-void output_csv_row(stream *s, wchar_t **data, SQLSMALLINT ncols, wchar_t sep, wchar_t delim)
+void output_csv_row(stream *s, wchar_t **data, int ncols, wchar_t sep, wchar_t delim)
 {
-	SQLSMALLINT i;
+	int i;
 	const wchar_t *p;
 
 	for(i = 0; i < ncols; i++) {
@@ -447,48 +459,48 @@ void output_csv_row(stream *s, wchar_t **data, SQLSMALLINT ncols, wchar_t sep, w
 	stream_newline(s);
 }
 
-void output_csv(resultset *res, stream *s, char separator, char delimiter)
+void output_csv(results *res, stream *s, char separator, char delimiter)
 {
-	row *r;
-
-	output_csv_row(s, res->cols, res->ncols, separator, delimiter);
-	for(r = res->rows; r; r = r->next)
-		output_csv_row(s, r->data, res->ncols, separator, delimiter);
+	output_csv_row(s, res_get_cols(res), res_get_ncols(res), separator, delimiter);
+	res_first_row(res);
+	do {
+		output_csv_row(s, res_get_row(res), res_get_ncols(res), separator, delimiter);
+	} while(res_next_row(res));
 }
 
-void output_flat(resultset *res, stream *s)
+void output_flat(results *res, stream *s)
 {
-	row *r;
-	SQLSMALLINT i;
+	int i;
 
-	for(r= res->rows; r; r = r->next) {
-		for(i = 0; i < res->ncols; i++) {
-			if(r->data[i]) {
-				stream_putws(s, res->cols[i]);
+	res_first_row(res);
+	do {
+		for(i = 0; i < res_get_ncols(res); i++) {
+			if(res_get_value(res, i)) {
+				stream_putws(s, res_get_col(res, i));
 				stream_newline(s);
-				stream_putws(s, r->data[i]);
+				stream_putws(s, res_get_value(res, i));
 				stream_newline(s);
 				stream_newline(s);
 			}
 		}
-	}
+	} while(res_next_row(res));
 }
 
-void output_list(resultset *res, stream *s)
+void output_list(results *res, stream *s)
 {
-	row *r;
-	SQLSMALLINT i;
+	int i;
 
-	for(i = 0; i < res->ncols; i++) {
-		stream_putws(s, res->cols[i]);
+	for(i = 0; i < res_get_ncols(res); i++) {
+		stream_putws(s, res_get_col(res, i));
 		stream_putws(s, L": ");
 
-		for(r = res->rows; r; r = r->next) {
-			if(r->data[i]) {
-				stream_putws(s, r->data[i]);
-				if(r->next) stream_putwc(s, L',');
+		res_first_row(res);
+		do {
+			if(res_get_value(res, i)) {
+				stream_putws(s, res_get_value(res, i));
+				if(res_more_rows(res)) stream_putwc(s, L',');
 			}
-		}
+		} while(res_next_row(res));
 
 		stream_newline(s);
 	}
@@ -496,35 +508,40 @@ void output_list(resultset *res, stream *s)
 
 void output_results(results *res, char mode, stream *s)
 {
-	SQLINTEGER i;
-	resultset *set;
+	wchar_t *w;
+	int nrows;
+	struct timeval time_taken;
 
 	if(mode == 1) mode = *getenv("DBSH_DEFAULT_ACTION");
 
-	for(i = 0; i < res->nwarnings; i++) {
-		stream_putws(s, res->warnings[i]);
+	while((w = res_next_warning(res))) {
+		stream_putws(s, w);
 		stream_newline(s);
 	}
 
-	for(set = res->sets; set; set = set->next) {
-		if(set->nrows == -1) {
+	res_first_set(res);
+
+	do {
+		nrows = res_get_nrows(res);
+
+		if(nrows == -1) {
 			stream_puts(s, _("Success\n"));
-		} else if(!set->ncols) {
+		} else if(!res_get_ncols(res)) {
 			stream_printf(s,
 				      ngettext("1 row affected\n",
-					       "%ld rows affected\n",
-					       set->nrows),
-				      set->nrows);
+					       "%d rows affected\n",
+					       nrows),
+				      nrows);
 		} else {
 			switch(mode) {
 			case 'C':  // CSV
-				output_csv(set, s, L',', L'"');
+				output_csv(res, s, L',', L'"');
 				break;
 			case 'F':  // Flat
-				output_flat(set, s);
+				output_flat(res, s);
 				break;
 			case 'G':  // Vertical
-				output_vert(set, s);
+				output_vert(res, s);
 				break;
 			case 'H':  // HTML
 				stream_printf(s, "TODO\n");
@@ -533,23 +550,25 @@ void output_results(results *res, char mode, stream *s)
 				stream_printf(s, "TODO\n");
 				break;
 			case 'L':  // List
-				output_list(set, s);
+				output_list(res, s);
 				break;
 			case 'T':  // TSV
-				output_csv(set, s, L'\t', 0);
+				output_csv(res, s, L'\t', 0);
 				break;
 			case 'X':  // XMLS
 				stream_printf(s, "TODO\n");
 				break;
 			default:
-				output_horiz(set, s);
+				output_horiz(res, s);
 			}
 			stream_newline(s);
 		}
-	}
+	} while(res_next_set(res));
+
+	time_taken = res_time_taken(res);
 
 	if((mode == 'G' || mode == 'g') &&
-	   (res->time_taken.tv_sec || res->time_taken.tv_usec))
+	   (time_taken.tv_sec || time_taken.tv_usec))
 		stream_printf(s, _("(%lu.%06lus)\n"),
-			res->time_taken.tv_sec, res->time_taken.tv_usec);
+			      time_taken.tv_sec, time_taken.tv_usec);
 }

@@ -16,6 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+/*
+  This whole implementation is horribly inefficient.
+  But that's fixable.  At least it has some semblance of structure now.
+  Premature optimisation etc etc.
+*/
+
+
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -25,11 +32,304 @@
 #include "results.h"
 
 
-static void v_resultset_set_cols(resultset *, int, va_list);
-static row *v_resultset_add_row(resultset *, va_list);
+typedef struct warn warn;
+typedef struct set set;
+typedef struct row row;
+
+struct results {
+	set *sets;
+	set *scursor;
+	row *rcursor;
+	warn *warnings;
+	warn *wcursor;
+	struct timeval time_taken;
+};
+
+struct warn {
+	wchar_t *text;
+	warn *next;
+};
+
+struct set {
+	unsigned int ncols;
+	unsigned int nrows;
+	wchar_t **cols;
+	row *rows;
+	set *next;
+};
+
+struct row {
+	wchar_t **data;
+	row *next;
+};
 
 
-wchar_t *strdup2wcs(const char *s)
+static wchar_t *strdup2wcs(const char *);
+static wchar_t *wstrdup(const wchar_t *);
+
+static void warn_free(warn *);
+
+static set *set_alloc();
+static void set_free(set *);
+static set *current_set(results *);
+
+static row *row_alloc();
+static void row_free(row *, unsigned int);
+static row *current_row(results *);
+
+
+results *res_alloc()
+{
+	results *res;
+
+	if(!(res = malloc(sizeof(results)))) err_system();
+
+	res->sets = set_alloc();
+	res->scursor = res->sets;
+	res->rcursor = 0;
+	res->warnings = 0;
+	res->wcursor = 0;
+	res->time_taken.tv_sec = 0;
+	res->time_taken.tv_usec = 0;
+
+	return res;
+}
+
+void res_free(results *r)
+{
+	if(r->warnings) warn_free(r->warnings);
+	if(r->sets) set_free(r->sets);
+	free(r);
+}
+
+void res_start_timer(results *r)
+{
+	gettimeofday(&r->time_taken, 0);
+}
+
+void res_stop_timer(results *r)
+{
+	struct timeval end_time;
+
+	gettimeofday(&end_time, 0);
+
+	r->time_taken.tv_sec  = end_time.tv_sec  - r->time_taken.tv_sec;
+	r->time_taken.tv_usec = end_time.tv_usec - r->time_taken.tv_usec;
+}
+
+struct timeval res_time_taken(results *r)
+{
+	return r->time_taken;
+}
+
+void res_add_warning(results *r, const char *text)
+
+{
+	warn **wp;
+
+	for(wp = &r->warnings; *wp; wp = &(*wp)->next);
+
+	if(!(*wp = malloc(sizeof(warn)))) err_system();
+	(*wp)->text = strdup2wcs(text);
+	(*wp)->next = 0;
+
+	if(!r->wcursor) r->wcursor = *wp;
+}
+
+wchar_t *res_next_warning(results *r)
+{
+	wchar_t *text;
+
+	if(!r->wcursor) return 0;
+	text = r->wcursor->text;
+	r->wcursor = r->wcursor->next;
+	return text;
+}
+
+void res_add_set(results *r)
+{
+	set **sp;
+
+	for(sp = &r->sets; *sp; sp = &(*sp)->next);
+	*sp = set_alloc();
+	r->scursor = *sp;
+}
+
+void res_first_set(results *r)
+{
+	r->scursor = r->sets;
+}
+
+int res_next_set(results *r)
+{
+	if(r->scursor) r->scursor = r->scursor->next;
+	return r->scursor ? 1 : 0;
+}
+
+void res_set_ncols(results *r, unsigned int ncols)
+{
+	set *s;
+
+	s = current_set(r);
+	if(s->nrows) err_fatal("res_set_ncols: meta set");
+	s->ncols = ncols;
+	if(!(s->cols = realloc(s->cols, ncols * sizeof(wchar_t *)))) err_system();
+}
+
+void res_set_col(results *r, unsigned int i, const char *text)
+{
+	set *s;
+
+	s = current_set(r);
+	if(i >= s->ncols) err_fatal("res_set_col: %u, '%s' (%u columns)\n",
+				    i, text, s->ncols);
+	s->cols[i] = strdup2wcs(text);
+}
+
+void res_set_cols(results *r, unsigned int ncols, ...)
+{
+	va_list ap;
+	unsigned int i;
+
+	res_set_ncols(r, ncols);
+	va_start(ap, ncols);
+	for(i = 0; i < ncols; i++) res_set_col(r, i, va_arg(ap, const char *));
+	va_end(ap);
+}
+
+unsigned int res_get_ncols(results *r)
+{
+	set *s;
+
+	s = current_set(r);
+	return s->ncols;
+}
+
+wchar_t *res_get_col(results *r, unsigned int i)
+{
+	set *s;
+
+	s = current_set(r);
+	if(i >= s->ncols) err_fatal("res_get_col: %u (%u columns)\n",
+				    i, s->ncols);
+	return s->cols[i];
+}
+
+wchar_t **res_get_cols(results *r)
+{
+	set *s;
+
+	s = current_set(r);
+	return s->cols;
+}
+
+void res_set_nrows(results *r, int nrows)
+{
+	set *s;
+
+	s = current_set(r);
+	if(s->ncols) err_fatal("res_set_nrows: data set");
+	s->nrows = nrows;
+}
+
+void res_new_row(results *res)
+{
+	set *s;
+	row **rp;
+
+	s = current_set(res);
+	for(rp = &s->rows; *rp; rp = &(*rp)->next);
+	*rp = row_alloc(s->ncols);
+
+	res->rcursor = *rp;
+	s->nrows++;
+}
+
+void res_set_value(results *res, unsigned int i, const char *value)
+{
+	set *s;
+	row *r;
+
+	s = current_set(res);
+	if(i >= s->ncols) err_fatal("res_set_value: %u, '%s' (%u columns)\n",
+				    i, value, s->ncols);
+
+	r = current_row(res);
+	if(r->data[i]) free(r->data[i]);
+	r->data[i] = strdup2wcs(value);
+}
+
+void res_set_value_w(results *res, unsigned int i, const wchar_t *value)
+{
+	set *s;
+	row *r;
+
+	s = current_set(res);
+	if(i >= s->ncols) err_fatal("res_set_value_w: %u, '%ls' (%u columns)\n",
+				    i, value, s->ncols);
+
+	r = current_row(res);
+	if(r->data[i]) free(r->data[i]);
+	r->data[i] = wstrdup(value);
+}
+
+void res_add_row(results *res, ...)
+{
+	set *s;
+	va_list ap;
+	unsigned int i;
+
+	s = current_set(res);
+	res_new_row(res);
+	va_start(ap, res);
+	for(i = 0; i < s->ncols; i++)
+		res_set_value(res, i, va_arg(ap, const char *));
+	va_end(ap);
+}
+
+int res_get_nrows(results *res)
+{
+	set *s;
+
+	s = current_set(res);
+	return s->nrows;
+}
+
+void res_first_row(results *res)
+{
+	set *s;
+
+	s = current_set(res);
+	res->rcursor = s->rows;
+}
+
+int res_next_row(results *res)
+{
+	if(res->rcursor) res->rcursor = res->rcursor->next;
+	return res->rcursor ? 1 : 0;
+}
+
+int res_more_rows(results *res)
+{
+	row *r;
+
+	r = current_row(res);
+	return r->next ? 1 : 0;
+}
+
+wchar_t *res_get_value(results *res, unsigned int i)
+{
+	return current_row(res)->data[i];
+}
+
+wchar_t **res_get_row(results *res)
+{
+	return current_row(res)->data;
+}
+
+
+
+static wchar_t *strdup2wcs(const char * s)
 {
 	mbstate_t ps;
 	size_t len;
@@ -46,34 +346,30 @@ wchar_t *strdup2wcs(const char *s)
 	return wcs;
 }
 
-results *results_alloc()
+static wchar_t *wstrdup(const wchar_t *s)
 {
-	results *res;
+	wchar_t *d;
+	size_t l;
 
-	if(!(res = malloc(sizeof(results)))) err_system();
+	l = (wcslen(s) + 1) * sizeof(wchar_t);
+	if(!(d = malloc(l))) err_system();
+	memcpy(d, s, l);
 
-	res->sets = 0;
-	res->nwarnings = 0;
-	res->warnings = 0;
-	res->time_taken.tv_sec = 0;
-	res->time_taken.tv_usec = 0;
-
-	return res;
+	return d;
 }
 
-results *results_single_alloc()
+static void warn_free(warn *w)
 {
-	results *res = results_alloc();
-	res->sets = resultset_alloc();
-
-	return res;
+	if(w->next) warn_free(w->next);
+	if(w->text) free(w->text);
+	free(w);
 }
 
-resultset *resultset_alloc()
+static set *set_alloc()
 {
-	resultset *res;
+	set *res;
 
-	if(!(res = malloc(sizeof(resultset)))) err_system();
+	if(!(res = malloc(sizeof(set)))) err_system();
 
 	res->ncols = 0;
 	res->nrows = 0;
@@ -84,7 +380,29 @@ resultset *resultset_alloc()
 	return res;
 }
 
-row *results_row_alloc(int ncols)
+static void set_free(set *r)
+{
+	int i;
+
+	if(r->next) set_free(r->next);
+
+	if(r->cols) {
+		for(i = 0; i< r->ncols; i++) if(r->cols[i]) free(r->cols[i]);
+		free(r->cols);
+	}
+
+	if(r->rows) row_free(r->rows, r->ncols);
+
+	free(r);
+}
+
+static set *current_set(results *r)
+{
+	if(!r->scursor) err_fatal("current_set: no current set");
+	return r->scursor;
+}
+
+static row *row_alloc(int ncols)
 {
 	row *r;
 
@@ -97,144 +415,11 @@ row *results_row_alloc(int ncols)
 	return r;
 }
 
-resultset *results_add_set(results *res)
-{
-	resultset **sp;
-
-	for(sp = &res->sets; *sp; sp = &(*sp)->next);
-	*sp = resultset_alloc();
-
-	return *sp;
-}
-
-void results_set_warnings(results *res, int nwarnings, ...)
-{
-	va_list ap;
-	int i;
-
-	va_start(ap, nwarnings);
-
-	res->nwarnings = nwarnings;
-	if(!(res->warnings = calloc(nwarnings, sizeof(char *)))) err_system();
-
-	for(i = 0; i < nwarnings; i++)
-		if(!(res->warnings[i] = strdup2wcs(va_arg(ap, const char *)))) err_system();
-
-	va_end(ap);
-}
-
-void results_set_cols(results *res, int ncols, ...)
-{
-	va_list ap;
-
-	va_start(ap, ncols);
-	v_resultset_set_cols(res->sets, ncols, ap);
-	va_end(ap);
-}
-
-void resultset_set_cols(resultset *res, int ncols, ...)
-{
-	va_list ap;
-
-	va_start(ap, ncols);
-	v_resultset_set_cols(res, ncols, ap);
-	va_end(ap);
-}
-
-static void v_resultset_set_cols(resultset *res, int ncols, va_list ap)
+static void row_free(row *r, unsigned int ncols)
 {
 	int i;
 
-	res->ncols = ncols;
-	if(!(res->cols = calloc(ncols, sizeof(char *)))) err_system();
-
-	for(i = 0; i < ncols; i++)
-		if(!(res->cols[i] = strdup2wcs(va_arg(ap, const char *)))) err_system();
-}
-
-row *results_add_row(results *res, ...)
-{
-	va_list ap;
-	row *r;
-
-	va_start(ap, res);
-	r = v_resultset_add_row(res->sets, ap);
-	va_end(ap);
-
-	return r;
-}
-
-row *resultset_add_row(resultset *res, ...)
-{
-	va_list ap;
-	row *r;
-
-	va_start(ap, res);
-	r = v_resultset_add_row(res, ap);
-	va_end(ap);
-
-	return r;
-}
-
-static row *v_resultset_add_row(resultset *res, va_list ap)
-{
-	row **rp;
-	int i;
-	const char *d;
-
-	/*
-	  This is inefficient but I think it makes the code
-	  clearer than passing a 'latest row' around.
-	*/
-
-	for(rp = &(res->rows); *rp; rp = &(*rp)->next);
-	*rp = results_row_alloc(res->ncols);
-
-	for(i = 0; i < res->ncols; i++) {
-		d = va_arg(ap, const char *);
-		if(d && !((*rp)->data[i] = strdup2wcs(d))) err_system();
-	}
-
-	res->nrows++;
-
-	return *rp;
-}
-
-void results_free(results *r)
-{
-	SQLINTEGER i;
-
-	if(r->warnings) {
-		for(i = 0; i < r->nwarnings; i++) if(r->warnings[i]) free(r->warnings[i]);
-		free(r->warnings);
-	}
-
-	if(r->sets) resultset_free(r->sets);
-
-	free(r);
-}
-
-void resultset_free(resultset *r)
-{
-	SQLSMALLINT i;
-
-	if(r->next) resultset_free(r->next);
-
-	if(r->cols) {
-		for(i = 0; i< r->ncols; i++) if(r->cols[i]) free(r->cols[i]);
-		free(r->cols);
-	}
-
-	if(r->rows) results_row_free(r->rows, r->ncols);
-
-	free(r);
-}
-
-void results_row_free(row *r, int ncols)
-{
-	SQLSMALLINT i;
-
-	if(r->next) results_row_free(r->next, ncols);
+	if(r->next) row_free(r->next, ncols);
 
 	if(r->data) {
 		for(i = 0; i < ncols; i++) if(r->data[i]) free(r->data[i]);
@@ -242,4 +427,10 @@ void results_row_free(row *r, int ncols)
 	}
 
 	free(r);
+}
+
+static row *current_row(results *res)
+{
+	if(!res->rcursor) err_fatal("current_row: no current row");
+	return res->rcursor;
 }

@@ -55,7 +55,7 @@ static void go(SQLHDBC conn, buffer *sqlbuf, char action, stream *stream)
 
 	if(res) {
 		output_results(res, action, stream);
-		results_free(res);
+		res_free(res);
 	}
 }
 

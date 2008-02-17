@@ -44,34 +44,34 @@ static results *get_help(const char *topic)
 	if(!strcmp(topic, "intro")) text = HELP_INTRO;
 	else text = HELP_NOTFOUND;
 
-	res = results_single_alloc();
-	results_set_cols(res, 1, topic);
-	results_add_row(res, text);
+	res = res_alloc();
+	res_set_cols(res, 1, topic);
+	res_add_row(res, text);
 
 	return res;
 }
 
 static results *get_copying()
 {
-	results *res = results_single_alloc();
-	results_set_cols(res, 1, _("COPYING"));
-	results_add_row(res, GPL_COPYING);
+	results *res = res_alloc();
+	res_set_cols(res, 1, _("COPYING"));
+	res_add_row(res, GPL_COPYING);
 	return res;
 }
 
 static results *get_warranty()
 {
-	results *res = results_single_alloc();
-	results_set_cols(res, 1, _("WARRANTY"));
-	results_add_row(res, GPL_WARRANTY);
+	results *res = res_alloc();
+	res_set_cols(res, 1, _("WARRANTY"));
+	res_add_row(res, GPL_WARRANTY);
 	return res;
 }
 
 static results *set(const char *name, const char *value)
 {
-	results *res = results_single_alloc();
+	results *res = res_alloc();
 
-	results_set_cols(res, 2, _("name"), _("value"));
+	res_set_cols(res, 2, _("name"), _("value"));
 
 	if(name) {
 		char *prefixed_name;
@@ -82,21 +82,18 @@ static results *set(const char *name, const char *value)
 			if(setenv(prefixed_name, value, 1) == -1) {
 				char buf[64];
 				strerror_r(errno, buf, 64);
-				results_set_warnings(res, 1, buf);
+				res_add_warning(res, buf);
 			}
 		} else {
 			value = getenv(prefixed_name);
-			if(!value) results_set_warnings(res, 1, _("Variable not set"));
+			if(!value) res_add_warning(res, _("Variable not set"));
 		}
 
-		results_add_row(res, name, value);
+		res_add_row(res, name, value);
 
 		free(prefixed_name);
 	} else {
 		char **v, *name, *value;
-		row **rp;
-
-		rp = &(res->sets->rows);
 
 		for(v = environ; *v; v++) {
 			if(!strncmp(*v, "DBSH_", 5)) {
@@ -109,13 +106,7 @@ static results *set(const char *name, const char *value)
 
 				if(*value) {
 					*value++ = 0;
-
-					*rp = results_row_alloc(2);
-					(*rp)->data[0] = strdup2wcs(name);
-					(*rp)->data[1] = strdup2wcs(value);
-
-					res->sets->nrows++;
-					rp = &(*rp)->next;
+					res_add_row(res, name, value);
 				}
 
 				free(name);

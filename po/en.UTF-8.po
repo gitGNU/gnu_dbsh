@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-01-26 14:06+0000\n"
+"POT-Creation-Date: 2008-02-17 15:09+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -36,48 +36,48 @@ msgstr "value"
 msgid "Variable not set"
 msgstr "Variable not set"
 
-#: command.c:139
+#: command.c:130
 #, c-format
 msgid "Cannot unset variable '%s'\n"
 msgstr ""
 
-#: command.c:145
+#: command.c:136
 #, c-format
 msgid "Syntax: %s %s\n"
 msgstr ""
 
-#: command.c:174
+#: command.c:165
 msgid "<table>"
 msgstr ""
 
-#: command.c:182
+#: command.c:173
 msgid "<variable>"
 msgstr ""
 
-#: command.c:187
+#: command.c:178
 #, c-format
 msgid "Unrecognised command: %s\n"
 msgstr "Unrecognised command: %s\n"
 
-#: db.c:56
+#: db.c:58
 #, c-format
 msgid "Error at %s line %d:\n"
 msgstr "Error at %s line %d:\n"
 
-#: db.c:61
+#: db.c:63
 #, c-format
 msgid "%s (SQLSTATE %s, error %ld)\n"
 msgstr "%s (SQLSTATE %s, error %ld)\n"
 
-#: db.c:67
+#: db.c:69
 msgid " (return code was "
 msgstr " (return code was "
 
-#: db.c:101
+#: db.c:103
 msgid "Failed to allocate environment handle\n"
 msgstr "Failed to allocate environment handle\n"
 
-#: db.c:106
+#: db.c:108
 msgid "Failed to set ODBC version to 3\n"
 msgstr "Failed to set ODBC version to 3\n"
 
@@ -194,54 +194,59 @@ msgstr ""
 msgid "Procedure term"
 msgstr ""
 
-#: db.c:331 db.c:524 db.c:554
+#: db.c:330 db.c:534 db.c:574
 msgid "Failed to allocate statement handle"
 msgstr "Failed to allocate statement handle"
 
-#: db.c:342
+#: db.c:341
+#, fuzzy
+msgid "Failed to prepare statement"
+msgstr "Failed to execute statement"
+
+#: db.c:351
 msgid "Failed to execute statement"
 msgstr "Failed to execute statement"
 
-#: db.c:414
+#: db.c:437
 msgid "Failed to retrieve number of columns"
 msgstr "Failed to retrieve number of columns"
 
-#: db.c:422
+#: db.c:445
 msgid "Failed to retrieve rows affected"
 msgstr "Failed to retrieve rows affected"
 
-#: db.c:449
+#: db.c:469
 msgid "Failed to retrieve column data"
 msgstr "Failed to retrieve column data"
 
-#: db.c:488
+#: db.c:501
 msgid "Failed to fetch row"
 msgstr "Failed to fetch row"
 
-#: db.c:538
+#: db.c:551
 msgid "Failed to list tables"
 msgstr "Failed to list tables"
 
-#: db.c:569
+#: db.c:590
 msgid "Failed to list columns"
 msgstr "Failed to list columns"
 
-#: db.c:640
+#: db.c:668
 #, fuzzy
 msgid "Failed to get max catalog name len"
 msgstr "Failed to execute statement"
 
-#: db.c:650
+#: db.c:678
 #, fuzzy
 msgid "Failed to get current catalog"
 msgstr "Failed to retrieve column data"
 
-#: db.c:671
+#: db.c:699
 #, fuzzy
 msgid "Failed to get catalog location"
 msgstr "Failed to list columns"
 
-#: db.c:677
+#: db.c:705
 msgid "Failed to get catalog name separator"
 msgstr ""
 
@@ -292,79 +297,79 @@ msgstr ""
 "Usage: %s -l\n"
 "       %s <dsn> [<username>] [<password>]\n"
 
-#: output.c:192
+#: output.c:199
 msgctxt "topleft"
 msgid "+"
 msgstr "┌"
 
-#: output.c:194
+#: output.c:201
 msgctxt "topmid"
 msgid "+"
 msgstr "┬"
 
-#: output.c:196
+#: output.c:203
 msgctxt "topright"
 msgid "+"
 msgstr "┐"
 
-#: output.c:201
+#: output.c:208
 msgctxt "midleft"
 msgid "+"
 msgstr "├"
 
-#: output.c:203
+#: output.c:210
 msgctxt "midmid"
 msgid "+"
 msgstr "┼"
 
-#: output.c:205
+#: output.c:212
 msgctxt "midright"
 msgid "+"
 msgstr "┤"
 
-#: output.c:211
+#: output.c:218
 msgctxt "botleft"
 msgid "+"
 msgstr "└"
 
-#: output.c:213
+#: output.c:220
 msgctxt "botmid"
 msgid "+"
 msgstr "┴"
 
-#: output.c:215
+#: output.c:222
 msgctxt "botright"
 msgid "+"
 msgstr "┘"
 
-#: output.c:226
+#: output.c:236
 #, fuzzy, c-format
 msgid "1 row in set\n"
-msgid_plural "%ld rows in set\n"
+msgid_plural "%d rows in set\n"
 msgstr[0] "1 row in set\n"
 msgstr[1] "%ld rows in set\n"
 
-#: output.c:240 output.c:333 output.c:335
+#: output.c:249 output.c:350 output.c:352
 msgid "-"
 msgstr "─"
 
-#: output.c:265 output.c:285 output.c:376 output.c:385 output.c:392
-#: output.c:394 output.c:396 output.c:410
+#: output.c:273 output.c:293 output.c:392 output.c:401 output.c:407
+#: output.c:409 output.c:411 output.c:422
 msgid "|"
 msgstr "│"
 
-#: output.c:509
+#: output.c:528
 msgid "Success\n"
 msgstr "Success\n"
 
-#: output.c:512
+#: output.c:531
 #, fuzzy, c-format
 msgid "1 row affected\n"
-msgid_plural "%ld rows affected\n"
+msgid_plural "%d rows affected\n"
 msgstr[0] "1 row affected\n"
 msgstr[1] "%ld rows affected\n"
 
-#: output.c:551
+#: output.c:572
 #, c-format
 msgid "(%lu.%06lus)\n"
 msgstr "(%lu.%06lus)\n"

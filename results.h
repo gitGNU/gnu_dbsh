@@ -20,48 +20,40 @@
 #define RESULTS_H
 
 #include <sys/time.h>
-#include <sql.h>
 #include <wchar.h>
 
-typedef struct resultset resultset;
-typedef struct row row;
 
-struct results {
-	resultset *sets;
-	SQLINTEGER nwarnings;
-	wchar_t **warnings;
-	struct timeval time_taken;
-};
+results *res_alloc();
+void res_free(results *);
 
-struct resultset {
-	SQLSMALLINT ncols;
-	SQLINTEGER nrows;
-	wchar_t **cols;
-	row *rows;
-	resultset *next;
-};
+void res_start_timer(results *);
+void res_stop_timer(results *);
+struct timeval res_time_taken(results *);
 
-struct row {
-	wchar_t **data;
-	row *next;
-};
+void res_add_warning(results *, const char *);
+wchar_t *res_next_warning(results *);
 
-results *results_alloc();
-results *results_single_alloc();
-resultset *results_add_set();
-void results_set_warnings(results *, int, ...);
-void results_set_cols(results *, int, ...);
-row *results_add_row(results *, ...);
-void results_free(results *);
+void res_add_set(results *);
+void res_first_set(results *);
+int res_next_set(results *);
 
-resultset *resultset_alloc();
-void resultset_set_cols(resultset *, int, ...);
-row *resultset_add_row(resultset *, ...);
-void resultset_free(resultset *);
+void res_set_ncols(results *, unsigned int);
+void res_set_col(results *, unsigned int, const char *);
+void res_set_cols(results *, unsigned int, ...);
+unsigned int res_get_ncols(results *);
+wchar_t *res_get_col(results *, unsigned int);
+wchar_t **res_get_cols(results *);
 
-row *results_row_alloc(int);
-void results_row_free(row *, int);
-
-wchar_t *strdup2wcs(const char *);
+void res_set_nrows(results *, int);
+void res_new_row(results *);
+void res_set_value(results *, unsigned int, const char *);
+void res_set_value_w(results *, unsigned int, const wchar_t *);
+void res_add_row(results *, ...);
+int res_get_nrows(results *);
+void res_first_row(results *);
+int res_next_row(results *);
+int res_more_rows(results *);
+wchar_t *res_get_value(results *, unsigned int);
+wchar_t **res_get_row(results *);
 
 #endif
