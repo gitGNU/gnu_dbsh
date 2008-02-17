@@ -421,8 +421,9 @@ void fetch_results(results *res, SQLHSTMT st)
 		res_add_set(res);
 	}
 
-	set_current_statement(0);
+	buffer_free(buf);
 
+	set_current_statement(0);
 	SQLFreeHandle(SQL_HANDLE_STMT, st);
 }
 
