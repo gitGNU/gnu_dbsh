@@ -19,8 +19,7 @@
 #ifndef ACTION_H
 #define ACTION_H
 
-#include "buffer.h"
-#include "db.h"
+#include <sql.h>
 
 void run_action(SQLHDBC, buffer *, char, char *);
 
