@@ -787,7 +787,7 @@ results *db_autocommit(int change)
 
 	if(change) {
 		state = change > 0 ? SQL_AUTOCOMMIT_ON : SQL_AUTOCOMMIT_OFF;
-		r = SQLSetConnectAttr(conn, SQL_ATTR_AUTOCOMMIT, &state, 0);
+		r = SQLSetConnectAttr(conn, SQL_ATTR_AUTOCOMMIT, (SQLPOINTER) state, 0);
 		if(r == SQL_SUCCESS_WITH_INFO || r == SQL_ERROR)
 			fetch_warnings(res, SQL_HANDLE_DBC, conn);
 	}
