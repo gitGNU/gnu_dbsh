@@ -39,7 +39,7 @@ static int get_lnum(buffer *buf)
 	return n;
 }
 
-const char *prompt_render(SQLHDBC conn, buffer *buf)
+const char *prompt_render(buffer *buf)
 {
 	static char prompt[MAX_LEN];
 
