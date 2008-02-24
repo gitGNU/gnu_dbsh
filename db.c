@@ -503,7 +503,7 @@ static int fetch_row(results *res, SQLHSTMT st, buffer *buf)
 {
 	SQLRETURN r;
 	SQLSMALLINT i;
-	SQLINTEGER reqlen;
+	SQLINTEGER reqlen, offset;
 
 
 	r = SQLFetch(st);
@@ -512,16 +512,26 @@ static int fetch_row(results *res, SQLHSTMT st, buffer *buf)
 	res_new_row(res);
 
 	for(i = 0; i < res_get_ncols(res); i++) {
-		r = SQLGetData(st, i + 1, SQL_C_CHAR, buf->buf, buf->len, &reqlen);
+		offset = 0;
 
-		if(reqlen + 1 > buf->len) {
-			buffer_realloc(buf, reqlen + 1);
-			r = SQLGetData(st, i + 1, SQL_C_CHAR, buf->buf, buf->len, 0);
-		}
+		for(;;) {
+			r = SQLGetData(st, i + 1, SQL_C_CHAR,
+				       buf->buf + offset, buf->len - offset,
+				       &reqlen);
 
-		if(!SQL_SUCCEEDED(r)) {
-			report_error(SQL_HANDLE_STMT, st, r, _("Failed to fetch row"));
-			return 0;
+			if(r == SQL_NO_DATA) break;
+			else if(!SQL_SUCCEEDED(r)) {
+				report_error(SQL_HANDLE_STMT, st, r, _("Failed to fetch row"));
+				return 0;
+			}
+
+			if(reqlen == SQL_NULL_DATA) break;
+			else if(reqlen == SQL_NO_TOTAL) reqlen = buf->len + 1024;  // guess
+
+			if(reqlen > 0 && reqlen + 1 > buf->len) {
+				offset = buf->len - 1;
+				buffer_realloc(buf, reqlen + 1);
+			} else break;
 		}
 
 		if(reqlen != SQL_NULL_DATA) res_set_value(res, i, buf->buf);

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-02-17 23:56+0000\n"
+"POT-Creation-Date: 2008-02-24 13:45+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -24,11 +24,11 @@ msgstr "COPYING"
 msgid "WARRANTY"
 msgstr "WARRANTY"
 
-#: command.c:74 db.c:249
+#: command.c:74 db.c:253
 msgid "name"
 msgstr "name"
 
-#: command.c:74 db.c:249
+#: command.c:74 db.c:253
 msgid "value"
 msgstr "value"
 
@@ -83,12 +83,12 @@ msgstr "Failed to allocate environment handle\n"
 msgid "Failed to set ODBC version to 3"
 msgstr "Failed to set ODBC version to 3\n"
 
-#: db.c:127 db.c:259
+#: db.c:127 db.c:263
 #, fuzzy
 msgid "Driver"
 msgstr "Server"
 
-#: db.c:133 db.c:252
+#: db.c:133 db.c:256
 msgid "DSN"
 msgstr ""
 
@@ -109,152 +109,152 @@ msgstr "DBMS"
 msgid "system"
 msgstr ""
 
-#: db.c:163
+#: db.c:164
 #, fuzzy
 msgid "Failed to allocate connection handle"
 msgstr "Failed to allocate connection handle\n"
 
-#: db.c:178
+#: db.c:182
 msgid "Failed to connect"
 msgstr "Failed to connect"
 
-#: db.c:183
+#: db.c:187
 #, c-format
 msgid "Connected to %s\n"
 msgstr "Connected to %s\n"
 
-#: db.c:213
+#: db.c:217
 msgid "SQLGetInfo() failed"
 msgstr "SQLGetInfo() failed"
 
-#: db.c:214 db.c:216 db.c:230 db.c:232 db.c:275 db.c:294
+#: db.c:218 db.c:220 db.c:234 db.c:236 db.c:279 db.c:298
 #, fuzzy
 msgid "(unknown)"
 msgstr "(none)"
 
-#: db.c:229
+#: db.c:233
 #, fuzzy
 msgid "SQLGetConnectAttr() failed"
 msgstr "SQLGetInfo() failed"
 
-#: db.c:253
+#: db.c:257
 msgid "Server"
 msgstr "Server"
 
-#: db.c:254
+#: db.c:258
 #, fuzzy
 msgid "DBMS name"
 msgstr "name"
 
-#: db.c:255
+#: db.c:259
 #, fuzzy
 msgid "DBMS version"
 msgstr "Version"
 
-#: db.c:256
+#: db.c:260
 #, fuzzy
 msgid "DBMS user"
 msgstr "DBMS"
 
-#: db.c:260
+#: db.c:264
 msgid "Driver version"
 msgstr ""
 
-#: db.c:261
+#: db.c:265
 #, fuzzy
 msgid "ODBC version"
 msgstr "Version"
 
-#: db.c:277
+#: db.c:281
 msgid "ODBC compliance"
 msgstr ""
 
-#: db.c:296
+#: db.c:300
 msgid "SQL-92 compliance"
 msgstr ""
 
-#: db.c:299
+#: db.c:303
 msgid "Driver Manager version"
 msgstr ""
 
-#: db.c:300
+#: db.c:304
 msgid "X/Open CLI compliance"
 msgstr ""
 
-#: db.c:303
+#: db.c:307
 msgid "Catalog term"
 msgstr ""
 
-#: db.c:305
+#: db.c:309
 msgid "Schema term"
 msgstr ""
 
-#: db.c:306
+#: db.c:310
 msgid "Table term"
 msgstr ""
 
-#: db.c:307
+#: db.c:311
 msgid "Procedure term"
 msgstr ""
 
-#: db.c:332 db.c:552 db.c:592
+#: db.c:336 db.c:566 db.c:606
 msgid "Failed to allocate statement handle"
 msgstr "Failed to allocate statement handle"
 
-#: db.c:343
+#: db.c:347
 #, fuzzy
 msgid "Failed to prepare statement"
 msgstr "Failed to execute statement"
 
-#: db.c:357
+#: db.c:361
 #, fuzzy
 msgid "Failed to bind parameter"
 msgstr "Failed to execute statement"
 
-#: db.c:368
+#: db.c:372
 msgid "Failed to execute statement"
 msgstr "Failed to execute statement"
 
-#: db.c:455
+#: db.c:459
 msgid "Failed to retrieve number of columns"
 msgstr "Failed to retrieve number of columns"
 
-#: db.c:463
+#: db.c:467
 msgid "Failed to retrieve rows affected"
 msgstr "Failed to retrieve rows affected"
 
-#: db.c:487
+#: db.c:491
 msgid "Failed to retrieve column data"
 msgstr "Failed to retrieve column data"
 
-#: db.c:519
+#: db.c:524
 msgid "Failed to fetch row"
 msgstr "Failed to fetch row"
 
-#: db.c:569
+#: db.c:583
 msgid "Failed to list tables"
 msgstr "Failed to list tables"
 
-#: db.c:608
+#: db.c:622
 msgid "Failed to list columns"
 msgstr "Failed to list columns"
 
-#: db.c:686
+#: db.c:700
 #, fuzzy
 msgid "Failed to get max catalog name len"
 msgstr "Failed to execute statement"
 
-#: db.c:696
+#: db.c:710
 #, fuzzy
 msgid "Failed to get current catalog"
 msgstr "Failed to retrieve column data"
 
-#: db.c:717
+#: db.c:731
 #, fuzzy
 msgid "Failed to get catalog location"
 msgstr "Failed to list columns"
 
-#: db.c:723
+#: db.c:737
 msgid "Failed to get catalog name separator"
 msgstr ""
 
