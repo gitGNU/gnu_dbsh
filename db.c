@@ -247,7 +247,7 @@ SQLINTEGER db_conn_attr(SQLINTEGER attr, char *buf, int len)
 
 #define ADD_INFO(t, n) db_info(t, buf, 256); res_add_row(res, n, buf)
 
-results *db_conn_details(SQLHDBC conn)
+results *db_conn_details()
 {
 	results *res;
 	char buf[256];
