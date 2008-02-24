@@ -38,7 +38,7 @@ pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
 
 
 static void set_current_statement(SQLHSTMT *);
-static void fetch_warnings(results *, SQLHSTMT);
+static void fetch_warnings(results *, SQLSMALLINT, SQLHANDLE);
 static void fetch_results(results *, SQLHSTMT);
 static void fetch_resultset(results *, SQLHSTMT, buffer *);
 static int fetch_row(results *, SQLHSTMT, buffer *);
@@ -355,7 +355,7 @@ results *execute_query(const char *buf, int buflen, parsed_line *params)
 		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, st);
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
 	}
 
 	for(i = 0; i < params->nchunks; i++) {
@@ -369,7 +369,7 @@ results *execute_query(const char *buf, int buflen, parsed_line *params)
 			res_free(res);
 			return 0;
 		} else if(r == SQL_SUCCESS_WITH_INFO) {
-			fetch_warnings(res, st);
+			fetch_warnings(res, SQL_HANDLE_STMT, st);
 		}
 	}
 
@@ -380,7 +380,7 @@ results *execute_query(const char *buf, int buflen, parsed_line *params)
 		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, st);
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
 	}
 
 	fetch_results(res, st);
@@ -396,24 +396,24 @@ static void set_current_statement(SQLHSTMT *stp)
 	pthread_mutex_unlock(&cs_lock);
 }
 
-static void fetch_warnings(results *res, SQLHSTMT st)
+static void fetch_warnings(results *res, SQLSMALLINT type, SQLHANDLE h)
 {
 	SQLINTEGER n, i;
 	buffer *buf;
 	SQLSMALLINT reqlen;
 
-	SQLGetDiagField(SQL_HANDLE_STMT, st, 0, SQL_DIAG_NUMBER, &n, 0, 0);
+	SQLGetDiagField(SQL_HANDLE_STMT, h, 0, SQL_DIAG_NUMBER, &n, 0, 0);
 	if(!n) return;
 
 	buf = buffer_alloc(1024);
 
 	for(i = 0; i < n; i++) {
-		SQLGetDiagField(SQL_HANDLE_STMT, st, i + 1, SQL_DIAG_MESSAGE_TEXT,
+		SQLGetDiagField(SQL_HANDLE_STMT, h, i + 1, SQL_DIAG_MESSAGE_TEXT,
 				buf->buf, buf->len, &reqlen);
 
 		if(reqlen + 1 > buf->len) {
 			buffer_realloc(buf, reqlen + 1);
-			SQLGetDiagField(SQL_HANDLE_STMT, st, i + 1, SQL_DIAG_MESSAGE_TEXT,
+			SQLGetDiagField(SQL_HANDLE_STMT, h, i + 1, SQL_DIAG_MESSAGE_TEXT,
 					buf->buf, buf->len, 0);
 
 		}
@@ -439,10 +439,10 @@ void fetch_results(results *res, SQLHSTMT st)
 		if(r == SQL_NO_DATA) {
 			break;
 		} else if(!SQL_SUCCEEDED(r)) {
-			fetch_warnings(res, st);
+			fetch_warnings(res, SQL_HANDLE_STMT, st);
 			break;
 		} else if(r == SQL_SUCCESS_WITH_INFO) {
-			fetch_warnings(res, st);
+			fetch_warnings(res, SQL_HANDLE_STMT, st);
 		}
 
 		res_add_set(res);
@@ -591,7 +591,7 @@ results *get_tables(const char *catalog,
 		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, st);
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
 	}
 
 	fetch_results(res, st);
@@ -630,7 +630,7 @@ results *get_columns(const char *catalog,
 		res_free(res);
 		return 0;
 	} else if(r == SQL_SUCCESS_WITH_INFO) {
-		fetch_warnings(res, st);
+		fetch_warnings(res, SQL_HANDLE_STMT, st);
 	}
 
 	fetch_results(res, st);
