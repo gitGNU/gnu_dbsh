@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-02-24 14:40+0000\n"
+"POT-Creation-Date: 2008-02-24 18:03+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -50,11 +50,11 @@ msgstr ""
 msgid "<table>"
 msgstr ""
 
-#: command.c:192
+#: command.c:196
 msgid "<variable>"
 msgstr ""
 
-#: command.c:197
+#: command.c:201
 #, c-format
 msgid "Unrecognised command: %s\n"
 msgstr "Unrecognised command: %s\n"
@@ -211,7 +211,7 @@ msgstr "Failed to execute statement"
 msgid "Failed to bind parameter"
 msgstr "Failed to execute statement"
 
-#: db.c:378
+#: db.c:378 db.c:817
 msgid "Failed to execute statement"
 msgstr "Failed to execute statement"
 
@@ -284,6 +284,11 @@ msgid ""
 "  tables [<catalog>]\n"
 "  columns <table>\n"
 "\n"
+"Transaction commands:\n"
+"  autocommit on|off\n"
+"  commit\n"
+"  rollback\n"
+"\n"
 "Other commands:\n"
 "  set [<variable>] [<value>]\n"
 "  unset <variable>\n"
@@ -304,7 +309,7 @@ msgstr ""
 "  set [<variable>] [<value>]\n"
 "  info"
 
-#: help.h:19
+#: help.h:24
 msgid "Help topic doesn't exist"
 msgstr "Help topic doesn't exist"
 
