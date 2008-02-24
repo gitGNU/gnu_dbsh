@@ -10,6 +10,11 @@
 "  tables [<catalog>]\n" \
 "  columns <table>\n" \
 "\n" \
+"Transaction commands:\n" \
+"  autocommit on|off\n" \
+"  commit\n" \
+"  rollback\n" \
+"\n" \
 "Other commands:\n" \
 "  set [<variable>] [<value>]\n" \
 "  unset <variable>\n" \

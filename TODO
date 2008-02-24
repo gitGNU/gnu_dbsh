@@ -41,8 +41,6 @@ automatically saved somewhere (~/.dbsh/aliases/getrow.sql?)
 SELECT table2_id FROM table1 \T SELECT * FROM table2 WHERE id = ?;
 
 commands:
-/autocommit on|off
-/commit + /rollback
 /describe <table> - SQLColumns, SQLStatistics etc
 /isolation ?
 /procedures (SQLProcedures)
