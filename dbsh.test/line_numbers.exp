@@ -1,0 +1,21 @@
+set test "Line numbers"
+
+send "line 1\n"
+expect {
+    "2 >"
+    { pass "$test" }
+}
+
+send "line 2\n"
+expect {
+    "3 >"
+    { pass "$test" }
+}
+
+send "line 3\n"
+expect {
+    "4 >"
+    { pass "$test" }
+}
+
+send "\\c\n";
