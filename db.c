@@ -155,6 +155,7 @@ SQLHDBC db_connect()
 {
 	SQLHENV env;
 	SQLHDBC conn;
+	SQLSMALLINT ldsn, luser, lpass;
 	SQLRETURN r;
 
 	env = alloc_env();
@@ -162,14 +163,17 @@ SQLHDBC db_connect()
 	r = SQLAllocHandle(SQL_HANDLE_DBC, env, &conn);
 	if(!SQL_SUCCEEDED(r)) err_fatal(_("Failed to allocate connection handle"));
 
+	ldsn =  dsn  ? SQL_NTS : 0;
+	luser = user ? SQL_NTS : 0;
+	lpass = pass ? SQL_NTS : 0;
 
 	if(!strchr(dsn, '=') || user) {
 		r = SQLConnect(conn,
-			       (SQLCHAR *) dsn, SQL_NTS,
-			       (SQLCHAR *) user, SQL_NTS,
-			       (SQLCHAR *) pass, SQL_NTS);
+			       (SQLCHAR *) dsn, ldsn,
+			       (SQLCHAR *) user, luser,
+			       (SQLCHAR *) pass, lpass);
 	} else {
-		r = SQLDriverConnect(conn, 0, (SQLCHAR *) dsn, SQL_NTS,
+		r = SQLDriverConnect(conn, 0, (SQLCHAR *) dsn, ldsn,
 				     0, 0, 0, SQL_DRIVER_NOPROMPT);
 	}
 
