@@ -31,7 +31,7 @@
 #define report_error(t, h, r, f) _report_error(t, h, r, f, __FILE__, __LINE__)
 
 extern const char *dsn, *user, *pass;
-extern SQLHDBC conn;
+SQLHDBC conn;
 
 SQLHSTMT *current_statement;
 pthread_mutex_t cs_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -42,8 +42,8 @@ static void fetch_warnings(results *, SQLHSTMT);
 static void fetch_results(results *, SQLHSTMT);
 static void fetch_resultset(results *, SQLHSTMT, buffer *);
 static int fetch_row(results *, SQLHSTMT, buffer *);
-static char *get_current_catalog(SQLHDBC);
-static void parse_catalog_spec(SQLHDBC, char *, char **, char **);
+static char *get_current_catalog();
+static void parse_catalog_spec(char *, char **, char **);
 static void parse_qualified_table(char *, char **, char **);
 
 static void _report_error(SQLSMALLINT type, SQLHANDLE handle, SQLRETURN r,
@@ -151,7 +151,7 @@ results *db_drivers_and_dsns()
 	return res;
 }
 
-SQLHDBC db_connect()
+static SQLHDBC connect()
 {
 	SQLHENV env;
 	SQLHDBC conn;
@@ -189,25 +189,31 @@ SQLHDBC db_connect()
 	return conn;
 }
 
+int db_connect()
+{
+	conn = connect();
+	return conn ? 1 : 0;
+}
+
 void db_reconnect()
 {
 	SQLHDBC newconn;
 
-	if((newconn = db_connect(dsn, user, pass))) {
+	if((newconn = connect())) {
 		SQLDisconnect(conn);
 		SQLFreeHandle(SQL_HANDLE_DBC, conn);
 		conn = newconn;
 	}
 }
 
-void db_close(SQLHDBC conn)
+void db_close()
 {
 	SQLDisconnect(conn);
 	SQLFreeHandle(SQL_HANDLE_DBC, conn);
 	SQLFreeHandle(SQL_HANDLE_ENV, alloc_env());
 }
 
-SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
+SQLSMALLINT db_info(SQLUSMALLINT type, char *buf, int len)
 {
 	SQLRETURN r;
 	SQLSMALLINT l;
@@ -223,7 +229,7 @@ SQLSMALLINT db_info(SQLHDBC conn, SQLUSMALLINT type, char *buf, int len)
 	return l;
 }
 
-SQLINTEGER db_conn_attr(SQLHDBC conn, SQLINTEGER attr, char *buf, int len)
+SQLINTEGER db_conn_attr(SQLINTEGER attr, char *buf, int len)
 {
 	SQLRETURN r;
 	SQLINTEGER l;
@@ -239,7 +245,7 @@ SQLINTEGER db_conn_attr(SQLHDBC conn, SQLINTEGER attr, char *buf, int len)
 	return l;
 }
 
-#define ADD_INFO(t, n) db_info(conn, t, buf, 256); res_add_row(res, n, buf)
+#define ADD_INFO(t, n) db_info(t, buf, 256); res_add_row(res, n, buf)
 
 results *db_conn_details(SQLHDBC conn)
 {
@@ -324,7 +330,7 @@ int db_supports_catalogs(SQLHDBC conn)
 	return (buf[0] == 'Y');
 }
 
-results *execute_query(SQLHDBC conn, const char *buf, int buflen, parsed_line *params)
+results *execute_query(const char *buf, int buflen, parsed_line *params)
 {
 	SQLHSTMT st;
 	results *res;
@@ -554,7 +560,7 @@ void db_cancel_query()
 	pthread_mutex_unlock(&cs_lock);
 }
 
-results *get_tables(SQLHDBC conn, const char *catalog,
+results *get_tables(const char *catalog,
 		       const char *schema, const char *table)
 {
 	SQLHSTMT st;
@@ -594,7 +600,7 @@ results *get_tables(SQLHDBC conn, const char *catalog,
 	return res;
 }
 
-results *get_columns(SQLHDBC conn, const char *catalog,
+results *get_columns(const char *catalog,
 			const char *schema, const char *table)
 {
 	SQLHSTMT st;
@@ -633,7 +639,7 @@ results *get_columns(SQLHDBC conn, const char *catalog,
 	return res;
 }
 
-results *db_list_tables(SQLHDBC conn, const char *spec)
+results *db_list_tables(const char *spec)
 {
 	char *catalog, *schema;
 	char *buf;
@@ -646,19 +652,19 @@ results *db_list_tables(SQLHDBC conn, const char *spec)
 	if(db_supports_catalogs(conn)) {
 		if(spec) {
 			if(!(buf = strdup(spec))) err_system();
-			parse_catalog_spec(conn, buf, &catalog, &schema);
+			parse_catalog_spec(buf, &catalog, &schema);
 		} else {
-			buf = get_current_catalog(conn);
+			buf = get_current_catalog();
 			catalog = buf;
 		}
 	} else schema = (char *) spec;
 
-	res = get_tables(conn, catalog, schema, 0);
+	res = get_tables(catalog, schema, 0);
 	if(buf) free(buf);
 	return res;
 }
 
-results *db_list_columns(SQLHDBC conn, const char *spec)
+results *db_list_columns(const char *spec)
 {
 	char *catalog, *schema, *table;
 	char *dspec, *buf;
@@ -669,7 +675,7 @@ results *db_list_columns(SQLHDBC conn, const char *spec)
 
 	if(db_supports_catalogs(conn)) {
 
-		parse_catalog_spec(conn, dspec, &catalog, &table);
+		parse_catalog_spec(dspec, &catalog, &table);
 
 		if(table) parse_qualified_table(table, &schema, &table);
 		else {
@@ -682,13 +688,13 @@ results *db_list_columns(SQLHDBC conn, const char *spec)
 		parse_qualified_table(dspec, &schema, &table);
 	}
 
-	res = get_columns(conn, catalog, schema, table);
+	res = get_columns(catalog, schema, table);
 	free(dspec);
 	if(buf) free(buf);
 	return res;
 }
 
-static char *get_current_catalog(SQLHDBC conn)
+static char *get_current_catalog()
 {
 	SQLSMALLINT buflen;
 	char *buf;
@@ -714,8 +720,7 @@ static char *get_current_catalog(SQLHDBC conn)
 	return buf;
 }
 
-static void parse_catalog_spec(SQLHDBC conn, char *spec,
-			     char **catalog, char **schema)
+static void parse_catalog_spec(char *spec, char **catalog, char **schema)
 {
 	SQLUSMALLINT catloc;
 	char sep[8], *p, *q;

@@ -52,20 +52,20 @@ const char *prompt_render(SQLHDBC conn, buffer *buf)
 	for(; *s; s++) {
 		switch(*s) {
 		case 'c':
-			if(db_supports_catalogs(conn))
-				i += db_conn_attr(conn, SQL_ATTR_CURRENT_CATALOG, prompt + i, MAX_LEN - i);
+			if(db_supports_catalogs())
+				i += db_conn_attr(SQL_ATTR_CURRENT_CATALOG, prompt + i, MAX_LEN - i);
 			break;
 		case 'd':
-			i += db_info(conn, SQL_DATA_SOURCE_NAME, prompt + i, MAX_LEN - i);
+			i += db_info(SQL_DATA_SOURCE_NAME, prompt + i, MAX_LEN - i);
 			break;
 		case 'l':
 			i += snprintf(prompt + i, MAX_LEN - i, "%d", get_lnum(buf));
 			break;
 		case 's':
-			i += db_info(conn, SQL_SERVER_NAME, prompt + i, MAX_LEN - i);
+			i += db_info(SQL_SERVER_NAME, prompt + i, MAX_LEN - i);
 			break;
 		case 'u':
-			i += db_info(conn, SQL_USER_NAME, prompt + i, MAX_LEN - i);
+			i += db_info(SQL_USER_NAME, prompt + i, MAX_LEN - i);
 			break;
 		default:
 			prompt[i++] = *s;

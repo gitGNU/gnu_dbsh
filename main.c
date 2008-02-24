@@ -40,7 +40,6 @@
 
 const char *dsn, *user;
 char *pass;
-SQLHDBC conn;
 buffer *mainbuf, *prevbuf;
 
 
@@ -78,7 +77,7 @@ int process_line(char *line)
 			if(!mainbuf->next && prevbuf->next && action != 'r') SWAP_BUFFERS;
 
 			if(action != 'c') {
-				run_action(conn, mainbuf, action, paramstring);
+				run_action(mainbuf, action, paramstring);
 				rl_history_add(mainbuf, (action == 'e' || action == 'p') ? "" : line -1);
 				SWAP_BUFFERS;
 			}
@@ -94,7 +93,7 @@ int process_line(char *line)
 		// do nothing
 		break;
 	case BUFFER_COMMAND:
-		run_action(conn, mainbuf, 1, "");
+		run_action(mainbuf, 1, "");
 		rl_history_add(mainbuf, "");
 		SWAP_BUFFERS;
 		mainbuf->next = 0;
@@ -154,7 +153,7 @@ int main(int argc, char *argv[])
 		for(p = argv[optind]; *p; p++) *p = 'x';
 	}
 
-	if(!(conn = db_connect())) exit(1);
+	if(!db_connect()) exit(1);
 
 	rl_history_start();
 	signal_handlers_install();
@@ -164,7 +163,7 @@ int main(int argc, char *argv[])
 
 	/* Main loop */
 	for(;;) {
-		line = rl_readline(prompt_render(conn, mainbuf));
+		line = rl_readline(prompt_render(mainbuf));
 		if(!line || process_line(line)) {
 			fputc('\n', stdout);
 			break;
@@ -177,7 +176,7 @@ int main(int argc, char *argv[])
 
 	rl_history_end();
 
-	db_close(conn);
+	db_close();
 
 	if(pass) free(pass);
 

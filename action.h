@@ -19,8 +19,6 @@
 #ifndef ACTION_H
 #define ACTION_H
 
-#include <sql.h>
-
-void run_action(SQLHDBC, buffer *, char, char *);
+void run_action(buffer *, char, char *);
 
 #endif

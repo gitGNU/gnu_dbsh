@@ -135,7 +135,7 @@ static void unset(const char *name)
 
 #define SYNTAX(p) printf(_("Syntax: %s %s\n"), c, p)
 
-results *run_command(SQLHDBC conn, buffer *buf)
+results *run_command(buffer *buf)
 {
 	parsed_line *l;
 	results *res = 0;
@@ -155,13 +155,13 @@ results *run_command(SQLHDBC conn, buffer *buf)
 
 	// Catalog commands
 	else if(!strncmp(c, "cat", 3)) {
-		res = get_tables(conn, SQL_ALL_CATALOGS, "", "");
+		res = get_tables(SQL_ALL_CATALOGS, "", "");
 	} else if(!strncmp(c, "sch", 3)) {
-		res = get_tables(conn, "", SQL_ALL_SCHEMAS, "");
+		res = get_tables("", SQL_ALL_SCHEMAS, "");
 	} else if(!strncmp(c, "tab", 3)) {
-		res = db_list_tables(conn, p1);
+		res = db_list_tables(p1);
 	} else if(!strncmp(c, "col", 3)) {
-		if(p1) res = db_list_columns(conn, p1);
+		if(p1) res = db_list_columns(p1);
 		else SYNTAX(_("<table>"));
 	}
 
@@ -172,7 +172,7 @@ results *run_command(SQLHDBC conn, buffer *buf)
 		if(p1) unset(p1);
 		else SYNTAX(_("<variable>"));
 	} else if(!strncmp(c, "inf", 3)) {
-		res = db_conn_details(conn);
+		res = db_conn_details();
 	}
 
 	else printf(_("Unrecognised command: %s\n"), c);

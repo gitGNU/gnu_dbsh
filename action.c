@@ -38,7 +38,7 @@
 #include "stream.h"
 
 
-static void go(SQLHDBC conn, buffer *sqlbuf, char action, parsed_line *params, stream *stream)
+static void go(buffer *sqlbuf, char action, parsed_line *params, stream *stream)
 {
 	results *res = NULL;
 
@@ -47,10 +47,10 @@ static void go(SQLHDBC conn, buffer *sqlbuf, char action, parsed_line *params, s
 		// do nothing
 		break;
 	case BUFFER_COMMAND:
-		res = run_command(conn, sqlbuf);
+		res = run_command(sqlbuf);
 		break;
 	case BUFFER_SQL:
-		res = execute_query(conn, sqlbuf->buf, sqlbuf->next, params);
+		res = execute_query(sqlbuf->buf, sqlbuf->next, params);
 		break;
 	}
 
@@ -108,7 +108,7 @@ static void print(buffer *sqlbuf, stream *stream)
 	stream_putwc(stream, L'\n');
 }
 
-void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
+void run_action(buffer *sqlbuf, char action, char *paramstring)
 {
 	parsed_line *l;
 	char *pipeline;
@@ -163,7 +163,7 @@ void run_action(SQLHDBC conn, buffer *sqlbuf, char action, char *paramstring)
 		// TODO: save to named buffer
 		break;
 	default:
-		go(conn, sqlbuf, action, l, stream);
+		go(sqlbuf, action, l, stream);
 		break;
 	}
 

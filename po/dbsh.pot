@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.5a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-02-24 13:45+0000\n"
+"POT-Creation-Date: 2008-02-24 14:03+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,11 +25,11 @@ msgstr ""
 msgid "WARRANTY"
 msgstr ""
 
-#: command.c:74 db.c:253
+#: command.c:74 db.c:259
 msgid "name"
 msgstr ""
 
-#: command.c:74 db.c:253
+#: command.c:74 db.c:259
 msgid "value"
 msgstr ""
 
@@ -82,11 +82,11 @@ msgstr ""
 msgid "Failed to set ODBC version to 3"
 msgstr ""
 
-#: db.c:127 db.c:263
+#: db.c:127 db.c:269
 msgid "Driver"
 msgstr ""
 
-#: db.c:133 db.c:256
+#: db.c:133 db.c:262
 msgid "DSN"
 msgstr ""
 
@@ -119,127 +119,127 @@ msgstr ""
 msgid "Connected to %s\n"
 msgstr ""
 
-#: db.c:217
+#: db.c:223
 msgid "SQLGetInfo() failed"
 msgstr ""
 
-#: db.c:218 db.c:220 db.c:234 db.c:236 db.c:279 db.c:298
+#: db.c:224 db.c:226 db.c:240 db.c:242 db.c:285 db.c:304
 msgid "(unknown)"
 msgstr ""
 
-#: db.c:233
+#: db.c:239
 msgid "SQLGetConnectAttr() failed"
 msgstr ""
 
-#: db.c:257
+#: db.c:263
 msgid "Server"
 msgstr ""
 
-#: db.c:258
+#: db.c:264
 msgid "DBMS name"
 msgstr ""
 
-#: db.c:259
+#: db.c:265
 msgid "DBMS version"
 msgstr ""
 
-#: db.c:260
+#: db.c:266
 msgid "DBMS user"
 msgstr ""
 
-#: db.c:264
+#: db.c:270
 msgid "Driver version"
 msgstr ""
 
-#: db.c:265
+#: db.c:271
 msgid "ODBC version"
 msgstr ""
 
-#: db.c:281
+#: db.c:287
 msgid "ODBC compliance"
 msgstr ""
 
-#: db.c:300
+#: db.c:306
 msgid "SQL-92 compliance"
 msgstr ""
 
-#: db.c:303
+#: db.c:309
 msgid "Driver Manager version"
 msgstr ""
 
-#: db.c:304
+#: db.c:310
 msgid "X/Open CLI compliance"
 msgstr ""
 
-#: db.c:307
+#: db.c:313
 msgid "Catalog term"
 msgstr ""
 
-#: db.c:309
+#: db.c:315
 msgid "Schema term"
 msgstr ""
 
-#: db.c:310
+#: db.c:316
 msgid "Table term"
 msgstr ""
 
-#: db.c:311
+#: db.c:317
 msgid "Procedure term"
 msgstr ""
 
-#: db.c:336 db.c:566 db.c:606
+#: db.c:342 db.c:572 db.c:612
 msgid "Failed to allocate statement handle"
 msgstr ""
 
-#: db.c:347
+#: db.c:353
 msgid "Failed to prepare statement"
 msgstr ""
 
-#: db.c:361
+#: db.c:367
 msgid "Failed to bind parameter"
 msgstr ""
 
-#: db.c:372
+#: db.c:378
 msgid "Failed to execute statement"
 msgstr ""
 
-#: db.c:459
+#: db.c:465
 msgid "Failed to retrieve number of columns"
 msgstr ""
 
-#: db.c:467
+#: db.c:473
 msgid "Failed to retrieve rows affected"
 msgstr ""
 
-#: db.c:491
+#: db.c:497
 msgid "Failed to retrieve column data"
 msgstr ""
 
-#: db.c:524
+#: db.c:530
 msgid "Failed to fetch row"
 msgstr ""
 
-#: db.c:583
+#: db.c:589
 msgid "Failed to list tables"
 msgstr ""
 
-#: db.c:622
+#: db.c:628
 msgid "Failed to list columns"
 msgstr ""
 
-#: db.c:700
+#: db.c:706
 msgid "Failed to get max catalog name len"
 msgstr ""
 
-#: db.c:710
+#: db.c:716
 msgid "Failed to get current catalog"
 msgstr ""
 
-#: db.c:731
+#: db.c:736
 msgid "Failed to get catalog location"
 msgstr ""
 
-#: db.c:737
+#: db.c:742
 msgid "Failed to get catalog name separator"
 msgstr ""
 
@@ -266,7 +266,7 @@ msgstr ""
 msgid "Help topic doesn't exist"
 msgstr ""
 
-#: main.c:49
+#: main.c:48
 #, c-format
 msgid ""
 "Usage: %s -l\n"

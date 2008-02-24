@@ -25,19 +25,19 @@
 #include <sqlext.h>
 
 results *db_drivers_and_dsns();
-SQLHDBC db_connect();
+int db_connect();
 void db_reconnect();
 void db_close();
-SQLSMALLINT db_info(SQLHDBC, SQLUSMALLINT, char *, int);
-SQLINTEGER db_conn_attr(SQLHDBC, SQLINTEGER, char *, int);
-results *db_conn_details(SQLHDBC);
-int db_supports_catalogs(SQLHDBC);
-results *execute_query(SQLHDBC, const char *, int, parsed_line *);
+SQLSMALLINT db_info(SQLUSMALLINT, char *, int);
+SQLINTEGER db_conn_attr(SQLINTEGER, char *, int);
+results *db_conn_details();
+int db_supports_catalogs();
+results *execute_query(const char *, int, parsed_line *);
 void db_cancel_query();
-results *get_tables(SQLHDBC, const char *, const char *, const char *);
-results *get_columns(SQLHDBC, const char *, const char *, const char *);
-results *db_list_schemas(SQLHDBC, const char *);
-results *db_list_tables(SQLHDBC, const char *);
-results *db_list_columns(SQLHDBC, const char *);
+results *get_tables(const char *, const char *, const char *);
+results *get_columns(const char *, const char *, const char *);
+results *db_list_schemas(const char *);
+results *db_list_tables(const char *);
+results *db_list_columns(const char *);
 
 #endif
