@@ -22,6 +22,7 @@ Standard syntax checking in run_command()
 SQL output mode that outputs INSERTs or UPDATEs?
 Mode that gets metadata about a query by preparing without executing
 Seperate timings for prepare/execute/fetch?
+A way to tell CSV/TSV mode to skip the header?
 
 prepared statements/named buffers/aliases
 SELECT * FROM TABLE WHERE id = ?
