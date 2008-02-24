@@ -9,6 +9,7 @@ ODBC unicode mode?
 replace calls to getenv with rc_get or similar to avoid hardcoded prefix
 pager gets run even if no result set is generated (is this a problem?)
 more consistency in error handling (less random perrors and printfs)
+make SQL errors a special case of results, so output.c can render them as it likes?
 tidy up function names
 improve /help
 hexdump-style output for binary data
