@@ -803,3 +803,24 @@ results *db_autocommit(int change)
 
 	return res;
 }
+
+results *db_endtran(int commit)
+{
+	results *res;
+	SQLRETURN r;
+
+	res = res_alloc();
+	res_set_nrows(res, -1);
+
+	r = SQLEndTran(SQL_HANDLE_DBC, conn, commit ? SQL_COMMIT : SQL_ROLLBACK);
+	if(!SQL_SUCCEEDED(r)) {
+		report_error(SQL_HANDLE_DBC, conn, r, _("Failed to execute statement"));
+		res_free(res);
+		return 0;
+	} else if(r == SQL_SUCCESS_WITH_INFO) {
+		fetch_warnings(res, SQL_HANDLE_DBC, conn);
+	}
+
+	return res;
+}
+

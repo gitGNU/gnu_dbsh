@@ -42,5 +42,6 @@ results *db_list_tables(const char *);
 results *db_list_columns(const char *);
 
 results *db_autocommit(int);
+results *db_endtran(int);
 
 #endif

@@ -182,6 +182,10 @@ results *run_command(buffer *buf)
 	// Transaction commands
 	else if(!strcmp(c, "autocommit")) {
 		res = autocommit(p1);
+	} else if(!strcmp(c, "commit")) {
+		res = db_endtran(1);
+	} else if(!strcmp(c, "rollback")) {
+		res = db_endtran(0);
 	}
 
 	// Other commands
