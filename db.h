@@ -34,10 +34,13 @@ results *db_conn_details();
 int db_supports_catalogs();
 results *execute_query(const char *, int, parsed_line *);
 void db_cancel_query();
+
 results *get_tables(const char *, const char *, const char *);
 results *get_columns(const char *, const char *, const char *);
 results *db_list_schemas(const char *);
 results *db_list_tables(const char *);
 results *db_list_columns(const char *);
+
+results *db_autocommit(int);
 
 #endif

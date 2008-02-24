@@ -67,6 +67,20 @@ static results *get_warranty()
 	return res;
 }
 
+static results *autocommit(const char *state)
+{
+	int change;
+
+	if(state) {
+		if(!strcmp(state, "Off") ||
+		   !strcmp(state, "off") ||
+		   !strcmp(state, "0")) change = -1;
+		else change = 1;
+	} else change = 0;
+
+	return db_autocommit(change);
+}
+
 static results *set(const char *name, const char *value)
 {
 	results *res = res_alloc();
@@ -163,6 +177,11 @@ results *run_command(buffer *buf)
 	} else if(!strncmp(c, "col", 3)) {
 		if(p1) res = db_list_columns(p1);
 		else SYNTAX(_("<table>"));
+	}
+
+	// Transaction commands
+	else if(!strcmp(c, "autocommit")) {
+		res = autocommit(p1);
 	}
 
 	// Other commands

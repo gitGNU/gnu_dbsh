@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: dbsh 0.4a\n"
 "Report-Msgid-Bugs-To: dangerous.ben@gmail.com\n"
-"POT-Creation-Date: 2008-02-24 14:03+0000\n"
+"POT-Creation-Date: 2008-02-24 14:40+0000\n"
 "PO-Revision-Date: 2008-01-15 08:26+0000\n"
 "Last-Translator: Ben Spencer <dangerous.ben@gmail.com>\n"
 "Language-Team: English (British)\n"
@@ -24,37 +24,37 @@ msgstr "COPYING"
 msgid "WARRANTY"
 msgstr "WARRANTY"
 
-#: command.c:74 db.c:259
+#: command.c:88 db.c:259
 msgid "name"
 msgstr "name"
 
-#: command.c:74 db.c:259
+#: command.c:88 db.c:259
 msgid "value"
 msgstr "value"
 
-#: command.c:89
+#: command.c:103
 msgid "Variable not set"
 msgstr "Variable not set"
 
-#: command.c:130
+#: command.c:144
 #, c-format
 msgid "Cannot unset variable '%s'\n"
 msgstr ""
 
-#: command.c:136
+#: command.c:150
 #, c-format
 msgid "Syntax: %s %s\n"
 msgstr ""
 
-#: command.c:165
+#: command.c:179
 msgid "<table>"
 msgstr ""
 
-#: command.c:173
+#: command.c:192
 msgid "<variable>"
 msgstr ""
 
-#: command.c:178
+#: command.c:197
 #, c-format
 msgid "Unrecognised command: %s\n"
 msgstr "Unrecognised command: %s\n"
@@ -127,7 +127,7 @@ msgstr "Connected to %s\n"
 msgid "SQLGetInfo() failed"
 msgstr "SQLGetInfo() failed"
 
-#: db.c:224 db.c:226 db.c:240 db.c:242 db.c:285 db.c:304
+#: db.c:224 db.c:226 db.c:240 db.c:242 db.c:285 db.c:304 db.c:800
 #, fuzzy
 msgid "(unknown)"
 msgstr "(none)"
@@ -256,6 +256,18 @@ msgstr "Failed to list columns"
 
 #: db.c:742
 msgid "Failed to get catalog name separator"
+msgstr ""
+
+#: db.c:786
+msgid "Autocommit state"
+msgstr ""
+
+#: db.c:799
+msgid "On"
+msgstr ""
+
+#: db.c:799
+msgid "Off"
 msgstr ""
 
 #: help.h:1

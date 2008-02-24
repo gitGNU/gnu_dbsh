@@ -774,3 +774,32 @@ static void parse_qualified_table(char *s, char **schema, char **table)
 		*table = s;
 	}
 }
+
+results *db_autocommit(int change)
+{
+	results *res;
+	SQLUINTEGER state;
+	const char *text;
+	SQLRETURN r;
+
+	res = res_alloc();
+	res_set_cols(res, 1, _("Autocommit state"));
+
+	if(change) {
+		state = change > 0 ? SQL_AUTOCOMMIT_ON : SQL_AUTOCOMMIT_OFF;
+		r = SQLSetConnectAttr(conn, SQL_ATTR_AUTOCOMMIT, &state, 0);
+		if(r == SQL_SUCCESS_WITH_INFO || r == SQL_ERROR)
+			fetch_warnings(res, SQL_HANDLE_DBC, conn);
+	}
+
+	r = SQLGetConnectAttr(conn, SQL_ATTR_AUTOCOMMIT, &state, 0, 0);
+	if(r == SQL_SUCCESS_WITH_INFO || r == SQL_ERROR)
+		fetch_warnings(res, SQL_HANDLE_DBC, conn);
+
+	if(SQL_SUCCEEDED(r)) text = (state == SQL_AUTOCOMMIT_ON) ? _("On") : _("Off");
+	else text = _("(unknown)");
+
+	res_add_row(res, text);
+
+	return res;
+}
