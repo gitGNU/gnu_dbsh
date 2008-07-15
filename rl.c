@@ -143,10 +143,12 @@ void rl_history_end()
 
 char *rl_readline(const char *prompt)
 {
-	char *buf;
+	char *buf, *p;
 	fputs(prompt, stdout);
 	if(!(buf = (char *) malloc(1024))) err_system();
 	fgets(buf, 1024, stdin);
+	for(p = buf; *p && *p != '\n'; p++);
+	*p = 0;
 	return buf;
 }
 
