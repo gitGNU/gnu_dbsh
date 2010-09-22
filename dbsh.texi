@@ -1,0 +1,587 @@
+\input texinfo
+@c %**start of header
+@setfilename dbsh.info
+@settitle dbsh
+@c %**end of header
+
+@copying
+Copyright @copyright{} 2010 Ben Spencer
+@end copying
+
+@titlepage
+@title The dbsh manual
+@author Ben Spencer
+@page
+@insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top, Introduction, (dir), (dir)
+@top The dbsh manual
+
+@menu
+* Introduction::                
+* Installation::                
+* Invoking::                    
+* Basics::   
+* Actions::                     
+* Commands::                    
+* Configuration::               
+@end menu
+@end ifnottex
+
+@node Introduction, Installation, Top, Top
+@chapter Introduction
+
+dbsh is a command-line ODBC client.  It aims to provide a unified
+interface to any (ODBC-supported) RDBMS, combining all the best
+features of clients like
+@uref{http://dev.mysql.com/doc/refman/5.1/en/mysql.html,,mysql},
+@uref{http://www.postgresql.org/docs/8.4/static/app-psql.html,,psql},
+and @uref{http://www.sqsh.org/,,sqsh}.  The target audience is
+programmers and DBAs who need to work with a variety of DBMSs and want
+a consistent and powerful interface with which to do so.
+
+dbsh is free software: you can redistribute it and/or modify it under
+the terms of the GNU General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your
+option) any later version.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+@node Installation, Invoking, Introduction, Top
+@chapter Installation
+
+@heading Prerequisites
+
+You'll need an ODBC 3+ library - dbsh has been tested against
+@uref{http://www.unixodbc.org/,,unixODBC} and
+@uref{http://www.iodbc.org/,,iODBC}.
+
+A readline-type library is optional but highly recommended. dbsh
+should work with GNU readline, NetBSD editline or Rich Salz's
+libeditline.
+
+@heading Building
+
+dbsh uses GNU autotools, so building and installing it should be a
+simple matter of:
+
+@example
+./configure
+make
+su -c "make install"
+@end example
+
+If you have @uref{http://www.gnu.org/software/dejagnu/,,DejaGnu} and
+the SQLite ODBC driver installed you can also run the test suite:
+
+@example
+make check
+@end example
+
+@node Invoking, Basics, Installation, Top
+@chapter Invoking
+
+@menu
+* Drivers and DSNs::            
+* Connecting to a DSN::         
+* Using a connection string::   
+@end menu
+
+@node Drivers and DSNs, Connecting to a DSN, Invoking, Invoking
+@section Drivers and DSNs
+
+The @option{-l} switch lists the available ODBC drivers and @abbr{DSNs,
+Data Source Names} configured on your system.
+
+@example
+ben@@arctor:~$ dbsh -l
++---------+
+| Driver  |
++---------+
+| SQLite  |
+| SQLite3 |
+| MySQL   |
++---------+
+3 rows in set
+
++------------+------+-------------+
+| DSN        | Type | Description |
++------------+------+-------------+
+| mysql-test | user | mysql-test  |
++------------+------+-------------+
+1 row in set
+@end example
+
+Consult the documentation of your ODBC implementation for details on
+configuring drivers and DSNs.  One of the following documents may be
+suitable:
+
+@itemize
+@item @uref{http://www.unixodbc.org/doc/UserManual/,unixODBC (GUI)}
+@item @uref{http://www.unixodbc.org/odbcinst.html,unixODBC (CLI)}
+@item
+@uref{http://www.iodbc.org/dataspace/iodbc/wiki/iODBC/ODBCOnUnix#Configuring_DSNs,iODBC
+(GUI)}
+@item
+@uref{http://www.iodbc.org/dataspace/iodbc/wiki/iODBC/FAQ#What%27s_an_odbcini_and_what_do_I_put_in_it,iODBC
+(CLI)}
+@end itemize
+
+@node Connecting to a DSN, Using a connection string, Drivers and DSNs, Invoking
+@section Connecting to a DSN
+
+Connect to a DSN as follows:
+
+@example
+dbsh @var{dsn} [@var{username}] [@var{password}]
+@end example
+
+Where @var{dsn} is the DSN to connect to, and the optional arguments
+@var{username} and @var{password} specify the login credentials to
+use.
+
+@node Using a connection string,  , Connecting to a DSN, Invoking
+@section Using a connection string
+
+You can connect to databases for which DSNs have not been created by
+using a @dfn{connection string}:
+
+@example
+dbsh @var{connection-string}
+@end example
+
+A connection string is a series of @samp{NAME=VALUE} pairs separated
+by semicolons.  The first of these parameters, @samp{DRIVER}, should
+be the ODBC driver to use, while the remainder are driver-specific.
+For example:
+
+@example
+dbsh DRIVER=SQLite;DATABASE=db.sqlite
+@end example
+
+will connect to the SQLite database in the file db.sqlite.
+
+dbsh assumes that you are using a connection string if you only pass
+it one argument and that argument contains an '=' character.
+
+Internal note: when using a connection string, dbsh connects using
+SQLDriverConnect rather than SQLConnect.
+
+@node Basics, Actions, Invoking, Top
+@chapter Basics
+
+When you run dbsh you are presented with a prompt something like this:
+
+@example
+Connected to foo
+foo 1>
+@end example
+
+The default prompt consists of the DSN you are connected to, and a
+line number (@pxref{prompt} to change it).
+
+Text entered at the dbsh prompt is stored in the main @dfn{SQL
+buffer}.  You can enter SQL statements spanning multiple lines into
+this buffer, and the prompt will update to show the current line
+number.  If your system supports it, you get readline capabilities.
+
+dbsh stops reading input and starts doing stuff with it when it sees
+an @dfn{action character}.  This is @samp{\} or @samp{;} by default
+(@pxref{action_chars}).  If you need to enter a literal action
+character, just escape it with a second character (eg @samp{\\}).
+
+@example
+foo 1> SELECT * FROM bar;
++----+--------------------+
+| id | desc               |
++----+--------------------+
+| 1  | This is some text. |
+| 2  | *NULL*             |
++----+--------------------+
+2 rows in set
+
+(0.000556s)
+@end example
+
+You can follow your query with a pipe (@samp{|}) or file redirect
+(@samp{>}).  These behave rather like you'd expect them to in the
+bourne shell (in fact, they just open a pipe to /bin/sh and let it
+handle everything from there on).
+
+@example
+foo 1> SELECT * FROM bar; | less
++----+--------------------+
+| id | desc               |
++----+--------------------+
+| 1  | This is some text. |
+| 2  | *NULL*             |
++----+--------------------+
+2 rows in set
+
+(0.000556s)
+(END)
+@end example
+
+@example
+foo 1> SELECT * FROM bar; > output.txt
+@end example
+
+You can specify a default pager to use when no explicit redirect is
+specified (@pxref{pager}).
+
+To exit dbsh, type @samp{\q}.
+
+@node Actions, Commands, Basics, Top
+@chapter Actions
+
+An @dfn{action} is a dbsh operation that (usually) acts on the
+contents of the main SQL buffer.
+
+The action is specified as a one-character suffix to the action
+character.  For example, to run the @samp{G} action:
+
+@example
+foo 1> SELECT * FROM test\G
+@end example
+
+If no suffix is given, the default action is used
+(@pxref{default_action}):
+
+@example
+foo 1> SELECT * FROM test;
+@end example
+
+Some actions take parameters - these follow the action character and
+suffix and are separated by spaces:
+
+@example
+foo 1> SELECT * FROM test WHERE id = ?\C 3
+@end example
+
+If the SQL buffer is empty (the first thing you type is an action
+character), the action will instead operate on the previous contents
+of the SQL buffer.  This allows you to quickly perform a new action on
+the previous query (eg to try a different output format, or to bind
+different parameters).
+
+@example
+foo 1> \G 1
+@end example
+
+This section describes the available actions and their uses.
+
+@menu
+* Actions which run SQL::       
+* Actions which manipulate the SQL buffer::  
+* Other actions::               
+@end menu
+
+@node Actions which run SQL, Actions which manipulate the SQL buffer, Actions, Actions
+@section Actions which run SQL
+
+These actions all send the contents of the SQL buffer to the ODBC
+driver, and fetch the results.  They differ only in how they output
+the results.  With the exception of @samp{g}, actions which run SQL
+all use upper case letters.
+
+These actions can take parameters, which are bound to parameter
+markers in the SQL.  For example:
+
+@example
+foo 1> INSERT INTO test (id) VALUES (?); 4
+foo 1> ; 5
+foo 1> ; 6
+@end example
+
+@subheading g - Horizontal output
+
+@example
+foo 1> SELECT * FROM test\g
++----+--------------------+
+| id | desc               |
++----+--------------------+
+| 1  | This is some text. |
+| 2  | *NULL*             |
+| 3  | Some more text.    |
++----+--------------------+
+3 rows in set
+@end example
+
+This is the default value of the @ref{default_action} setting.
+
+@subheading G - Vertical output
+
+Useful when the rows in the result set are too wide to fit onto one
+line.
+
+@example
+foo 1> SELECT * FROM test\G
++------+--------------------+
+|   id | 1                  |
+| desc | This is some text. |
++------+--------------------+
+|   id | 2                  |
+| desc | *NULL*             |
++------+--------------------+
+|   id | 3                  |
+| desc | Some more text.    |
++------+--------------------+
+3 rows in set
+@end example
+
+@subheading C - CSV output
+
+Comma-separated values format.  Useful for redirecting to files.
+
+@example
+foo 1> SELECT * FROM test\C
+"id","desc"
+"1","This is some text."
+"2",""
+"3","Some more text."
+@end example
+
+@subheading T - TSV output
+
+Tab-separated values.  Useful for redirecting to files.
+
+@example
+foo 1> SELECT * FROM test\T
+id	desc
+1	This is some text.
+2	
+3	Some more text.
+@end example
+
+@subheading F - Flat output
+
+Each data value on its own line.  Useful for copying and pasting large
+chunks of text.
+
+@example
+foo 1> SELECT * FROM test\F
+id
+1
+
+desc
+This is some text.
+
+id
+2
+
+id
+3
+
+desc
+Some more text.
+@end example
+
+@subheading L - List output
+
+Displays each column from the result set as a comma-separated list.
+Useful for pasting into IN() clauses.
+
+@example
+foo 1> SELECT * FROM test\L
+id: 1,2,3
+desc: This is some text.,Some more text.
+@end example
+
+@node Actions which manipulate the SQL buffer, Other actions, Actions which run SQL, Actions
+@section Actions which manipulate the SQL buffer
+
+@subheading c - Clear
+
+Clears the contents of the SQL buffer.  Useful if you've made a
+mistake.
+
+@subheading e - Edit
+
+This opens an editor (using the @env{EDITOR} or @env{VISUAL}
+environment variables if set) to edit the contents of the main SQL
+buffer.  Upon closing the editor, the text is stored in the 'previous'
+SQL buffer, so that other actions can be used on it immediately simply
+by entering an action character.
+
+@subheading p - Print
+
+Outputs the current contents of the SQL buffer.  Potentially useful
+for verifying it after some complex query editing.
+
+@node Other actions,  , Actions which manipulate the SQL buffer, Actions
+@section Other actions
+
+These actions don't really fit into the dbsh concept of actions being
+things which act on the SQL buffer, but they are implemented as
+actions rather than commands for familiarity with other database
+clients.
+
+@subheading r - Reconnect
+
+Reconnect to the current data source.
+
+@subheading q - Quit
+
+Exit dbsh.
+
+@node Commands, Configuration, Actions, Top
+@chapter Commands
+
+If an SQL buffer begins with a @dfn{command character} (@samp{/} by
+default, @pxref{command_chars}), then rather than being sent to the
+driver as an SQL statement it is interpreted as a @dfn{command} by
+dbsh.  Commands can be seen as pseudo-statements in that they return
+result sets - they are thus amenable to all the usual manipulation
+with actions and redirects.  However, for convenience commands are run
+as soon as return is pressed, without checking for an action
+character.
+
+The following commands are available:
+
+@menu
+* Help commands::               
+* Schema commands::             
+* Transaction commands::        
+* Other commands::              
+@end menu
+
+@node Help commands, Schema commands, Commands, Commands
+@section Help commands
+
+@deffn Command help
+Displays a list of available commands.
+@end deffn
+
+@deffn Command copying
+Displays the license.
+@end deffn
+
+@deffn Command warranty
+Displays the (lack of a) warranty.
+@end deffn
+
+@node Schema commands, Transaction commands, Help commands, Commands
+@section Schema commands
+
+These commands fetch information about the database schema using the
+ODBC SQLGetTables and SQLGetColumns calls.  Support for these calls
+varies between drivers, and therefore the utility of the commands does
+likewise.
+
+@deffn Command catalogs
+Lists the catalogs in the data source.
+@end deffn
+
+@deffn Command schemas
+Lists the schemas in the data source.
+@end deffn
+
+@deffn Command tables [@var{catalog}]
+Lists tables.  The optional argument is a catalog or schema (depending
+on driver) to limit the results to.
+@end deffn
+
+@deffn Command columns @var{table}
+Lists the columns in a table.
+@end deffn
+
+@node Transaction commands, Other commands, Schema commands, Commands
+@section Transaction commands
+
+These commands are of course only useful for databases that support
+transactions.
+
+@deffn Command autocommit [@var{status}]
+Displays the current autocommit status, or with a parameter of
+@samp{on} or @samp{off}, sets it.
+@end deffn
+
+@deffn Command commit
+Commits the current transaction.
+@end deffn
+
+@deffn Command rollback
+Rolls back the current transaction
+@end deffn
+
+@node Other commands,  , Transaction commands, Commands
+@section Other commands
+
+@deffn Command set [@var{name} [@var{value}]]
+Used to manipulate dbsh's @ref{Configuration,configuration} at
+runtime.  With no arguments, outputs all current configuration
+settings.  With one argument, outputs a single setting.  With two
+arguments, changes a setting.
+@end deffn
+
+@deffn Command unset @var{name}
+Unsets a configuration value.
+@end deffn
+
+@deffn Command info
+Fetches some information about the current data source from ODBC.
+@end deffn
+
+@node Configuration,  , Commands, Top
+@chapter Configuration
+
+dbsh has a number of options and three distinct means of settings
+them:
+
+@itemize
+
+@item Per-user config file located in ~/.dbsh/dbshrc.  Each line in the file
+is treated as a @samp{name=value} pair, with the option names in lower
+case.  This is the normal way to configure your favourite settings.
+
+@item Environment variables.  Any dbsh option can also be set as an
+environment variable named @samp{DBSH_}@samp{OPTION}, where
+@samp{OPTION} is the name of the option in upper case.  This is useful
+for scripts or when you want to use a different option for a single
+session.
+
+@item Options may be altered at runtime using the @ref{Other commands,set
+and unset commands}.
+
+@end itemize
+
+The following options are available:
+
+@anchor{action_chars}
+@defopt action_chars
+One or more characters used to terminate SQL statements.  Default @samp{\;}.
+@end defopt
+
+@anchor{command_chars}
+@defopt command_chars
+One or more characters used to indicate that the contents of the SQL
+buffer should be interpreted as a dbsh command.  Default @samp{/}.
+@end defopt
+
+@anchor{default_action}
+@defopt default_action
+The action to use when none is specified.  Default @samp{g}.
+@end defopt
+
+@anchor{pager}
+@defopt pager
+The default pager to invoke when no redirect is specified after a
+query.  No default.
+@end defopt
+
+@anchor{prompt}
+@defopt prompt
+The dbsh prompt.  Default @samp{d l> }.
+@end defopt
+
+@bye
