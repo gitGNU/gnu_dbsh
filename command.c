@@ -103,7 +103,7 @@ static results *set(const char *name, const char *value)
 			if(!value) res_add_warning(res, _("Variable not set"));
 		}
 
-		res_add_row(res, name, value);
+		if(value) res_add_row(res, name, value);
 
 		free(prefixed_name);
 	} else {

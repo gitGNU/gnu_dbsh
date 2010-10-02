@@ -17,3 +17,9 @@ expect {
     "name\tvalue\r\ndefault_action\tg\r\n\r\n"
     { pass "$test" }
 }
+
+send "/set foo\\T\n"
+expect {
+    "Variable not set\r\nname\tvalue\r\n\r\n"
+    { pass "$test" }
+}
