@@ -480,7 +480,7 @@ void fetch_resultset(results *res, SQLHSTMT st, buffer *buf)
 
 	for(i = 0; i < ncols; i++) {
 		SQLSMALLINT type;
-		SQLUINTEGER size;
+		SQLULEN size;
 		SQLSMALLINT digits;
 		SQLSMALLINT nullable;
 
@@ -509,7 +509,7 @@ static int fetch_row(results *res, SQLHSTMT st, buffer *buf)
 {
 	SQLRETURN r;
 	SQLSMALLINT i;
-	SQLINTEGER reqlen, offset;
+	SQLLEN reqlen, offset;
 
 
 	r = SQLFetch(st);
@@ -778,7 +778,7 @@ static void parse_qualified_table(char *s, char **schema, char **table)
 results *db_autocommit(int change)
 {
 	results *res;
-	SQLUINTEGER state;
+	SQLULEN state;
 	const char *text;
 	SQLRETURN r;
 
